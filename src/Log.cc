@@ -1,6 +1,7 @@
+// -*- LSST-C++ -*-
 /*
  * LSST Data Management System
- * Copyright 2013 LSST Corporation.
+ * Copyright 2013-2014 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -29,26 +30,35 @@
  *
  */
 
-#include "Log.h"
+// System headers
+#include <stdio.h>
+
+// Third-party headers
 #include <log4cxx/consoleappender.h>
 #include <log4cxx/simplelayout.h>
 #include <log4cxx/logmanager.h>
 #include <log4cxx/basicconfigurator.h>
 #include <log4cxx/xml/domconfigurator.h>
 #include <log4cxx/propertyconfigurator.h>
-#include <stdio.h>
+
+// Local headers
+#include "lsst/log/Log.h"
+
 
 // Max message length for varargs/printf style logging
 #define MAX_LOG_MSG_LEN 1024
 
-using namespace lsst;
+namespace lsst {
+namespace log {
 
 // LogFormatter class
 
 LogFormatter::LogFormatter() : _enabled(false) {}
     
 LogFormatter::~LogFormatter() {
-    if (_enabled) delete _fmter;
+    if (_enabled) {
+        delete _fmter;
+    }
 }
 
 // LogContext class
@@ -65,8 +75,9 @@ LogContext::LogContext(std::string const& name) {
 }
 
 LogContext::~LogContext() {
-    if (!_name.empty())
+    if (!_name.empty()) {
         Log::popContext();
+    }
 }
 
 // Log class
@@ -106,14 +117,17 @@ void Log::initLog() {
 void Log::configure() {
     log4cxx::LoggerPtr rootLogger = log4cxx::Logger::getRootLogger();
     LOG4CXX_INFO(rootLogger, "Initializing Logging System");
-    if (rootLogger->getAllAppenders().size() == 0)
+    if (rootLogger->getAllAppenders().size() == 0) {
         log4cxx::BasicConfigurator::configure();
+    }
     initLog();
 }
 
 std::string getFileExtension(std::string const& filename) {
     size_t dotpos = filename.find_last_of(".");
-    if (dotpos == std::string::npos) return "";
+    if (dotpos == std::string::npos) {
+      return "";
+    }
     return filename.substr(dotpos, filename.size() - dotpos);
 }
 
@@ -128,10 +142,11 @@ std::string getFileExtension(std::string const& filename) {
   */
 void Log::configure(std::string const& filename) {
     log4cxx::BasicConfigurator::resetConfiguration();
-    if (getFileExtension(filename).compare(".xml") == 0)
+    if (getFileExtension(filename).compare(".xml") == 0) {
         log4cxx::xml::DOMConfigurator::configure(filename);
-    else
+    } else {
         log4cxx::PropertyConfigurator::configure(filename);
+    }
     initLog();
 }
 
@@ -159,10 +174,11 @@ log4cxx::LoggerPtr Log::getLogger(log4cxx::LoggerPtr logger) {
   * @param loggername  Name of logger to return.
   */
 log4cxx::LoggerPtr Log::getLogger(std::string const& loggername) {
-    if (loggername.empty())
+    if (loggername.empty()){
         return defaultLogger;
-    else
+    } else {
         return log4cxx::Logger::getLogger(loggername);
+    }
 }
 
 /** Pushes NAME onto the global hierarchical default logger name.
@@ -173,10 +189,11 @@ void Log::pushContext(std::string const& name) {
     context.push(name);
     // Construct new default logger name
     std::stringstream ss;
-    if (defaultLoggerName.empty())
+    if (defaultLoggerName.empty()) {
         ss << name;
-    else
+    } else {
         ss << defaultLoggerName << "." << name;
+    }
     defaultLoggerName = ss.str();
     // Update defaultLogger
     defaultLogger = log4cxx::Logger::getLogger(defaultLoggerName);
@@ -240,8 +257,9 @@ void Log::setLevel(std::string const& loggername, int level) {
 int Log::getLevel(log4cxx::LoggerPtr logger) {
     log4cxx::LevelPtr level = logger->getLevel();
     int levelno = -1;
-    if (level != NULL)
+    if (level != NULL) {
         levelno = level->toInt();
+    }
     return levelno;
 }
 
@@ -262,10 +280,11 @@ int Log::getLevel(std::string const& loggername) {
   * @param level   Logging threshold to check.
   */
 bool Log::isEnabledFor(log4cxx::LoggerPtr logger, int level) {
-    if (logger->isEnabledFor(log4cxx::Level::toLevel(level)))
+    if (logger->isEnabledFor(log4cxx::Level::toLevel(level))) {
         return true;
-    else
+    } else {
         return false;
+    }
 }
 
 /** Return whether the logging threshold of the logger named LOGGERNAME
@@ -332,3 +351,4 @@ void Log::log(log4cxx::LoggerPtr logger,   ///< the logger
     vlog(logger, level, filename, funcname, lineno, fmt, args);
 }
 
+}} // namespace lsst::log
