@@ -29,8 +29,8 @@
  *
  */
 
-#include "log/Log.h"
-#include "log/logInterface.h"
+#include "lsst/log/Log.h"
+#include "lsst/log/logInterface.h"
 #include <stdarg.h>
 
 void lsst::log::configure_iface() {

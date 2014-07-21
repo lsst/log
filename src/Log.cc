@@ -29,7 +29,7 @@
  *
  */
 
-#include "Log.h"
+#include "lsst/log/Log.h"
 #include <log4cxx/consoleappender.h>
 #include <log4cxx/simplelayout.h>
 #include <log4cxx/logmanager.h>
