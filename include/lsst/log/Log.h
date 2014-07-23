@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2013 LSST Corporation.
+ * Copyright 2013-2014 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef LSST_LOG_H
-#define LSST_LOG_H
+#ifndef LSST_LOG_LOG_H
+#define LSST_LOG_LOG_H
 
 #include <string>
 #include <stdarg.h>
@@ -44,14 +44,14 @@
   *
   * @param filename  Path to configuration file.
   */
-#define LOG_CONFIG(filename) lsst::qserv::Log::configure(filename)
+#define LOG_CONFIG(filename) lsst::log::Log::configure(filename)
 
 /**
   * @def LOG_DEFAULT_NAME()
   * Get the current default logger name.
   * @return String containing the default logger name.
   */
-#define LOG_DEFAULT_NAME() lsst::qserv::Log::getDefaultLoggerName()
+#define LOG_DEFAULT_NAME() lsst::log::Log::getDefaultLoggerName()
 
 /**
   * @def LOG_GET(logger)
@@ -60,7 +60,7 @@
   *
   * @param logger  Either a logger name or a log4cxx logger object.
   */
-#define LOG_GET(logger) lsst::qserv::Log::getLogger(logger)
+#define LOG_GET(logger) lsst::log::Log::getLogger(logger)
 
 /**
   * @def LOG_NEWCTX(name)
@@ -69,7 +69,7 @@
   *
   * @param name  String containing name to push onto the logging context.
   */
-#define LOG_NEWCTX(name) (new lsst::qserv::LogContext(name))
+#define LOG_NEWCTX(name) (new lsst::log::LogContext(name))
 
 /**
   * @def LOG_PUSHCTX(name)
@@ -77,14 +77,14 @@
   *
   * @param name  String to push onto logging context.
   */
-#define LOG_PUSHCTX(name) lsst::qserv::Log::pushContext(name)
+#define LOG_PUSHCTX(name) lsst::log::Log::pushContext(name)
 
 /**
   * @def LOG_POPCTX()
   * Pops the last pushed name off the global hierarchical default logger
   * name.
   */
-#define LOG_POPCTX() lsst::qserv::Log::popContext()
+#define LOG_POPCTX() lsst::log::Log::popContext()
 
 /**
   * @def LOG_MDC(key, value)
@@ -96,7 +96,7 @@
   * @param key    Unique key.
   * @param value  String value.
   */
-#define LOG_MDC(key, value) lsst::qserv::Log::MDC(key, value)
+#define LOG_MDC(key, value) lsst::log::Log::MDC(key, value)
 
 /**
   * @def LOG_MDC_REMOVE(key)
@@ -104,7 +104,7 @@
   *
   * @param key  Key identifying value to remove.
   */
-#define LOG_MDC_REMOVE(key) lsst::qserv::Log::MDCRemove(key)
+#define LOG_MDC_REMOVE(key) lsst::log::Log::MDCRemove(key)
 
 /**
   * @def LOG_SET_LVL(logger, level)
@@ -114,7 +114,7 @@
   * @param level   New logging threshold.
   */
 #define LOG_SET_LVL(logger, level) \
-    lsst::qserv::Log::setLevel(logger, level)
+    lsst::log::Log::setLevel(logger, level)
 
 /**
   * @def LOG_GET_LVL(logger)
@@ -125,7 +125,7 @@
   *                to return.
   */
 #define LOG_GET_LVL(logger) \
-    lsst::qserv::Log::getLevel(logger)
+    lsst::log::Log::getLevel(logger)
 
 /**
   * @def LOG_CHECK_LVL(logger, level)
@@ -137,7 +137,7 @@
   * @param level   Logging threshold to check.
   */
 #define LOG_CHECK_LVL(logger, level) \
-    lsst::qserv::Log::isEnabledFor(logger, level)
+    lsst::log::Log::isEnabledFor(logger, level)
 
 /**
   * @def LOGF(logger, level, message)
@@ -149,9 +149,9 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF(logger, level, message) \
-    if (lsst::qserv::Log::isEnabledFor(logger, level)) { \
-        lsst::qserv::LogFormatter fmter_; \
-        lsst::qserv::Log::getLogger(logger)->forcedLog( \
+    if (lsst::log::Log::isEnabledFor(logger, level)) { \
+        lsst::log::LogFormatter fmter_; \
+        lsst::log::Log::getLogger(logger)->forcedLog( \
             log4cxx::Level::toLevel(level), (fmter_ % message).str().c_str(), \
             LOG4CXX_LOCATION); }
 
@@ -164,9 +164,9 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_TRACE(message) \
-    if (lsst::qserv::Log::defaultLogger->isTraceEnabled()) { \
-        lsst::qserv::LogFormatter fmter_; \
-        lsst::qserv::Log::defaultLogger->forcedLog( \
+    if (lsst::log::Log::defaultLogger->isTraceEnabled()) { \
+        lsst::log::LogFormatter fmter_; \
+        lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getTrace(), (fmter_ % message).str().c_str(), \
             LOG4CXX_LOCATION); }
 
@@ -179,9 +179,9 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_DEBUG(message) \
-    if (lsst::qserv::Log::defaultLogger->isDebugEnabled()) { \
-        lsst::qserv::LogFormatter fmter_; \
-        lsst::qserv::Log::defaultLogger->forcedLog( \
+    if (lsst::log::Log::defaultLogger->isDebugEnabled()) { \
+        lsst::log::LogFormatter fmter_; \
+        lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getDebug(), (fmter_ % message).str().c_str(), \
             LOG4CXX_LOCATION); }
 
@@ -194,9 +194,9 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_INFO(message) \
-    if (lsst::qserv::Log::defaultLogger->isInfoEnabled()) { \
-        lsst::qserv::LogFormatter fmter_; \
-        lsst::qserv::Log::defaultLogger->forcedLog( \
+    if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
+        lsst::log::LogFormatter fmter_; \
+        lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getInfo(), (fmter_ % message).str().c_str(), \
             LOG4CXX_LOCATION); }
 
@@ -209,9 +209,9 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_WARN(message) \
-    if (lsst::qserv::Log::defaultLogger->isWarnEnabled()) { \
-        lsst::qserv::LogFormatter fmter_; \
-        lsst::qserv::Log::defaultLogger->forcedLog( \
+    if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
+        lsst::log::LogFormatter fmter_; \
+        lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getWarn(), (fmter_ % message).str().c_str(), \
             LOG4CXX_LOCATION); }
 
@@ -224,9 +224,9 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_ERROR(message) \
-    if (lsst::qserv::Log::defaultLogger->isErrorEnabled()) { \
-        lsst::qserv::LogFormatter fmter_; \
-        lsst::qserv::Log::defaultLogger->forcedLog( \
+    if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
+        lsst::log::LogFormatter fmter_; \
+        lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getError(), (fmter_ % message).str().c_str(), \
             LOG4CXX_LOCATION); }
 
@@ -239,9 +239,9 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_FATAL(message) \
-    if (lsst::qserv::Log::defaultLogger->isFatalEnabled()) { \
-        lsst::qserv::LogFormatter fmter_; \
-        lsst::qserv::Log::defaultLogger->forcedLog( \
+    if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
+        lsst::log::LogFormatter fmter_; \
+        lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getFatal(), (fmter_ % message).str().c_str(), \
             LOG4CXX_LOCATION); }
 
@@ -255,8 +255,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG(logger, level, message...) \
-    if (lsst::qserv::Log::isEnabledFor(logger, level)) { \
-        lsst::qserv::Log::log(logger, log4cxx::Level::toLevel(level), \
+    if (lsst::log::Log::isEnabledFor(logger, level)) { \
+        lsst::log::Log::log(logger, log4cxx::Level::toLevel(level), \
         __BASE_FILE__, __PRETTY_FUNCTION__, __LINE__, message); }
 
 /**
@@ -268,8 +268,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_TRACE(message...) \
-    if (lsst::qserv::Log::defaultLogger->isTraceEnabled()) { \
-        lsst::qserv::Log::log(lsst::qserv::Log::defaultLogger, \
+    if (lsst::log::Log::defaultLogger->isTraceEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getTrace(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); }
 
@@ -282,8 +282,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_DEBUG(message...) \
-    if (lsst::qserv::Log::defaultLogger->isDebugEnabled()) { \
-        lsst::qserv::Log::log(lsst::qserv::Log::defaultLogger, \
+    if (lsst::log::Log::defaultLogger->isDebugEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getDebug(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); }
 
@@ -296,8 +296,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_INFO(message...) \
-    if (lsst::qserv::Log::defaultLogger->isInfoEnabled()) { \
-        lsst::qserv::Log::log(lsst::qserv::Log::defaultLogger, \
+    if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getInfo(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); }
 
@@ -310,8 +310,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_WARN(message...) \
-    if (lsst::qserv::Log::defaultLogger->isWarnEnabled()) { \
-        lsst::qserv::Log::log(lsst::qserv::Log::defaultLogger, \
+    if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getWarn(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); }
 
@@ -324,8 +324,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_ERROR(message...) \
-    if (lsst::qserv::Log::defaultLogger->isErrorEnabled()) { \
-        lsst::qserv::Log::log(lsst::qserv::Log::defaultLogger, \
+    if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getError(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); }
 
@@ -338,8 +338,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_FATAL(message...) \
-    if (lsst::qserv::Log::defaultLogger->isFatalEnabled()) { \
-        lsst::qserv::Log::log(lsst::qserv::Log::defaultLogger, \
+    if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getFatal(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); }
 
@@ -351,9 +351,10 @@
 #define LOG_LVL_FATAL log4cxx::Level::FATAL_INT
 
 #define LOG_LOGGER log4cxx::LoggerPtr
-#define LOG_CTX lsst::qserv::LogContext
+#define LOG_CTX lsst::log::LogContext
 
 namespace lsst {
+namespace log {
 
 /** This class is used by the LOGF_INFO and similar macros to support the
   * boost::format-like operators in the message parameter.
@@ -426,6 +427,6 @@ private:
     static std::string defaultLoggerName;
 };
 
-} // lsst
+}} // namespace lsst::log
 
-#endif // LSST_LOG_H
+#endif // LSST_LOG_LOG_H

@@ -1,6 +1,7 @@
+// -*- LSST-C++ -*-
 /*
  * LSST Data Management System
- * Copyright 2013 LSST Corporation.
+ * Copyright 2013-2014 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -29,58 +30,64 @@
  *
  */
 
-#include "lsst/log/Log.h"
-#include "lsst/log/logInterface.h"
+// System headers
 #include <stdarg.h>
 
-void lsst::log::configure_iface() {
-    lsst::Log::configure();
+// Local headers
+#include "lsst/log/Log.h"
+#include "lsst/log/logInterface.h"
+
+namespace lsst {
+namespace log {
+
+void configure_iface() {
+    Log::configure();
 }
 
-void lsst::log::configure_iface(std::string const& filename) {
-    lsst::Log::configure(filename);
+void configure_iface(std::string const& filename) {
+    Log::configure(filename);
 }
 
-std::string lsst::log::getDefaultLoggerName_iface(void) {
-    return lsst::Log::getDefaultLoggerName();
+std::string getDefaultLoggerName_iface(void) {
+    return Log::getDefaultLoggerName();
 }
 
-void lsst::log::pushContext_iface(std::string const& name) {
-    lsst::Log::pushContext(name);
+void pushContext_iface(std::string const& name) {
+    Log::pushContext(name);
 }
 
-void lsst::log::popContext_iface() {
-    lsst::Log::popContext();
+void popContext_iface() {
+    Log::popContext();
 }
 
-void lsst::log::MDC_iface(std::string const& key, std::string const& value) {
-    lsst::Log::MDC(key, value);
+void MDC_iface(std::string const& key, std::string const& value) {
+    Log::MDC(key, value);
 }
 
-void lsst::log::MDCRemove_iface(std::string const& key) {
-    lsst::Log::MDCRemove(key);
+void MDCRemove_iface(std::string const& key) {
+    Log::MDCRemove(key);
 }
 
-void lsst::log::setLevel_iface(std::string const& loggername, int level) {
-    lsst::Log::setLevel(loggername, level);
+void setLevel_iface(std::string const& loggername, int level) {
+    Log::setLevel(loggername, level);
 }
 
-int lsst::log::getLevel_iface(std::string const& loggername) {
-    return lsst::Log::getLevel(loggername);
+int getLevel_iface(std::string const& loggername) {
+    return Log::getLevel(loggername);
 }
 
-bool lsst::log::isEnabledFor_iface(std::string const& loggername, int level) {
-    return lsst::Log::isEnabledFor(loggername, level);
+bool isEnabledFor_iface(std::string const& loggername, int level) {
+    return Log::isEnabledFor(loggername, level);
 }
 
-void lsst::log::forcedLog_iface(std::string const& loggername, int level,
-                                std::string const& filename,
-                                std::string const& funcname, int lineno,
-                                std::string const& msg) {
-    lsst::Log::getLogger(loggername)->forcedLog(
+void forcedLog_iface(std::string const& loggername, int level,
+                     std::string const& filename,
+                     std::string const& funcname, int lineno,
+                     std::string const& msg) {
+    Log::getLogger(loggername)->forcedLog(
         log4cxx::Level::toLevel(level), msg.c_str(),
         log4cxx::spi::LocationInfo(filename.c_str(), funcname.c_str(), lineno)
     );
 }
 
-
+}}  // namespace lsst::log

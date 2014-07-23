@@ -1,7 +1,7 @@
 // -*- LSST-C++ -*-
 /*
  * LSST Data Management System
- * Copyright 2013 LSST Corporation.
+ * Copyright 2013-2014 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -30,10 +30,11 @@
  *
  */
 
-#ifndef LSST_LOGINTERFACE_H
-#define LSST_LOGINTERFACE_H
+#ifndef LSST_LOG_LOGINTERFACE_H
+#define LSST_LOG_LOGINTERFACE_H
 
-namespace lsst { namespace log {
+namespace lsst {
+namespace log {
 
 void configure_iface(void);
 void configure_iface(std::string const& filename);
@@ -49,6 +50,6 @@ void forcedLog_iface(std::string const& loggername, int level,
                      std::string const& filename, std::string const& funcname,
                      int lineno, std::string const& mdg);
 
-}} // lsst::log
+}} // namespace lsst::log
 
-#endif // LSST_LOGINTERFACE_H
+#endif // LSST_LOG_LOGINTERFACE_H

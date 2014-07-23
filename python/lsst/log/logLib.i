@@ -12,4 +12,5 @@ Access to the classes from the log library
 #include "lsst/log/logInterface.h"
 %}
 
+%include "lsst/p_lsstSwig.i"
 %include "lsst/log/logInterface.h"

@@ -1,6 +1,7 @@
+// -*- LSST-C++ -*-
 /*
  * LSST Data Management System
- * Copyright 2013 LSST Corporation.
+ * Copyright 2013-2014 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -29,19 +30,26 @@
  *
  */
 
-#include "lsst/log/Log.h"
+// System headers
+#include <stdio.h>
+
+// Third-party headers
 #include <log4cxx/consoleappender.h>
 #include <log4cxx/simplelayout.h>
 #include <log4cxx/logmanager.h>
 #include <log4cxx/basicconfigurator.h>
 #include <log4cxx/xml/domconfigurator.h>
 #include <log4cxx/propertyconfigurator.h>
-#include <stdio.h>
+
+// Local headers
+#include "lsst/log/Log.h"
+
 
 // Max message length for varargs/printf style logging
 #define MAX_LOG_MSG_LEN 1024
 
-using namespace lsst;
+namespace lsst {
+namespace log {
 
 // LogFormatter class
 
@@ -262,10 +270,11 @@ int Log::getLevel(std::string const& loggername) {
   * @param level   Logging threshold to check.
   */
 bool Log::isEnabledFor(log4cxx::LoggerPtr logger, int level) {
-    if (logger->isEnabledFor(log4cxx::Level::toLevel(level)))
+    if (logger->isEnabledFor(log4cxx::Level::toLevel(level))) {
         return true;
-    else
+    } else {
         return false;
+    }
 }
 
 /** Return whether the logging threshold of the logger named LOGGERNAME
@@ -332,3 +341,4 @@ void Log::log(log4cxx::LoggerPtr logger,   ///< the logger
     vlog(logger, level, filename, funcname, lineno, fmt, args);
 }
 
+}} // namespace lsst::log
