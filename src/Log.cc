@@ -56,7 +56,9 @@ namespace log {
 LogFormatter::LogFormatter() : _enabled(false) {}
     
 LogFormatter::~LogFormatter() {
-    if (_enabled) delete _fmter;
+    if (_enabled) {
+        delete _fmter;
+    }
 }
 
 // LogContext class
@@ -73,8 +75,9 @@ LogContext::LogContext(std::string const& name) {
 }
 
 LogContext::~LogContext() {
-    if (!_name.empty())
+    if (!_name.empty()) {
         Log::popContext();
+    }
 }
 
 // Log class
@@ -114,14 +117,17 @@ void Log::initLog() {
 void Log::configure() {
     log4cxx::LoggerPtr rootLogger = log4cxx::Logger::getRootLogger();
     LOG4CXX_INFO(rootLogger, "Initializing Logging System");
-    if (rootLogger->getAllAppenders().size() == 0)
+    if (rootLogger->getAllAppenders().size() == 0) {
         log4cxx::BasicConfigurator::configure();
+    }
     initLog();
 }
 
 std::string getFileExtension(std::string const& filename) {
     size_t dotpos = filename.find_last_of(".");
-    if (dotpos == std::string::npos) return "";
+    if (dotpos == std::string::npos) {
+      return "";
+    }
     return filename.substr(dotpos, filename.size() - dotpos);
 }
 
@@ -136,10 +142,11 @@ std::string getFileExtension(std::string const& filename) {
   */
 void Log::configure(std::string const& filename) {
     log4cxx::BasicConfigurator::resetConfiguration();
-    if (getFileExtension(filename).compare(".xml") == 0)
+    if (getFileExtension(filename).compare(".xml") == 0) {
         log4cxx::xml::DOMConfigurator::configure(filename);
-    else
+    } else {
         log4cxx::PropertyConfigurator::configure(filename);
+    }
     initLog();
 }
 
@@ -167,10 +174,11 @@ log4cxx::LoggerPtr Log::getLogger(log4cxx::LoggerPtr logger) {
   * @param loggername  Name of logger to return.
   */
 log4cxx::LoggerPtr Log::getLogger(std::string const& loggername) {
-    if (loggername.empty())
+    if (loggername.empty()){
         return defaultLogger;
-    else
+    } else {
         return log4cxx::Logger::getLogger(loggername);
+    }
 }
 
 /** Pushes NAME onto the global hierarchical default logger name.
@@ -181,10 +189,11 @@ void Log::pushContext(std::string const& name) {
     context.push(name);
     // Construct new default logger name
     std::stringstream ss;
-    if (defaultLoggerName.empty())
+    if (defaultLoggerName.empty()) {
         ss << name;
-    else
+    } else {
         ss << defaultLoggerName << "." << name;
+    }
     defaultLoggerName = ss.str();
     // Update defaultLogger
     defaultLogger = log4cxx::Logger::getLogger(defaultLoggerName);
@@ -248,8 +257,9 @@ void Log::setLevel(std::string const& loggername, int level) {
 int Log::getLevel(log4cxx::LoggerPtr logger) {
     log4cxx::LevelPtr level = logger->getLevel();
     int levelno = -1;
-    if (level != NULL)
+    if (level != NULL) {
         levelno = level->toInt();
+    }
     return levelno;
 }
 
