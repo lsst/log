@@ -32,9 +32,14 @@
 #ifndef LSST_LOG_LOG_H
 #define LSST_LOG_LOG_H
 
-#include <string>
-#include <stdarg.h>
+
+// System headers
 #include <stack>
+#include <stdarg.h>
+#include <string>
+#include <vector>
+
+// Third-party headers
 #include <log4cxx/logger.h>
 #include <boost/format.hpp>
 
