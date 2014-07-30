@@ -298,10 +298,6 @@ bool Log::isEnabledFor(std::string const& loggername, int level) {
     return isEnabledFor(getLogger(loggername), level);
 }
 
-/** @overload void vlog(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
-  * std::string const& filename, std::string const& funcname,
-  * unsigned int lineno, std::string const& fmt, va_list args)
-  */
 void Log::vlog(log4cxx::LoggerPtr logger,   ///< the logger
                log4cxx::LevelPtr level,     ///< message level
                std::string const& filename, ///< source filename
@@ -317,11 +313,6 @@ void Log::vlog(log4cxx::LoggerPtr logger,   ///< the logger
                                                              lineno));
 }
 
-/** @overload void Log::log(std::string const& loggername,
-  * log4cxx::LevelPtr level, std::string const& filename,
-  * std::string const& funcname, unsigned int lineno,
-  * std::string const& fmt, ...)
-  */
 void Log::log(std::string const& loggername, ///< name of logger
               log4cxx::LevelPtr level,       ///< message level
               std::string const& filename,   ///< source filename

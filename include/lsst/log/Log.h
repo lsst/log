@@ -256,7 +256,7 @@
   *
   * @param logger      Either name of logger or log4cxx logger object.
   * @param level       Logging level associated with message.
-  * @param message...  An sprintf-compatible format string followed by zero,
+  * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOG(logger, level, message...) \
@@ -269,7 +269,7 @@
   * Log a trace-level message to the default logger using a varargs/printf
   * syle interface.
   *
-  * @param message...  An sprintf-compatible format string followed by zero,
+  * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOG_TRACE(message...) \
@@ -283,7 +283,7 @@
   * Log a debug-level message to the default logger using a varargs/printf
   * syle interface.
   *
-  * @param message...  An sprintf-compatible format string followed by zero,
+  * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOG_DEBUG(message...) \
@@ -297,7 +297,7 @@
   * Log a info-level message to the default logger using a varargs/printf
   * syle interface.
   *
-  * @param message...  An sprintf-compatible format string followed by zero,
+  * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOG_INFO(message...) \
@@ -311,7 +311,7 @@
   * Log a warn-level message to the default logger using a varargs/printf
   * syle interface.
   *
-  * @param message...  An sprintf-compatible format string followed by zero,
+  * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOG_WARN(message...) \
@@ -325,7 +325,7 @@
   * Log a error-level message to the default logger using a varargs/printf
   * syle interface.
   *
-  * @param message...  An sprintf-compatible format string followed by zero,
+  * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOG_ERROR(message...) \
@@ -339,7 +339,7 @@
   * Log a fatal-level message to the default logger using a varargs/printf
   * syle interface.
   *
-  * @param message...  An sprintf-compatible format string followed by zero,
+  * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOG_FATAL(message...) \
