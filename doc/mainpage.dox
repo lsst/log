@@ -49,18 +49,18 @@ A logger object may be retrieved and used to avoid the cost of excessive lookups
 \section basicPythonExamples Basic Python examples
 
     subject = "important stuff"
-    protolog.log("myLogger", protolog.INFO, "Here is some information about %s.", subject)
+    lsst.log.log("myLogger", lsst.log.INFO, "Here is some information about %s.", subject)
 
 
 
-    protolog.debug("My debugging statement.")
+    lssglog.debug("My debugging statement.")
 
 
 The standard Python `logging` module may also be used:
 
     lgr = logging.getLogger()
     lgr.setLevel(logging.INFO)
-    lgr.addHandler(protolog.ProtoLogHandler())
+    lgr.addHandler(lsst.log.LogHandler())
     lgr.info("This is an info statement via the logging module.")
 
 
@@ -104,7 +104,7 @@ In addition to the above macros, in C++, the following `boost::format` style log
 - `LOGF_ERROR(fmt)` Log a message of level `LOG_LVL_ERROR` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
 - `LOGF_FATAL(fmt)` Log a message of level `LOG_LVL_FATAL` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
 
-In Python, the following logging functions are available in the `protolog` module. These functions take a variable number of arguments following a format string in the style of `printf()`. The use of `*args` is recommended over the use of the `%` operator so that formatting of log messages that do not meet the level threshold can be avoided.
+In Python, the following logging functions are available in the `lsst.log` module. These functions take a variable number of arguments following a format string in the style of `printf()`. The use of `*args` is recommended over the use of the `%` operator so that formatting of log messages that do not meet the level threshold can be avoided.
 - `log(loggername, level, fmt, *args)` Log a message of level '''`level`''' with format string '''`fmt`''' and variable arguments '''`*args`''' to the logger named '''`loggername`'''.
 - `trace(fmt, *args)` Log a message of level `TRACE` with format string '''`fmt`''' and corresponding arguments '''`*args`''' to the default logger.
 - `debug(fmt, *args)` Log a message of level `DEBUG` with format string '''`fmt`''' and corresponding arguments '''`*args`''' to the default logger.
@@ -113,7 +113,7 @@ In Python, the following logging functions are available in the `protolog` modul
 - `error(fmt, *args)` Log a message of level `ERROR` with format string '''`fmt`''' and corresponding arguments '''`*args`''' to the default logger.
 - `fatal(fmt, *args)` Log a message of level `FATAL` with format string '''`fmt`''' and corresponding arguments '''`*args`''' to the default logger.
 
-\section initiatialiation Initialization
+\section initialization Initialization
 
 The underlying log4cxx system can be initialized from either the C++ or Python layers.
 
@@ -121,20 +121,20 @@ In C++, the following macros can be used:
 - `LOG_CONFIG(filename)` Initialize log4cxx using the XML or Java properties configuration file '''`filename`''' (see below).
 - `LOG_CONFIG()` Initialize log4cxx with default configuration file if found, otherwise using basic configuration (see below).
 
-In Python, the following function is available in the `protolog` module:
-- `configLog(filename)` Initialize log4cxx using the XML or Java properties configuration file '''`filename`''' (see below).
-- `configLog()` Initialize log4cxx with default configuration file if found, otherwise using basic configuration (see below).
+In Python, the following function is available in the `lsst.log` module:
+- `configure(filename)` Initialize log4cxx using the XML or Java properties configuration file '''`filename`''' (see below).
+- `configure()` Initialize log4cxx with default configuration file if found, otherwise using basic configuration (see below).
 
 
 \section configuration Configuration
 
-The logging system is configured either using a standard log4cxx XML config file, a standard log4j Java properties, or using the default configuration. While log4cxx allows for programmatic configuration, as of this writing, only the adjustment of logging level threshold (see below) is exposed via the !ProtoLog API. All other configuration (e.g. outputs and formatting) are controlled via a configuration file.
+The logging system is configured either using a standard log4cxx XML config file, a standard log4j Java properties, or using the default configuration. While log4cxx allows for programmatic configuration, as of this writing, only the adjustment of logging level threshold (see below) is exposed via the lsst.log API. All other configuration (e.g. outputs and formatting) are controlled via a configuration file.
 
-In the absence of an explicit call to one of the configuration macros, !ProtoLog is designed to leverage log4cxx's static initializer, which employs the following algorithm (except from [http://logging.apache.org/log4cxx/usage.html here]):
+In the absence of an explicit call to one of the configuration macros, lsst.log is designed to leverage log4cxx's static initializer, which employs the following algorithm (except from <a href="http://logging.apache.org/log4cxx/usage.html">here</a>):
   1. Set the `configurationOptionStr` string variable to the value of the '''LOG4CXX_CONFIGURATION''' environment variable if set, otherwise the value of the '''log4j.configuration''' or '''LOG4CXX_CONFIGURATION''' environment variable if set, otherwise the first of the following file names which exist in the current working directory, "log4cxx.xml", "log4cxx.properties", "log4j.xml" and "log4j.properties". If `configurationOptionStr` has not been set, then disable logging.
-  2. Unless a custom configurator is specified using the '''LOG4CXX_CONFIGURATOR_CLASS''' or '''log4j.configuratorClass''' environment variable, the !PropertyConfigurator will be used to configure log4cxx unless the file name ends with the ".xml" extension, in which case the `DOMConfigurator` will be used. If a custom configurator is specified, the environment variable should contain a fully qualified class name of a class that implements the `Configurator` interface.
+  2. Unless a custom configurator is specified using the '''LOG4CXX_CONFIGURATOR_CLASS''' or '''log4j.configuratorClass''' environment variable, the PropertyConfigurator will be used to configure log4cxx unless the file name ends with the ".xml" extension, in which case the `DOMConfigurator` will be used. If a custom configurator is specified, the environment variable should contain a fully qualified class name of a class that implements the `Configurator` interface.
 
-The C++ macro `LOG_CONFIG()` and the Python `protolog` module function `configLog()`, which do not take a file path argument, utilize the above initialization algorithm with the following addition: Following step (1), if the `configurationOptionStr` has not been set, log4cxx is configured using log4cxx's `BasicConfigurator`, which is hardwired to add to the root logger a `ConsoleAppender`. In this case, the output will be formatted using a `PatternLayout` set to the pattern "%-4r [%t] %-5p %c %x - %m%n".
+The C++ macro `LOG_CONFIG()` and the Python `lsst.log` module function `configure()`, which do not take a file path argument, utilize the above initialization algorithm with the following addition: Following step (1), if the `configurationOptionStr` has not been set, log4cxx is configured using log4cxx's `BasicConfigurator`, which is hardwired to add to the root logger a `ConsoleAppender`. In this case, the output will be formatted using a `PatternLayout` set to the pattern "%-4r [%t] %-5p %c %x - %m%n".
 
 Below is an example of an XML file that configures three appenders and two loggers: the root logger and the named logger "debugs". Each of the appenders contains a layout that defines which metadata to display and how to format log messages. 
 
@@ -154,7 +154,7 @@ Below is an example of an XML file that configures three appenders and two logge
       <!-- Output the log message to log file
         -->
       <appender name="appxFileAppender" class="org.apache.log4j.FileAppender">
-        <param name="file" value="/u1/bchick/sandbox2/modules/var/log/qserv-master.proto.log" />
+        <param name="file" value="/u1/bchick/sandbox2/modules/var/log/qserv-master.log" />
         <param name="append" value="true" />
         <layout class="org.apache.log4j.PatternLayout">
           <param name="ConversionPattern" value="%d %-5p %c{2} - %m%n" />
@@ -164,7 +164,7 @@ Below is an example of an XML file that configures three appenders and two logge
       <!-- My debugging file
         -->
       <appender name="debugsAppender" class="org.apache.log4j.FileAppender">
-        <param name="file" value="/u1/bchick/sandbox2/modules/var/log/debugs.proto.log" />
+        <param name="file" value="/u1/bchick/sandbox2/modules/var/log/debugs.log" />
         <param name="append" value="true" />
         <layout class="org.apache.log4j.PatternLayout">
           <param name="ConversionPattern" value="%d [%t] %-5p %c{2} %M (%F:%L) - %m%n" />
@@ -185,7 +185,7 @@ Below is an example of an XML file that configures three appenders and two logge
     
      </log4j:configuration>
 
-The root logger is setup to append to both the console and the file `var/log/qserv-master.proto.log` with a threshold of "INFO". The named logger "debugs", meanwhile, is set to exclusively append to the file `var/log/debugs.proto.log` with a threshold of "DEBUG". In this way, "debugs" may capture and isolate verbose debugging messages without polluting the main log. This behavior is triggered by setting the `additivity` attribute of the `category` tag to `"false"`. If `additivity` were set to `"true"` (the default value), all messages sent to "debugs" that met its threshold of "DEBUG" would also be sent to the console and `var/log/qserv-master.proto.log`, the targets of the appenders associated with the root logger.
+The root logger is setup to append to both the console and the file `var/log/qserv-master.log` with a threshold of "INFO". The named logger "debugs", meanwhile, is set to exclusively append to the file `var/log/debugs.log` with a threshold of "DEBUG". In this way, "debugs" may capture and isolate verbose debugging messages without polluting the main log. This behavior is triggered by setting the `additivity` attribute of the `category` tag to `"false"`. If `additivity` were set to `"true"` (the default value), all messages sent to "debugs" that met its threshold of "DEBUG" would also be sent to the console and `var/log/qserv-master.log`, the targets of the appenders associated with the root logger.
 
 Note that as an alternative to XML, a configuration file containing log4j Java properties may be used. Here's a trivial example of a log4j properties file that corresponds to the `BasicConfigurator` previously mentioned:
 
@@ -199,7 +199,18 @@ Note that as an alternative to XML, a configuration file containing log4j Java p
     log4j.appender.A1.layout=org.apache.log4j.PatternLayout
     log4j.appender.A1.layout.ConversionPattern=%-4r [%t] %-5p %c %x - %m%n
 
-Read more about log4cxx configuration [http://logging.apache.org/log4cxx/usage.html here].
+
+Values in the configuration file can include Unix environment variables using the "`${ENVVAR}`" notation. In addition, "`${user.home}`" and "`${user.name}`" may be useful substitutions.  Note that "`~`" substitution does ''not'' work.
+
+Useful appenders include:
+- `org.apache.log4j.ConsoleAppender`, taking a `target` property with values `System.out` and `System.err`
+- `org.apache.log4j.FileAppender`, taking `file` and `append` properties
+- `org.apache.log4j.rolling.RollingFileAppender`, taking a `rollingPolicy` property (but which can currently only be configured using an XML file, not a properties file)
+- `org.apache.log4j.SyslogAppender`, taking `facility` and `syslogHost` properties
+
+For the `PatternLayout`, all the conversion specifiers from <a href="http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/PatternLayout.html">this document</a> should work.
+
+Read more about log4cxx configuration <a href="http://logging.apache.org/log4cxx/usage.html">here</a>.
 
 
 \section progrCtrl Programmatic Control of Threshold
@@ -218,7 +229,7 @@ In C++, the following macros are available:
 - `LOG_LVL_ERROR` Error logging level (40000).
 - `LOG_LVL_FATAL` Fatal logging level (50000).
 
-In Python, the `protolog` module includes the following functions and variables:
+In Python, the `lsst.log` module includes the following functions and variables:
 - `setLevel(loggername, level)` Assign '''`level`''' as the threshold of the logger named '''`loggername`'''.
 - `getLevel(loggername)` Returns the threshold level of the logger named '''`loggername`'''.
 - `isEnabledFor(loggername, level)` Returns `true`/`false` indicating whether a logging message of level '''`level`''' meets the threshold associated with the logger named '''`loggername`'''.
@@ -232,12 +243,12 @@ In Python, the `protolog` module includes the following functions and variables:
 
 \section contexts Logging Contexts
 
-The logging context is maintained via a global stack onto which names can be pushed and popped using the !ProtoLog macros `LOG_PUSHCTX(name)` and `LOG_POPCTX()` within C++ or the `protolog` functions `pushContext(name)` and {{{popContext()}}} within Python. The default logger name is dynamically constructed each time a name is pushed onto or popped from the logging context. For example, within the Qserv demo, the following code can be found within `app.py`:
+The logging context is maintained via a global stack onto which names can be pushed and popped using the lsst.log macros `LOG_PUSHCTX(name)` and `LOG_POPCTX()` within C++ or the `lsst.log` functions `pushContext(name)` and {{{popContext()}}} within Python. The default logger name is dynamically constructed each time a name is pushed onto or popped from the logging context. For example, within the Qserv demo, the following code can be found within `app.py`:
 
-    protolog.initLog("/u1/bchick/sandbox2/modules/etc/Log4cxxConfig.xml")
-    protolog.pushContext("czar")
+    lsst.log.initLog("/u1/bchick/sandbox2/modules/etc/Log4cxxConfig.xml")
+    lsst.log.pushContext("czar")
     [...]
-    protolog.debug("This is a debug statement!")
+    lsst.log.debug("This is a debug statement!")
 
 The debugging statement is sent to the default logger, which in this case is ''czar''. Later, within the {{{submitQuery3()}}} function of {{{control/dispatcher.cc}}}, we have:
 
@@ -245,7 +256,7 @@ The debugging statement is sent to the default logger, which in this case is ''c
 
 At this point, any logging statements that do not specify a logger name will be associated with a default logger of ''czar.control''. This mechanism allows dynamic hierarchical logging without hardcoding full logger names in order to accommodate better code re-use. Logging could then be configured, for example, so that the ''czar.control'' context is redirected or copied to a special file with a unique logging level.
 
-To pop a name from the logging context, invoke the {{{protolog.popContext()}}} function within Python or the {{{LOG_POPCTX()}}} macro within C++.
+To pop a name from the logging context, invoke the {{{lsst.log.popContext()}}} function within Python or the {{{LOG_POPCTX()}}} macro within C++.
 
 The context determines the default logger, which is used whenever a logger is not explicitly indicated or an empty string is provided as the logger name.
 
@@ -254,7 +265,7 @@ To summarize, within C++, we have the following macros:
 - `LOG_POPCTX()` Pop the last name `C` off of the global context stack such that a previous default logger name "`A`.`B`.`C`" is now "`A`.`B`".
 - `LOG_DEFAULT_NAME()` Returns the default logger name.
 
-And in Python, the following functions are available in the `protolog` module:
+And in Python, the following functions are available in the `lsst.log` module:
 - `pushContext(name)` Push '''`name`''' onto the global context stack such that the default logger name is appended with ".'''`name`'''".
 - `popContext()` Pop the last name `C` off of the global context stack such that a previous default logger name "`A`.`B`.`C`" is now "`A`.`B`".
 - `getDefaultLoggerName()` Returns the default logger name.
@@ -274,11 +285,11 @@ In C++, the context object will pop the provided name in its destructor. Context
 
 In this example, if the context were initially "nameOne.nameTwo", the first logging statement would be sent to the logger named "nameOne.nameTwo.demo" and the second logging statement would be sent to the logger named "nameOne.nameTwo".
 
-The !ProtoLogContext class defined in the Python layer is compatible with Python's `with` statement, and therefore, the above example can be implemented in Python as follows:
+The LogContext class defined in the Python layer is compatible with Python's `with` statement, and therefore, the above example can be implemented in Python as follows:
 
-    with ProtoLogContext(name="demo") as context:
-        protolog.info("Info statement within demo context.")
-    protolog.info("Info statement outside demo context.")
+    with LogContext(name="demo") as context:
+        lsst.log.info("Info statement within demo context.")
+    lsst.log.info("Info statement outside demo context.")
 
 
 \section flDebugging Fine-level Debugging Example
@@ -290,20 +301,20 @@ The following is a simple recipe for emulating additional debugging levels using
         """
         Returns the logger name that corresponds to fine-level debugging number NUM.
         """
-        return '%s.debug%d' % (protolog.getDefaultLoggerName(), num)
+        return '%s.debug%d' % (lsst.log.getDefaultLoggerName(), num)
     
     def debugAt(num, fmt, *args):
         """
         Sends the log message created from FMT and *ARGS to the logger corresponding to fine-level debugging number NUM.
         """
-        protolog.log(debugLoggerName(num), protolog.DEBUG, fmt, *args)
+        lsst.log.log(debugLoggerName(num), lsst.log.DEBUG, fmt, *args)
     
     def debugSetAt(num):
         """
         Adjusts logging level thresholds to emulate debugging with fine-level NUM.
         """
         for i in range(5):
-            protolog.setLevel(debugLoggerName(i), protolog.INFO if i < num else protolog.DEBUG)
+            lsst.log.setLevel(debugLoggerName(i), lsst.log.INFO if i < num else lsst.log.DEBUG)
     
     debugSetAt(1)
     debugAt(1, "Debug 1 statement that will display")
@@ -338,7 +349,7 @@ The following is a simple recipe for emulating additional debugging levels using
 
 \section mappedDC Mapped Diagnostic Context
 
-User-specified metadata in the form of key/value pairs may be given to !ProtoLog using the macro `LOG_MDC(key, value)` within C++, or the `protolog` function `MDC(key, value)` within Python. These metadata may then be automatically included as part of any/all subsequent log messages by specifying the corresponding key in the appender's formatting string as per standard log4cxx. These metadata are handled using log4cxx's mapped diagnostic context (MDC) feature, which has thread-level scope.
+User-specified metadata in the form of key/value pairs may be given to lsst.log using the macro `LOG_MDC(key, value)` within C++, or the `lsst.log` function `MDC(key, value)` within Python. These metadata may then be automatically included as part of any/all subsequent log messages by specifying the corresponding key in the appender's formatting string as per standard log4cxx. These metadata are handled using log4cxx's mapped diagnostic context (MDC) feature, which has thread-level scope.
 
 For example, a session id may be included by using the following formatting string:
 
@@ -349,13 +360,13 @@ In C++, the following MDC macros are available:
 - `LOG_MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender.
 - `LOG_MDC_REMOVE(key)` Delete the existing value from the global map that is associated with '''`key`'''.
 
-In Python, the `protolog` module provides the following MDC functions:
-- `MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender.
+In Python, the `lsst.log` module provides the following MDC functions:
+- `MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender. Note that `value` is converted to a string by Python before it is stored in the MDC. 
 - `MDCRemove(key)` Delete the existing value from the global map that is associated with '''`key`'''.
 
 \section benchmarks Benchmarks
 
-Measuring the performance of !ProtoLog when actually writing log messages to output targets such as a file or socket provides little to no information due to buffering and the fact that in the absence of buffering these operations are I/O limited. Conversely, timing calls to log functions when the level threshold is not met is quite valuable since an ideal logging system would add no appreciable overhead when deactivated. Basic measurements of the performance of !ProtoLog have been made with the level threshold such that logging messages are not written. These measurements are made within a single-node instance of Qserv running on lsst-dev03 without significant competition from other system activity. The average time required to submit the following suppressed log message is 26 nanoseconds:
+Measuring the performance of lsst.log when actually writing log messages to output targets such as a file or socket provides little to no information due to buffering and the fact that in the absence of buffering these operations are I/O limited. Conversely, timing calls to log functions when the level threshold is not met is quite valuable since an ideal logging system would add no appreciable overhead when deactivated. Basic measurements of the performance of Log have been made with the level threshold such that logging messages are not written. These measurements are made within a single-node instance of Qserv running on lsst-dev03 without significant competition from other system activity. The average time required to submit the following suppressed log message is 26 nanoseconds:
 
     LOG_INFO("Hello default logger!");
 
@@ -371,7 +382,7 @@ Importantly, the overhead is unaffected when formatting is introduced since the 
     LOGF_INFO("Hello default logger with %s." % info_stuff);
 
 
-Note that these timings are indistinguishable from those using log4cxx directly, without the !ProtoLog layer.
+Note that these timings are indistinguishable from those using log4cxx directly, without the Log layer.
 
 Meanwhile, the situation is quite different when looking up the logger by name. For instance, the average time required to submit the following suppressed log message is 1.0 microseconds (~40X slower):
 
