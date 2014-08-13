@@ -1,0 +1,28 @@
+2014-07-31 14:51:34.836	INFO	main	In main	{}
+2014-07-31 14:51:34.865	INFO	main.a	In a, 12345	{{visit,12345}}
+2014-07-31 14:51:34.865	INFO	main.a	In a, 67890	{{visit,67890}}
+2014-07-31 14:51:34.867	DEBUG	main.a	Debug message in a	{{visit,12345}}
+2014-07-31 14:51:34.867	DEBUG	main.a	Debug message in a	{{visit,67890}}
+2014-07-31 14:51:34.869	INFO	main.a.b	In b	{{visit,67890}}
+2014-07-31 14:51:34.869	INFO	main.a.b	In b	{{visit,12345}}
+2014-07-31 14:51:34.871	DEBUG	main.a.b	Testing; logged only when called by a	{{visit,12345}}
+2014-07-31 14:51:34.871	DEBUG	main.a.b	Testing; logged only when called by a	{{visit,67890}}
+2014-07-31 14:51:34.873	INFO	main.a.b	Leaving b	{{visit,12345}}
+2014-07-31 14:51:34.873	INFO	main.a.b	Leaving b	{{visit,67890}}
+2014-07-31 14:51:34.875	INFO	main.a	Leaving a	{{visit,12345}}
+2014-07-31 14:51:34.875	INFO	main.a	Leaving a	{{visit,67890}}
+2014-07-31 14:51:34.877	INFO	main.a	In a, 27182	{{visit,27182}}
+2014-07-31 14:51:34.877	INFO	main.a	In a, 31415	{{visit,31415}}
+2014-07-31 14:51:34.879	DEBUG	main.a	Debug message in a	{{visit,31415}}
+2014-07-31 14:51:34.879	DEBUG	main.a	Debug message in a	{{visit,27182}}
+2014-07-31 14:51:34.881	INFO	main.a.b	In b	{{visit,31415}}
+2014-07-31 14:51:34.881	INFO	main.a.b	In b	{{visit,27182}}
+2014-07-31 14:51:34.883	DEBUG	main.a.b	Testing; logged only when called by a	{{visit,31415}}
+2014-07-31 14:51:34.883	DEBUG	main.a.b	Testing; logged only when called by a	{{visit,27182}}
+2014-07-31 14:51:34.885	INFO	main.a.b	Leaving b	{{visit,27182}}
+2014-07-31 14:51:34.885	INFO	main.a.b	Leaving b	{{visit,31415}}
+2014-07-31 14:51:34.887	INFO	main.a	Leaving a	{{visit,31415}}
+2014-07-31 14:51:34.887	INFO	main.a	Leaving a	{{visit,27182}}
+2014-07-31 14:51:34.958	INFO	main.b	In b	{}
+2014-07-31 14:51:34.959	INFO	main.b	Leaving b	{}
+2014-07-31 14:51:34.960	INFO	main	Leaving main	{}
