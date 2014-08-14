@@ -222,6 +222,13 @@ In C++, the following macros are available:
 - `LOG_SET_LVL(loggername, level)` Assign '''`level`''' as the threshold of the logger named '''`loggername`'''.
 - `LOG_GET_LVL(loggername)` Returns the threshold level of the logger named '''`loggername`'''.
 - `LOG_CHECK_LVL(loggername, level)` Returns `true`/`false` indicating whether a logging message of level '''`level`''' meets the threshold associated with the logger named '''`loggername`'''.
+- `LOG_CHECK_TRACE()` Returns `true`/`false` indicating whether a logging message of level '''`trace`''' meets the threshold associated with the default logger.
+- `LOG_CHECK_DEBUG()` Returns `true`/`false` indicating whether a logging message of level '''`debug`''' meets the threshold associated with the default logger.
+- `LOG_CHECK_INFO()` Returns `true`/`false` indicating whether a logging message of level '''`info`''' meets the threshold associated with the default logger.
+- `LOG_CHECK_WARN()` Returns `true`/`false` indicating whether a logging message of level '''`warn`''' meets the threshold associated with the default logger.
+- `LOG_CHECK_ERROR()` Returns `true`/`false` indicating whether a logging message of level '''`error`''' meets the threshold associated with the default logger.
+- `LOG_CHECK_FATAL()` Returns `true`/`false` indicating whether a logging message of level '''`fatal`''' meets the threshold associated with the default logger.
+
 - `LOG_LVL_TRACE` Trace logging level (5000).
 - `LOG_LVL_DEBUG` Debug logging level (10000).
 - `LOG_LVL_INFO` Info logging level (20000).
