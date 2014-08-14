@@ -145,6 +145,60 @@
     lsst::log::Log::isEnabledFor(logger, level)
 
 /**
+  * @def LOG_CHECK_TRACE()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to TRACE.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_TRACE() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_TRACE)
+
+/**
+  * @def LOG_CHECK_DEBUG()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to DEBUG.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_DEBUG() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_DEBUG)
+
+/**
+  * @def LOG_CHECK_INFO()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to INFO.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_INFO() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_INFO)
+
+/**
+  * @def LOG_CHECK_WARN()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to WARN.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_WARN() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_WARN)
+
+/**
+  * @def LOG_CHECK_ERROR()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to ERROR.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_ERROR() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_ERROR)
+
+/**
+  * @def LOG_CHECK_FATAL()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to FATAL.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_FATAL() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_FATAL)
+
+/**
   * @def LOGF(logger, level, message)
   * Log a message using a boost::format style interface.
   *
