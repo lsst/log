@@ -115,6 +115,7 @@ void Log::initLog() {
   * pattern "%-4r [%t] %-5p %c %x - %m%n".
   */
 void Log::configure() {
+    log4cxx::BasicConfigurator::resetConfiguration();
     log4cxx::LoggerPtr rootLogger = log4cxx::Logger::getRootLogger();
     if (rootLogger->getAllAppenders().size() == 0) {
         log4cxx::BasicConfigurator::configure();
