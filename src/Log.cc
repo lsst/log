@@ -116,10 +116,10 @@ void Log::initLog() {
   */
 void Log::configure() {
     log4cxx::LoggerPtr rootLogger = log4cxx::Logger::getRootLogger();
-    LOG4CXX_INFO(rootLogger, "Initializing Logging System");
     if (rootLogger->getAllAppenders().size() == 0) {
         log4cxx::BasicConfigurator::configure();
     }
+    LOG4CXX_INFO(rootLogger, "Initializing Logging System");
     initLog();
 }
 
