@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -20,6 +20,13 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
+// System headers
+#include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <string>
+
+// Local headers
 #include "lsst/log/Log.h"
 
 #define BOOST_TEST_MODULE Log_1
@@ -31,19 +38,99 @@
 
 BOOST_AUTO_TEST_SUITE(LogSuite)
 
+struct LogFixture {
+    LogFixture() {
+        std::string cfName = std::tmpnam(NULL);
+        ofName = std::tmpnam(NULL);
+        std::ofstream f;
+        f.open(cfName.c_str());
+        f << "log4j.rootLogger=DEBUG, FA\n"
+          << "log4j.appender.FA=FileAppender\n" 
+          << "log4j.appender.FA.file=" << ofName << "\n"
+          << "log4j.appender.FA.layout=SimpleLayout\n";
+        f.close();
+        LOG_CONFIG(cfName);
+    }
+
+    void check(std::string expected) {
+        std::ifstream t(ofName.c_str());
+        std::string received((std::istreambuf_iterator<char>(t)),
+                             std::istreambuf_iterator<char>());
+        BOOST_CHECK_EQUAL(expected, received);
+    }    
+    std::string ofName;
+};
+
 BOOST_AUTO_TEST_CASE(basic) {
-    char const* subject = "important stuff";
-    LOG("myLogger", LOG_LVL_INFO, "Here is some information about %s.", subject);
-    LOGF("myLogger", LOG_LVL_INFO, "Here is more information about %s." % subject);
-    LOG_DEBUG("My debugging statement.");
-
-    LOG_LOGGER logger = LOG_GET("myLogger");
-    LOG(logger, LOG_LVL_WARN, "Here is a warning.");
-
-    // check here
+    LogFixture f;
+    LOGF_TRACE("This is TRACE");
+    LOGF_INFO("This is INFO");
+    LOGF_DEBUG("This is DEBUG");
+    LOGF_WARN("This is WARN");
+    LOGF_ERROR("This is ERROR");
+    LOGF_FATAL("This is FATAL");
+    LOGF_INFO("Format %1% %2% %3%" % 3 % 2.71828 % "foo c++");
+    f.check("INFO - This is INFO\n"
+            "DEBUG - This is DEBUG\n"
+            "WARN - This is WARN\n"
+            "ERROR - This is ERROR\n"
+            "FATAL - This is FATAL\n"
+            "INFO - Format 3 2.71828 foo c++\n");
 }
 
 BOOST_AUTO_TEST_CASE(context) {
+    LogFixture f;
+    LOGF_TRACE("This is TRACE");
+    LOGF_INFO("This is INFO");
+    LOGF_DEBUG("This is DEBUG");
+    {
+        LOG_CTX context("component");
+        LOGF_TRACE("This is TRACE");
+        LOGF_INFO("This is INFO");
+        LOGF_DEBUG("This is DEBUG");
+    }
+    LOGF_TRACE("This is TRACE 2");
+    LOGF_INFO("This is INFO 2");
+    LOGF_DEBUG("This is DEBUG 2");
+    {
+        LOG_CTX context("comp");
+        LOGF_TRACE("This is TRACE 3");
+        LOGF_INFO("This is INFO 3");
+        LOGF_DEBUG("This is DEBUG 3");
+        LOG_SET_LVL(LOG_DEFAULT_NAME(), LOG_LVL_INFO);
+        BOOST_CHECK_EQUAL(LOG_GET_LVL(LOG_DEFAULT_NAME()), 
+                          LOG_LVL_INFO);
+        LOGF_TRACE("This is TRACE 3a");
+        LOGF_INFO("This is INFO 3a");
+        LOGF_DEBUG("This is DEBUG 3a");
+        {
+            LOG_CTX context("subcomp");
+            LOG_SET_LVL(LOG_DEFAULT_NAME(), LOG_LVL_TRACE);
+            BOOST_CHECK_EQUAL(LOG_GET_LVL(LOG_DEFAULT_NAME()), 
+                              LOG_LVL_TRACE);
+            LOGF_TRACE("This is TRACE 4");
+            LOGF_INFO("This is INFO 4");
+            LOGF_DEBUG("This is DEBUG 4");
+            LOGF_TRACE("This is TRACE 5");
+            LOGF_INFO("This is INFO 5");
+            LOGF_DEBUG("This is DEBUG 5");
+        }
+    }
+    f.check("INFO - This is INFO\n"
+            "DEBUG - This is DEBUG\n"
+            "INFO - This is INFO\n"
+            "DEBUG - This is DEBUG\n"
+            "INFO - This is INFO 2\n"
+            "DEBUG - This is DEBUG 2\n"
+            "INFO - This is INFO 3\n"
+            "DEBUG - This is DEBUG 3\n"
+            "INFO - This is INFO 3a\n"
+            "TRACE - This is TRACE 4\n"
+            "INFO - This is INFO 4\n"
+            "DEBUG - This is DEBUG 4\n"
+            "TRACE - This is TRACE 5\n"
+            "INFO - This is INFO 5\n"
+            "DEBUG - This is DEBUG 5\n");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

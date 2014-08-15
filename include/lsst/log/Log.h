@@ -402,12 +402,12 @@
             log4cxx::Level::getFatal(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); }
 
-#define LOG_LVL_TRACE log4cxx::Level::TRACE_INT
-#define LOG_LVL_DEBUG log4cxx::Level::DEBUG_INT
-#define LOG_LVL_INFO log4cxx::Level::INFO_INT
-#define LOG_LVL_WARN log4cxx::Level::WARN_INT
-#define LOG_LVL_ERROR log4cxx::Level::ERROR_INT
-#define LOG_LVL_FATAL log4cxx::Level::FATAL_INT
+#define LOG_LVL_TRACE static_cast<int>(log4cxx::Level::TRACE_INT)
+#define LOG_LVL_DEBUG static_cast<int>(log4cxx::Level::DEBUG_INT)
+#define LOG_LVL_INFO static_cast<int>(log4cxx::Level::INFO_INT)
+#define LOG_LVL_WARN static_cast<int>(log4cxx::Level::WARN_INT)
+#define LOG_LVL_ERROR static_cast<int>(log4cxx::Level::ERROR_INT)
+#define LOG_LVL_FATAL static_cast<int>(log4cxx::Level::FATAL_INT)
 
 #define LOG_LOGGER log4cxx::LoggerPtr
 #define LOG_CTX lsst::log::LogContext
