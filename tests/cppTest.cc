@@ -37,15 +37,29 @@
 #pragma clang diagnostic pop
 
 struct LogFixture {
+    std::string ofName;
+    enum Layout_t { LAYOUT_SIMPLE, LAYOUT_PATTERN };
+
     LogFixture() {
-        std::string cfName = std::tmpnam(NULL);
         ofName = std::tmpnam(NULL);
+    }
+
+    void configure(Layout_t layout) {
+        std::string cfName = std::tmpnam(NULL);
         std::ofstream f;
         f.open(cfName.c_str());
         f << "log4j.rootLogger=DEBUG, FA\n"
           << "log4j.appender.FA=FileAppender\n" 
-          << "log4j.appender.FA.file=" << ofName << "\n"
-          << "log4j.appender.FA.layout=SimpleLayout\n";
+          << "log4j.appender.FA.file=" << ofName << "\n";
+        switch (layout) {
+            case LAYOUT_SIMPLE:
+                f << "log4j.appender.FA.layout=SimpleLayout\n";
+                break;
+            case LAYOUT_PATTERN:
+                f << "log4j.appender.FA.layout=PatternLayout\n"
+                  << "log4j.appender.FA.layout.ConversionPattern=%-5p %c %C %M (%F:%L) %l - %m - %X%n\n";
+                break;
+        }
         f.close();
         LOG_CONFIG(cfName);
     }
@@ -56,10 +70,11 @@ struct LogFixture {
                              std::istreambuf_iterator<char>());
         BOOST_CHECK_EQUAL(expected, received);
     }    
-    std::string ofName;
 };
 
+
 BOOST_FIXTURE_TEST_CASE(basic, LogFixture) {
+    configure(LAYOUT_SIMPLE);
     LOGF_TRACE("This is TRACE");
     LOGF_INFO("This is INFO");
     LOGF_DEBUG("This is DEBUG");
@@ -75,7 +90,9 @@ BOOST_FIXTURE_TEST_CASE(basic, LogFixture) {
           "INFO - Format 3 2.71828 foo c++\n");
 }
 
+
 BOOST_FIXTURE_TEST_CASE(context, LogFixture) {
+    configure(LAYOUT_SIMPLE);
     LOGF_TRACE("This is TRACE");
     LOGF_INFO("This is INFO");
     LOGF_DEBUG("This is DEBUG");
@@ -127,4 +144,48 @@ BOOST_FIXTURE_TEST_CASE(context, LogFixture) {
           "TRACE - This is TRACE 5\n"
           "INFO - This is INFO 5\n"
           "DEBUG - This is DEBUG 5\n");
+}
+
+
+BOOST_FIXTURE_TEST_CASE(pattern, LogFixture) {
+    configure(LAYOUT_PATTERN);
+
+    LOGF_TRACE("This is TRACE");
+    LOGF_INFO("This is INFO");
+    LOGF_DEBUG("This is DEBUG");
+
+    LOG_MDC("x", "3");
+    LOG_MDC("y", "foo");
+
+    LOGF_TRACE("This is TRACE 2");
+    LOGF_INFO("This is INFO 2");
+    LOGF_DEBUG("This is DEBUG 2");
+    LOG_MDC_REMOVE("z");
+
+    {
+        LOG_CTX context("component");
+        LOGF_TRACE("This is TRACE 3");
+        LOGF_INFO("This is INFO 3");
+        LOGF_DEBUG("This is DEBUG 3");
+        LOG_MDC_REMOVE("x");
+        LOGF_TRACE("This is TRACE 4");
+        LOGF_INFO("This is INFO 4");
+        LOGF_DEBUG("This is DEBUG 4");
+    }
+    LOGF_TRACE("This is TRACE 5");
+    LOGF_INFO("This is INFO 5");
+    LOGF_DEBUG("This is DEBUG 5");
+
+    LOG_MDC_REMOVE("y");
+
+    check("INFO  root pattern test_method (tests/cppTest.cc:152) tests/cppTest.cc(152) - This is INFO - {}\n"
+          "DEBUG root pattern test_method (tests/cppTest.cc:153) tests/cppTest.cc(153) - This is DEBUG - {}\n"
+          "INFO  root pattern test_method (tests/cppTest.cc:159) tests/cppTest.cc(159) - This is INFO 2 - {{x,3}{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/cppTest.cc:160) tests/cppTest.cc(160) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/cppTest.cc:166) tests/cppTest.cc(166) - This is INFO 3 - {{x,3}{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/cppTest.cc:167) tests/cppTest.cc(167) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/cppTest.cc:170) tests/cppTest.cc(170) - This is INFO 4 - {{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/cppTest.cc:171) tests/cppTest.cc(171) - This is DEBUG 4 - {{y,foo}}\n"
+          "INFO  root pattern test_method (tests/cppTest.cc:174) tests/cppTest.cc(174) - This is INFO 5 - {{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/cppTest.cc:175) tests/cppTest.cc(175) - This is DEBUG 5 - {{y,foo}}\n");
 }
