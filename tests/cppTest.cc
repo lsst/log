@@ -36,8 +36,6 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-BOOST_AUTO_TEST_SUITE(LogSuite)
-
 struct LogFixture {
     LogFixture() {
         std::string cfName = std::tmpnam(NULL);
@@ -61,8 +59,7 @@ struct LogFixture {
     std::string ofName;
 };
 
-BOOST_AUTO_TEST_CASE(basic) {
-    LogFixture f;
+BOOST_FIXTURE_TEST_CASE(basic, LogFixture) {
     LOGF_TRACE("This is TRACE");
     LOGF_INFO("This is INFO");
     LOGF_DEBUG("This is DEBUG");
@@ -70,16 +67,15 @@ BOOST_AUTO_TEST_CASE(basic) {
     LOGF_ERROR("This is ERROR");
     LOGF_FATAL("This is FATAL");
     LOGF_INFO("Format %1% %2% %3%" % 3 % 2.71828 % "foo c++");
-    f.check("INFO - This is INFO\n"
-            "DEBUG - This is DEBUG\n"
-            "WARN - This is WARN\n"
-            "ERROR - This is ERROR\n"
-            "FATAL - This is FATAL\n"
-            "INFO - Format 3 2.71828 foo c++\n");
+    check("INFO - This is INFO\n"
+          "DEBUG - This is DEBUG\n"
+          "WARN - This is WARN\n"
+          "ERROR - This is ERROR\n"
+          "FATAL - This is FATAL\n"
+          "INFO - Format 3 2.71828 foo c++\n");
 }
 
-BOOST_AUTO_TEST_CASE(context) {
-    LogFixture f;
+BOOST_FIXTURE_TEST_CASE(context, LogFixture) {
     LOGF_TRACE("This is TRACE");
     LOGF_INFO("This is INFO");
     LOGF_DEBUG("This is DEBUG");
@@ -116,21 +112,19 @@ BOOST_AUTO_TEST_CASE(context) {
             LOGF_DEBUG("This is DEBUG 5");
         }
     }
-    f.check("INFO - This is INFO\n"
-            "DEBUG - This is DEBUG\n"
-            "INFO - This is INFO\n"
-            "DEBUG - This is DEBUG\n"
-            "INFO - This is INFO 2\n"
-            "DEBUG - This is DEBUG 2\n"
-            "INFO - This is INFO 3\n"
-            "DEBUG - This is DEBUG 3\n"
-            "INFO - This is INFO 3a\n"
-            "TRACE - This is TRACE 4\n"
-            "INFO - This is INFO 4\n"
-            "DEBUG - This is DEBUG 4\n"
-            "TRACE - This is TRACE 5\n"
-            "INFO - This is INFO 5\n"
-            "DEBUG - This is DEBUG 5\n");
+    check("INFO - This is INFO\n"
+          "DEBUG - This is DEBUG\n"
+          "INFO - This is INFO\n"
+          "DEBUG - This is DEBUG\n"
+          "INFO - This is INFO 2\n"
+          "DEBUG - This is DEBUG 2\n"
+          "INFO - This is INFO 3\n"
+          "DEBUG - This is DEBUG 3\n"
+          "INFO - This is INFO 3a\n"
+          "TRACE - This is TRACE 4\n"
+          "INFO - This is INFO 4\n"
+          "DEBUG - This is DEBUG 4\n"
+          "TRACE - This is TRACE 5\n"
+          "INFO - This is INFO 5\n"
+          "DEBUG - This is DEBUG 5\n");
 }
-
-BOOST_AUTO_TEST_SUITE_END()
