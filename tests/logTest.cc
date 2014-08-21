@@ -178,14 +178,14 @@ BOOST_FIXTURE_TEST_CASE(pattern, LogFixture) {
 
     LOG_MDC_REMOVE("y");
 
-    check("INFO  root pattern test_method (tests/cppTest.cc:152) tests/cppTest.cc(152) - This is INFO - {}\n"
-          "DEBUG root pattern test_method (tests/cppTest.cc:153) tests/cppTest.cc(153) - This is DEBUG - {}\n"
-          "INFO  root pattern test_method (tests/cppTest.cc:159) tests/cppTest.cc(159) - This is INFO 2 - {{x,3}{y,foo}}\n"
-          "DEBUG root pattern test_method (tests/cppTest.cc:160) tests/cppTest.cc(160) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern test_method (tests/cppTest.cc:166) tests/cppTest.cc(166) - This is INFO 3 - {{x,3}{y,foo}}\n"
-          "DEBUG component pattern test_method (tests/cppTest.cc:167) tests/cppTest.cc(167) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern test_method (tests/cppTest.cc:170) tests/cppTest.cc(170) - This is INFO 4 - {{y,foo}}\n"
-          "DEBUG component pattern test_method (tests/cppTest.cc:171) tests/cppTest.cc(171) - This is DEBUG 4 - {{y,foo}}\n"
-          "INFO  root pattern test_method (tests/cppTest.cc:174) tests/cppTest.cc(174) - This is INFO 5 - {{y,foo}}\n"
-          "DEBUG root pattern test_method (tests/cppTest.cc:175) tests/cppTest.cc(175) - This is DEBUG 5 - {{y,foo}}\n");
+    check("INFO  root pattern test_method (tests/logTest.cc:154) tests/logTest.cc(154) - This is INFO - {}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:155) tests/logTest.cc(155) - This is DEBUG - {}\n"
+          "INFO  root pattern test_method (tests/logTest.cc:161) tests/logTest.cc(161) - This is INFO 2 - {{x,3}{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:162) tests/logTest.cc(162) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/logTest.cc:168) tests/logTest.cc(168) - This is INFO 3 - {{x,3}{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/logTest.cc:169) tests/logTest.cc(169) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/logTest.cc:172) tests/logTest.cc(172) - This is INFO 4 - {{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/logTest.cc:173) tests/logTest.cc(173) - This is DEBUG 4 - {{y,foo}}\n"
+          "INFO  root pattern test_method (tests/logTest.cc:176) tests/logTest.cc(176) - This is INFO 5 - {{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:177) tests/logTest.cc(177) - This is DEBUG 5 - {{y,foo}}\n");
 }
