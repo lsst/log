@@ -115,11 +115,12 @@ void Log::initLog() {
   * pattern "%-4r [%t] %-5p %c %x - %m%n".
   */
 void Log::configure() {
+    log4cxx::BasicConfigurator::resetConfiguration();
     log4cxx::LoggerPtr rootLogger = log4cxx::Logger::getRootLogger();
-    LOG4CXX_INFO(rootLogger, "Initializing Logging System");
     if (rootLogger->getAllAppenders().size() == 0) {
         log4cxx::BasicConfigurator::configure();
     }
+    LOG4CXX_INFO(rootLogger, "Initializing Logging System");
     initLog();
 }
 
@@ -206,9 +207,15 @@ void Log::popContext() {
     context.pop();
     // construct new default logger name
     std::string::size_type pos = defaultLoggerName.find_last_of('.');
-    defaultLoggerName = defaultLoggerName.substr(0, pos);
+
     // Update defaultLogger
-    defaultLogger = log4cxx::Logger::getLogger(defaultLoggerName);
+    if (pos >= std::string::npos) {
+        defaultLoggerName = "";
+        defaultLogger = log4cxx::Logger::getRootLogger();
+    } else {
+        defaultLoggerName = defaultLoggerName.substr(0, pos);
+        defaultLogger = log4cxx::Logger::getLogger(defaultLoggerName);
+    }
 }
 
 /** Places a KEY/VALUE pair in the Mapped Diagnostic Context (MDC) for the

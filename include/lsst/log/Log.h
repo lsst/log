@@ -145,6 +145,60 @@
     lsst::log::Log::isEnabledFor(logger, level)
 
 /**
+  * @def LOG_CHECK_TRACE()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to TRACE.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_TRACE() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_TRACE)
+
+/**
+  * @def LOG_CHECK_DEBUG()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to DEBUG.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_DEBUG() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_DEBUG)
+
+/**
+  * @def LOG_CHECK_INFO()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to INFO.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_INFO() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_INFO)
+
+/**
+  * @def LOG_CHECK_WARN()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to WARN.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_WARN() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_WARN)
+
+/**
+  * @def LOG_CHECK_ERROR()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to ERROR.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_ERROR() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_ERROR)
+
+/**
+  * @def LOG_CHECK_FATAL()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to FATAL.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_FATAL() \
+        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_FATAL)
+
+/**
   * @def LOGF(logger, level, message)
   * Log a message using a boost::format style interface.
   *
@@ -348,12 +402,12 @@
             log4cxx::Level::getFatal(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); }
 
-#define LOG_LVL_TRACE log4cxx::Level::TRACE_INT
-#define LOG_LVL_DEBUG log4cxx::Level::DEBUG_INT
-#define LOG_LVL_INFO log4cxx::Level::INFO_INT
-#define LOG_LVL_WARN log4cxx::Level::WARN_INT
-#define LOG_LVL_ERROR log4cxx::Level::ERROR_INT
-#define LOG_LVL_FATAL log4cxx::Level::FATAL_INT
+#define LOG_LVL_TRACE static_cast<int>(log4cxx::Level::TRACE_INT)
+#define LOG_LVL_DEBUG static_cast<int>(log4cxx::Level::DEBUG_INT)
+#define LOG_LVL_INFO static_cast<int>(log4cxx::Level::INFO_INT)
+#define LOG_LVL_WARN static_cast<int>(log4cxx::Level::WARN_INT)
+#define LOG_LVL_ERROR static_cast<int>(log4cxx::Level::ERROR_INT)
+#define LOG_LVL_FATAL static_cast<int>(log4cxx::Level::FATAL_INT)
 
 #define LOG_LOGGER log4cxx::LoggerPtr
 #define LOG_CTX lsst::log::LogContext
