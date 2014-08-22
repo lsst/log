@@ -310,11 +310,11 @@ void Log::vlog(log4cxx::LoggerPtr logger,   ///< the logger
                std::string const& filename, ///< source filename
                std::string const& funcname, ///< source function name
                unsigned int lineno,         ///< source line number
-               std::string const& fmt,      ///< message format string
+               char const* fmt,             ///< message format string
                va_list args                 ///< message arguments
               ) {
     char msg[MAX_LOG_MSG_LEN];
-    vsnprintf(msg, MAX_LOG_MSG_LEN, fmt.c_str(), args);
+    vsnprintf(msg, MAX_LOG_MSG_LEN, fmt, args);
     logger->forcedLog(level, msg, log4cxx::spi::LocationInfo(filename.c_str(),
                                                              funcname.c_str(),
                                                              lineno));
@@ -325,7 +325,7 @@ void Log::log(std::string const& loggername, ///< name of logger
               std::string const& filename,   ///< source filename
               std::string const& funcname,   ///< source function name
               unsigned int lineno,           ///< source line number
-              std::string const& fmt,        ///< message format string
+              char const* fmt,               ///< message format string
               ...                            ///< message arguments
              ) {
     va_list args;
@@ -341,7 +341,7 @@ void Log::log(log4cxx::LoggerPtr logger,   ///< the logger
               std::string const& filename, ///< source filename
               std::string const& funcname, ///< source function name
               unsigned int lineno,         ///< source line number
-              std::string const& fmt,      ///< message format string
+              char const* fmt,             ///< message format string
               ...                          ///< message arguments
              ) {
     va_list args;

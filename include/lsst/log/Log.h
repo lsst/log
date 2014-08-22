@@ -474,13 +474,13 @@ public:
     static bool isEnabledFor(std::string const& loggername, int level);
     static void vlog(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
                      std::string const& filename, std::string const& funcname,
-                     unsigned int lineno, std::string const& fmt, va_list args);
+                     unsigned int lineno, char const* fmt, va_list args);
     static void log(std::string const& loggername, log4cxx::LevelPtr level,
                     std::string const& filename, std::string const& funcname,
-                    unsigned int lineno, std::string const& fmt, ...);
+                    unsigned int lineno, char const* fmt, ...);
     static void log(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
                     std::string const& filename, std::string const& funcname,
-                    unsigned int lineno, std::string const& fmt, ...);
+                    unsigned int lineno, char const* fmt, ...);
 private:
     static std::stack<std::string> context;
     static std::string defaultLoggerName;
