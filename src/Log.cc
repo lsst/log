@@ -51,35 +51,6 @@
 namespace lsst {
 namespace log {
 
-// LogFormatter class
-
-LogFormatter::LogFormatter() : _enabled(false) {}
-    
-LogFormatter::~LogFormatter() {
-    if (_enabled) {
-        delete _fmter;
-    }
-}
-
-// LogContext class
-
-/** Create a logging context associated with a default logger name
-  * constructed by pushing NAME onto the pre-existing hierarchical default
-  * logger name.
-  *
-  * @param name  String to push onto logging context.
-  */
-LogContext::LogContext(std::string const& name) {
-    _name = name;
-    Log::pushContext(name);
-}
-
-LogContext::~LogContext() {
-    if (!_name.empty()) {
-        Log::popContext();
-    }
-}
-
 // Log class
 
 /** Reference to the defaultLogger used by LOG* macros.
