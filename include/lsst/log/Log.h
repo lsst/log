@@ -484,9 +484,6 @@ public:
     static void log(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
                     std::string const& filename, std::string const& funcname,
                     unsigned int lineno, std::string const& fmt, ...);
-private:
-    static std::stack<std::string> context;
-    static std::string defaultLoggerName;
 };
 
 /** This class handles the default logger name of a logging context.

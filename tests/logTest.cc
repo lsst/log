@@ -216,6 +216,10 @@ BOOST_FIXTURE_TEST_CASE(context1, LogFixture) {
         LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
     }
     LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
+
+    // unmatched POP will leave us at root logger
+    LOG_POPCTX();
+    LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
     
     check("INFO  root - default logger name is ''\n"
           "INFO  component1 - default logger name is 'component1'\n"
@@ -224,5 +228,6 @@ BOOST_FIXTURE_TEST_CASE(context1, LogFixture) {
           "INFO  component3 - default logger name is 'component3'\n"
           "INFO  component3.component4 - default logger name is 'component3.component4'\n"
           "INFO  component3 - default logger name is 'component3'\n"
+          "INFO  root - default logger name is ''\n"
           "INFO  root - default logger name is ''\n");
 }
