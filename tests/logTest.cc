@@ -38,7 +38,7 @@
 
 struct LogFixture {
     std::string ofName;
-    enum Layout_t { LAYOUT_SIMPLE, LAYOUT_PATTERN };
+    enum Layout_t { LAYOUT_SIMPLE, LAYOUT_PATTERN, LAYOUT_COMPONENT };
 
     LogFixture() {
         ofName = std::tmpnam(NULL);
@@ -58,6 +58,10 @@ struct LogFixture {
             case LAYOUT_PATTERN:
                 f << "log4j.appender.FA.layout=PatternLayout\n"
                   << "log4j.appender.FA.layout.ConversionPattern=%-5p %c %C %M (%F:%L) %l - %m - %X%n\n";
+                break;
+            case LAYOUT_COMPONENT:
+                f << "log4j.appender.FA.layout=PatternLayout\n"
+                  << "log4j.appender.FA.layout.ConversionPattern=%-5p %c - %m%n\n";
                 break;
         }
         f.close();
@@ -178,14 +182,47 @@ BOOST_FIXTURE_TEST_CASE(pattern, LogFixture) {
 
     LOG_MDC_REMOVE("y");
 
-    check("INFO  root pattern test_method (tests/logTest.cc:154) tests/logTest.cc(154) - This is INFO - {}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:155) tests/logTest.cc(155) - This is DEBUG - {}\n"
-          "INFO  root pattern test_method (tests/logTest.cc:161) tests/logTest.cc(161) - This is INFO 2 - {{x,3}{y,foo}}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:162) tests/logTest.cc(162) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern test_method (tests/logTest.cc:168) tests/logTest.cc(168) - This is INFO 3 - {{x,3}{y,foo}}\n"
-          "DEBUG component pattern test_method (tests/logTest.cc:169) tests/logTest.cc(169) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern test_method (tests/logTest.cc:172) tests/logTest.cc(172) - This is INFO 4 - {{y,foo}}\n"
-          "DEBUG component pattern test_method (tests/logTest.cc:173) tests/logTest.cc(173) - This is DEBUG 4 - {{y,foo}}\n"
-          "INFO  root pattern test_method (tests/logTest.cc:176) tests/logTest.cc(176) - This is INFO 5 - {{y,foo}}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:177) tests/logTest.cc(177) - This is DEBUG 5 - {{y,foo}}\n");
+    check("INFO  root pattern test_method (tests/logTest.cc:158) tests/logTest.cc(158) - This is INFO - {}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:159) tests/logTest.cc(159) - This is DEBUG - {}\n"
+          "INFO  root pattern test_method (tests/logTest.cc:165) tests/logTest.cc(165) - This is INFO 2 - {{x,3}{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:166) tests/logTest.cc(166) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/logTest.cc:172) tests/logTest.cc(172) - This is INFO 3 - {{x,3}{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/logTest.cc:173) tests/logTest.cc(173) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/logTest.cc:176) tests/logTest.cc(176) - This is INFO 4 - {{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/logTest.cc:177) tests/logTest.cc(177) - This is DEBUG 4 - {{y,foo}}\n"
+          "INFO  root pattern test_method (tests/logTest.cc:180) tests/logTest.cc(180) - This is INFO 5 - {{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:181) tests/logTest.cc(181) - This is DEBUG 5 - {{y,foo}}\n");
+}
+
+BOOST_FIXTURE_TEST_CASE(context1, LogFixture) {
+    configure(LAYOUT_COMPONENT);
+
+    LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
+    LOG_PUSHCTX("component1");
+    LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
+    LOG_PUSHCTX("component2");
+    LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
+    LOG_POPCTX();
+    LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
+    LOG_POPCTX();
+
+    {
+        LOG_CTX context1("component3");
+        LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
+        {
+            LOG_CTX context1("component4");
+            LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
+        }
+        LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
+    }
+    LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
+    
+    check("INFO  root - default logger name is ''\n"
+          "INFO  component1 - default logger name is 'component1'\n"
+          "INFO  component1.component2 - default logger name is 'component1.component2'\n"
+          "INFO  component1 - default logger name is 'component1'\n"
+          "INFO  component3 - default logger name is 'component3'\n"
+          "INFO  component3.component4 - default logger name is 'component3.component4'\n"
+          "INFO  component3 - default logger name is 'component3'\n"
+          "INFO  root - default logger name is ''\n");
 }
