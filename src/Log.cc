@@ -31,6 +31,7 @@
  */
 
 // System headers
+#include <stdexcept>
 #include <stdio.h>
 
 // Third-party headers
@@ -57,14 +58,9 @@ namespace log {
   */
 log4cxx::LoggerPtr Log::defaultLogger = log4cxx::Logger::getRootLogger();
 
-std::stack<std::string> Log::context;
-std::string Log::defaultLoggerName;
-
 /** Initializes logging module (e.g. default logger and logging context).
   */
 void Log::initLog() {
-    // Clear context
-    while (!context.empty()) context.pop();
     // Default logger initially set to root logger
     defaultLogger = log4cxx::Logger::getRootLogger();
 }
@@ -126,7 +122,11 @@ void Log::configure(std::string const& filename) {
   * @return String containing the default logger name.
   */
 std::string Log::getDefaultLoggerName() {
-    return defaultLoggerName;
+    std::string name = defaultLogger->getName();
+    if (name == "root") {
+        name.clear();
+    }
+    return name;
 }
 
 /** This method exists solely to simplify the LOGF macro. It merely returns
@@ -158,34 +158,34 @@ log4cxx::LoggerPtr Log::getLogger(std::string const& loggername) {
   * @param name  String to push onto logging context.
   */
 void Log::pushContext(std::string const& name) {
-    context.push(name);
-    // Construct new default logger name
-    std::stringstream ss;
-    if (defaultLoggerName.empty()) {
-        ss << name;
-    } else {
-        ss << defaultLoggerName << "." << name;
+    // we do not allow multi-level context (logger1.logger2)
+    if (name.find('.') != std::string::npos) {
+        throw std::invalid_argument("lsst::log::Log::pushContext(): "
+                "multi-level contexts are not allowed: " + name);
     }
-    defaultLoggerName = ss.str();
+
+    // Construct new default logger name
+    std::string newName = defaultLogger->getName();
+    if (newName == "root") {
+        newName = name;
+    } else {
+        newName += ".";
+        newName += name;
+    }
     // Update defaultLogger
-    defaultLogger = log4cxx::Logger::getLogger(defaultLoggerName);
+    defaultLogger = log4cxx::Logger::getLogger(newName);
 }
 
 /** Pops the last pushed name off the global hierarchical default logger
   * name.
   */
 void Log::popContext() {
-    context.pop();
-    // construct new default logger name
-    std::string::size_type pos = defaultLoggerName.find_last_of('.');
-
-    // Update defaultLogger
-    if (pos >= std::string::npos) {
-        defaultLoggerName = "";
-        defaultLogger = log4cxx::Logger::getRootLogger();
-    } else {
-        defaultLoggerName = defaultLoggerName.substr(0, pos);
-        defaultLogger = log4cxx::Logger::getLogger(defaultLoggerName);
+    // switch to parent logger, this assumes that loggers are not
+    // re-parented between calls to push and pop
+    log4cxx::LoggerPtr parent = defaultLogger->getParent();
+    // root logger does not have parent, stay at root instead
+    if (parent) {
+        defaultLogger = parent;
     }
 }
 

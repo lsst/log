@@ -70,8 +70,16 @@
 /**
   * @def LOG_PUSHCTX(name)
   * Pushes NAME onto the global hierarchical default logger name.
+  * Note that we only allow simple non-dotted names to be used for
+  * context names, multi-level context name (e.g. "componen1.component2")
+  * will result in exception.
+  *
+  * @note Call to this macro is not thread-safe, moreover context is
+  * global and applies to all threads (which means you want to avoid
+  * using this in multi-threaded applications).
   *
   * @param name  String to push onto logging context.
+  * @throw std::invalid_argument if name contains dot.
   */
 #define LOG_PUSHCTX(name) lsst::log::Log::pushContext(name)
 
@@ -79,6 +87,8 @@
   * @def LOG_POPCTX()
   * Pops the last pushed name off the global hierarchical default logger
   * name.
+  *
+  * @note Call to this macro is not thread-safe.
   */
 #define LOG_POPCTX() lsst::log::Log::popContext()
 
@@ -475,9 +485,6 @@ public:
     static void log(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
                     std::string const& filename, std::string const& funcname,
                     unsigned int lineno, std::string const& fmt, ...);
-private:
-    static std::stack<std::string> context;
-    static std::string defaultLoggerName;
 };
 
 /** This class handles the default logger name of a logging context.
