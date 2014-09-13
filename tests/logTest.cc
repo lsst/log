@@ -25,6 +25,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <stdexcept>
+#include <unistd.h>
 
 // Local headers
 #include "lsst/log/Log.h"
@@ -182,16 +184,16 @@ BOOST_FIXTURE_TEST_CASE(pattern, LogFixture) {
 
     LOG_MDC_REMOVE("y");
 
-    check("INFO  root pattern test_method (tests/logTest.cc:158) tests/logTest.cc(158) - This is INFO - {}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:159) tests/logTest.cc(159) - This is DEBUG - {}\n"
-          "INFO  root pattern test_method (tests/logTest.cc:165) tests/logTest.cc(165) - This is INFO 2 - {{x,3}{y,foo}}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:166) tests/logTest.cc(166) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern test_method (tests/logTest.cc:172) tests/logTest.cc(172) - This is INFO 3 - {{x,3}{y,foo}}\n"
-          "DEBUG component pattern test_method (tests/logTest.cc:173) tests/logTest.cc(173) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern test_method (tests/logTest.cc:176) tests/logTest.cc(176) - This is INFO 4 - {{y,foo}}\n"
-          "DEBUG component pattern test_method (tests/logTest.cc:177) tests/logTest.cc(177) - This is DEBUG 4 - {{y,foo}}\n"
-          "INFO  root pattern test_method (tests/logTest.cc:180) tests/logTest.cc(180) - This is INFO 5 - {{y,foo}}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:181) tests/logTest.cc(181) - This is DEBUG 5 - {{y,foo}}\n");
+    check("INFO  root pattern test_method (tests/logTest.cc:160) tests/logTest.cc(160) - This is INFO - {}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:161) tests/logTest.cc(161) - This is DEBUG - {}\n"
+          "INFO  root pattern test_method (tests/logTest.cc:167) tests/logTest.cc(167) - This is INFO 2 - {{x,3}{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:168) tests/logTest.cc(168) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/logTest.cc:174) tests/logTest.cc(174) - This is INFO 3 - {{x,3}{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/logTest.cc:175) tests/logTest.cc(175) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/logTest.cc:178) tests/logTest.cc(178) - This is INFO 4 - {{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/logTest.cc:179) tests/logTest.cc(179) - This is DEBUG 4 - {{y,foo}}\n"
+          "INFO  root pattern test_method (tests/logTest.cc:182) tests/logTest.cc(182) - This is INFO 5 - {{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:183) tests/logTest.cc(183) - This is DEBUG 5 - {{y,foo}}\n");
 }
 
 BOOST_FIXTURE_TEST_CASE(context1, LogFixture) {
@@ -216,7 +218,11 @@ BOOST_FIXTURE_TEST_CASE(context1, LogFixture) {
         LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
     }
     LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
-    
+
+    // unmatched POP will leave us at root logger
+    LOG_POPCTX();
+    LOGF_INFO("default logger name is '%1%'" % LOG_DEFAULT_NAME());
+
     check("INFO  root - default logger name is ''\n"
           "INFO  component1 - default logger name is 'component1'\n"
           "INFO  component1.component2 - default logger name is 'component1.component2'\n"
@@ -224,5 +230,13 @@ BOOST_FIXTURE_TEST_CASE(context1, LogFixture) {
           "INFO  component3 - default logger name is 'component3'\n"
           "INFO  component3.component4 - default logger name is 'component3.component4'\n"
           "INFO  component3 - default logger name is 'component3'\n"
+          "INFO  root - default logger name is ''\n"
           "INFO  root - default logger name is ''\n");
+}
+
+BOOST_FIXTURE_TEST_CASE(context_exc, LogFixture) {
+    configure(LAYOUT_COMPONENT);
+
+    // multi-level context will result in exception
+    BOOST_CHECK_THROW(LOG_PUSHCTX("x.y"), std::invalid_argument);
 }
