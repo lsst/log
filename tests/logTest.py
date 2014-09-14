@@ -69,10 +69,7 @@ class TestLog(unittest.TestCase):
         Create a configuration file in the temporary directory and populate
         it with the provided string.
         """
-        configFilename = os.path.join(self.tempDir, "log4cxx.properties")
-        with open(configFilename, "w") as configFile:
-            configFile.write(configuration.format(self.outputFilename))
-        log.configure(configFilename)
+        log.configure_prop(configuration.format(self.outputFilename))
 
     def check(self, reference):
         """Compare the log file with the provided reference text."""
@@ -103,7 +100,6 @@ class TestLog(unittest.TestCase):
             log.fatal("This is FATAL")
             log.info("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
- INFO root null - Initializing Logging System
  INFO root null - This is INFO
  DEBUG root null - This is DEBUG
  WARN root null - This is WARN
@@ -146,7 +142,6 @@ class TestLog(unittest.TestCase):
                 log.debug("This is DEBUG 5")
 
         self.check("""
- INFO root null - Initializing Logging System
  INFO root null - This is INFO
  DEBUG root null - This is DEBUG
  INFO component null - This is INFO
@@ -214,7 +209,7 @@ INFO  component  testPattern (logTest.py:{0[6]}) logTest.py({0[6]}) - This is IN
 DEBUG component  testPattern (logTest.py:{0[7]}) logTest.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (logTest.py:{0[8]}) logTest.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (logTest.py:{0[9]}) logTest.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format( [x + 178 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)] ))
+""".format([x + 173 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)]))
 
     def testFileAppender(self):
         """Test configuring logging to go to a file."""
@@ -248,7 +243,6 @@ DEBUG - This is DEBUG
             logging.shutdown()
 
         self.check("""
- INFO root null - Initializing Logging System
  INFO root null - This is INFO
 """)
 

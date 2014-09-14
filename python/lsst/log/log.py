@@ -22,10 +22,11 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from lsst.log import configure_iface, getDefaultLoggerName_iface,\
-                     pushContext_iface, popContext_iface, MDC_iface,\
-                     MDCRemove_iface, getLevel_iface, setLevel_iface,\
-                     isEnabledFor_iface, forcedLog_iface
+from lsst.log import (configure_iface, configure_prop_iface,
+                      getDefaultLoggerName_iface, pushContext_iface,
+                      popContext_iface, MDC_iface, MDCRemove_iface,
+                      getLevel_iface, setLevel_iface,
+                      isEnabledFor_iface, forcedLog_iface)
 import logging
 import inspect
 from os import path
@@ -43,6 +44,9 @@ def configure(*args):
         configure_iface(args[0])
     else:
         configure_iface()
+
+def configure_prop(properties):
+    configure_prop_iface(properties)
 
 def getDefaultLoggerName():
     name = getDefaultLoggerName_iface()

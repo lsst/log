@@ -40,6 +40,7 @@
 #include <log4cxx/basicconfigurator.h>
 #include <log4cxx/xml/domconfigurator.h>
 #include <log4cxx/propertyconfigurator.h>
+#include <log4cxx/helpers/bytearrayinputstream.h>
 
 // Local headers
 #include "lsst/log/Log.h"
@@ -114,6 +115,21 @@ void Log::configure(std::string const& filename) {
     } else {
         log4cxx::PropertyConfigurator::configure(filename);
     }
+    initLog();
+}
+
+/** Configures log4cxx using a string containing the list of properties,
+  * equivalent to configuring from a file containing the same content 
+  * but without creating temporary files.
+  *
+  * @param properties  COnfiguration properties.
+  */
+void Log::configure_prop(std::string const& properties) {
+    std::vector<unsigned char> data(properties.begin(), properties.end());
+    log4cxx::helpers::InputStreamPtr inStream(new log4cxx::helpers::ByteArrayInputStream(data));
+    log4cxx::helpers::Properties prop;
+    prop.load(inStream);
+    log4cxx::PropertyConfigurator::configure(prop);
     initLog();
 }
 

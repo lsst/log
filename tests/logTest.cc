@@ -25,6 +25,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <unistd.h>
 
 // Local headers
 #include "lsst/log/Log.h"
@@ -44,31 +45,31 @@ struct LogFixture {
         ofName = std::tmpnam(NULL);
     }
 
-    void configure(Layout_t layout) {
-        std::string cfName = std::tmpnam(NULL);
-        std::ofstream f;
-        f.open(cfName.c_str());
-        f << "log4j.rootLogger=DEBUG, FA\n"
-          << "log4j.appender.FA=FileAppender\n" 
-          << "log4j.appender.FA.file=" << ofName << "\n";
-        switch (layout) {
-            case LAYOUT_SIMPLE:
-                f << "log4j.appender.FA.layout=SimpleLayout\n";
-                break;
-            case LAYOUT_PATTERN:
-                f << "log4j.appender.FA.layout=PatternLayout\n"
-                  << "log4j.appender.FA.layout.ConversionPattern=%-5p %c %C %M (%F:%L) %l - %m - %X%n\n";
-                break;
-            case LAYOUT_COMPONENT:
-                f << "log4j.appender.FA.layout=PatternLayout\n"
-                  << "log4j.appender.FA.layout.ConversionPattern=%-5p %c - %m%n\n";
-                break;
-        }
-        f.close();
-        LOG_CONFIG(cfName);
+    ~LogFixture() {
+        unlink(ofName.c_str());
     }
 
-    void check(std::string expected) {
+    void configure(Layout_t layout) {
+        std::string config = "log4j.rootLogger=DEBUG, FA\n"
+                "log4j.appender.FA=FileAppender\n" 
+                "log4j.appender.FA.file=" + ofName + "\n";
+        switch (layout) {
+            case LAYOUT_SIMPLE:
+                config += "log4j.appender.FA.layout=SimpleLayout\n";
+                break;
+            case LAYOUT_PATTERN:
+                config += "log4j.appender.FA.layout=PatternLayout\n"
+                        "log4j.appender.FA.layout.ConversionPattern=%-5p %c %C %M (%F:%L) %l - %m - %X%n\n";
+                break;
+            case LAYOUT_COMPONENT:
+                config += "log4j.appender.FA.layout=PatternLayout\n"
+                        "log4j.appender.FA.layout.ConversionPattern=%-5p %c - %m%n\n";
+                break;
+        }
+        LOG_CONFIG_PROP(config);
+    }
+
+    void check(const std::string& expected) {
         std::ifstream t(ofName.c_str());
         std::string received((std::istreambuf_iterator<char>(t)),
                              std::istreambuf_iterator<char>());
@@ -182,16 +183,16 @@ BOOST_FIXTURE_TEST_CASE(pattern, LogFixture) {
 
     LOG_MDC_REMOVE("y");
 
-    check("INFO  root pattern test_method (tests/logTest.cc:158) tests/logTest.cc(158) - This is INFO - {}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:159) tests/logTest.cc(159) - This is DEBUG - {}\n"
-          "INFO  root pattern test_method (tests/logTest.cc:165) tests/logTest.cc(165) - This is INFO 2 - {{x,3}{y,foo}}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:166) tests/logTest.cc(166) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern test_method (tests/logTest.cc:172) tests/logTest.cc(172) - This is INFO 3 - {{x,3}{y,foo}}\n"
-          "DEBUG component pattern test_method (tests/logTest.cc:173) tests/logTest.cc(173) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern test_method (tests/logTest.cc:176) tests/logTest.cc(176) - This is INFO 4 - {{y,foo}}\n"
-          "DEBUG component pattern test_method (tests/logTest.cc:177) tests/logTest.cc(177) - This is DEBUG 4 - {{y,foo}}\n"
-          "INFO  root pattern test_method (tests/logTest.cc:180) tests/logTest.cc(180) - This is INFO 5 - {{y,foo}}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:181) tests/logTest.cc(181) - This is DEBUG 5 - {{y,foo}}\n");
+    check("INFO  root pattern test_method (tests/logTest.cc:159) tests/logTest.cc(159) - This is INFO - {}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:160) tests/logTest.cc(160) - This is DEBUG - {}\n"
+          "INFO  root pattern test_method (tests/logTest.cc:166) tests/logTest.cc(166) - This is INFO 2 - {{x,3}{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:167) tests/logTest.cc(167) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/logTest.cc:173) tests/logTest.cc(173) - This is INFO 3 - {{x,3}{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/logTest.cc:174) tests/logTest.cc(174) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/logTest.cc:177) tests/logTest.cc(177) - This is INFO 4 - {{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/logTest.cc:178) tests/logTest.cc(178) - This is DEBUG 4 - {{y,foo}}\n"
+          "INFO  root pattern test_method (tests/logTest.cc:181) tests/logTest.cc(181) - This is INFO 5 - {{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:182) tests/logTest.cc(182) - This is DEBUG 5 - {{y,foo}}\n");
 }
 
 BOOST_FIXTURE_TEST_CASE(context1, LogFixture) {

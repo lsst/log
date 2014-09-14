@@ -52,6 +52,16 @@
 #define LOG_CONFIG(filename) lsst::log::Log::configure(filename)
 
 /**
+  * @def LOG_CONFIG_PROP(string)
+  * Configures log4cxx from a string containing list of properties.
+  * This is equivalent to configuring with a file name containing the same 
+  * data as a string.
+  *
+  * @param string  List of properties (lines separated by new line character)
+  */
+#define LOG_CONFIG_PROP(string) lsst::log::Log::configure_prop(string)
+
+/**
   * @def LOG_DEFAULT_NAME()
   * Get the current default logger name.
   * @return String containing the default logger name.
@@ -462,6 +472,7 @@ public:
     static void initLog(void);
     static void configure(void);
     static void configure(std::string const& filename);
+    static void configure_prop(std::string const& properties);
     static std::string getDefaultLoggerName(void);
     static log4cxx::LoggerPtr getLogger(log4cxx::LoggerPtr logger);
     static log4cxx::LoggerPtr getLogger(std::string const& loggername);
