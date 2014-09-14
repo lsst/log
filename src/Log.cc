@@ -33,6 +33,7 @@
 // System headers
 #include <stdexcept>
 #include <stdio.h>
+#include <stdlib.h>
 
 // Third-party headers
 #include <log4cxx/consoleappender.h>
@@ -49,6 +50,45 @@
 
 // Max message length for varargs/printf style logging
 #define MAX_LOG_MSG_LEN 1024
+
+
+namespace {
+
+// name of the env. variable pointing to logging config file
+const char configEnv[] = "LSST_LOG_CONFIG";
+
+/*
+ * Logging is configured at global initialization time (though everybody knows this is evil
+ * thing to do). What we want to do:
+ * - Let user re-configure later with LOG_CONFIG(filename) - this means that we do not
+ *   do anything fancy here like initializing from some other file
+ * - if LSST_LOG_CONFIG is set to existing file name then we want to configure from
+ *   that file but only if user does not call LOG_CONFIG(filename)
+ *   - this means that we should leave it to log4cxx to default-configure using that file
+ *     name (meaning that we want to set LOG4CXX_CONFIGURATION)
+ * - otherwise do basic configuration only
+ */
+bool init() {
+    if (const char* env = getenv(::configEnv)) {
+        // check that file actually exists
+        if (env[0] and access(env, R_OK) == 0) {
+            // prepare for default initialization in log4cxx if
+            // user does not do LOG_CONFIG(...)
+            ::setenv("LOG4CXX_CONFIGURATION", env, 1);
+            return true;
+        }
+    }
+    // do basic configuration only
+    log4cxx::BasicConfigurator::configure();
+    lsst::log::Log::initLog();
+
+    return true;
+}
+
+bool initialized = init();
+
+}
+
 
 namespace lsst {
 namespace log {
@@ -68,27 +108,31 @@ void Log::initLog() {
 
 /** Configures log4cxx and initializes logging system by invoking
   * initLog(). Uses either default configuration or log4cxx basic
-  * configuration according to the following algorithm (see
-  * http://logging.apache.org/log4cxx/usage.html for additional details):
-  *
-  * Set the configurationOptionStr string variable to the value of the
-  * LOG4CXX_CONFIGURATION environment variable if set, otherwise the value
-  * of the log4j.configuration or LOG4CXX_CONFIGURATION environment
-  * variable if set, otherwise the first of the following file names which
-  * exist in the current working directory, "log4cxx.xml",
-  * "log4cxx.properties", "log4j.xml" and "log4j.properties". If
-  * configurationOptionStr has not been set, then use BasicConfigurator,
+  * configuration. Default configuration can be specified via
+  * environment variable LSST_LOG_CONFIG, if it is set and specifies
+  * existing file name then this file name is used for configuration.
+  * Otherwise log4cxx BasicConfigurator class is used to configure,
   * which is hardwired to add to the root logger a ConsoleAppender. In this
   * case, the output will be formatted using a PatternLayout set to the
   * pattern "%-4r [%t] %-5p %c %x - %m%n".
   */
 void Log::configure() {
+    // TODO: does resetConfiguration() remove existing appenders?
     log4cxx::BasicConfigurator::resetConfiguration();
+
+    // if LSST_LOG_CONFIG is set then use that file
+    if (const char* env = getenv(::configEnv)) {
+        if (env[0] and access(env, R_OK) == 0) {
+            configure(env);
+            return;
+        }
+    }
+
+    // Do basic configuration (only if not configured already?)
     log4cxx::LoggerPtr rootLogger = log4cxx::Logger::getRootLogger();
     if (rootLogger->getAllAppenders().size() == 0) {
         log4cxx::BasicConfigurator::configure();
     }
-    LOG4CXX_INFO(rootLogger, "Initializing Logging System");
     initLog();
 }
 
@@ -110,6 +154,7 @@ std::string getFileExtension(std::string const& filename) {
   * @param filename  Path to configuration file.
   */
 void Log::configure(std::string const& filename) {
+    // TODO: does resetConfiguration() remove existing appenders?
     log4cxx::BasicConfigurator::resetConfiguration();
     if (getFileExtension(filename).compare(".xml") == 0) {
         log4cxx::xml::DOMConfigurator::configure(filename);
