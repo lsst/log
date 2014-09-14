@@ -32,6 +32,7 @@
 
 // System headers
 #include <stdio.h>
+#include <stdlib.h>
 
 // Third-party headers
 #include <log4cxx/consoleappender.h>
@@ -48,6 +49,38 @@
 
 // Max message length for varargs/printf style logging
 #define MAX_LOG_MSG_LEN 1024
+
+
+namespace {
+
+/*
+ * Logging is configured at global initialization time (though everybody knows this is evil
+ * thing to do). What we want to do:
+ * - Let user re-configure later with LOG_CONFIG(filename) - this means that we do not
+ *   do anything fancy here like initializing from some other file
+ * - if LOG4CXX_CONFIGURATION is set then leave configuration to log4cxx (see above),
+ *   but check that file exists first
+ * - otherwise do basic configuration only
+ */
+bool init() {
+    if (const char* env = getenv("LOG4CXX_CONFIGURATION")) {
+        // check that file actually exists
+        if (env[0] and access(env, R_OK) == 0) {
+            // leave it to log4cxx (or user)
+            return true;
+        }
+    }
+    // do basic configuration only
+    log4cxx::BasicConfigurator::configure();
+    lsst::log::Log::initLog();
+
+    return true;
+}
+
+bool initialized = init();
+
+}
+
 
 namespace lsst {
 namespace log {
@@ -87,7 +120,6 @@ void Log::configure() {
     if (rootLogger->getAllAppenders().size() == 0) {
         log4cxx::BasicConfigurator::configure();
     }
-    LOG4CXX_INFO(rootLogger, "Initializing Logging System");
     initLog();
 }
 
