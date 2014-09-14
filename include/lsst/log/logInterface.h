@@ -38,6 +38,7 @@ namespace log {
 
 void configure_iface(void);
 void configure_iface(std::string const& filename);
+void configure_prop_iface(std::string const& properties);
 std::string getDefaultLoggerName_iface(void);
 void pushContext_iface(std::string const& name);
 void popContext_iface();

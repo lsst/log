@@ -46,31 +46,31 @@ struct LogFixture {
         ofName = std::tmpnam(NULL);
     }
 
-    void configure(Layout_t layout) {
-        std::string cfName = std::tmpnam(NULL);
-        std::ofstream f;
-        f.open(cfName.c_str());
-        f << "log4j.rootLogger=DEBUG, FA\n"
-          << "log4j.appender.FA=FileAppender\n" 
-          << "log4j.appender.FA.file=" << ofName << "\n";
-        switch (layout) {
-            case LAYOUT_SIMPLE:
-                f << "log4j.appender.FA.layout=SimpleLayout\n";
-                break;
-            case LAYOUT_PATTERN:
-                f << "log4j.appender.FA.layout=PatternLayout\n"
-                  << "log4j.appender.FA.layout.ConversionPattern=%-5p %c %C %M (%F:%L) %l - %m - %X%n\n";
-                break;
-            case LAYOUT_COMPONENT:
-                f << "log4j.appender.FA.layout=PatternLayout\n"
-                  << "log4j.appender.FA.layout.ConversionPattern=%-5p %c - %m%n\n";
-                break;
-        }
-        f.close();
-        LOG_CONFIG(cfName);
+    ~LogFixture() {
+        unlink(ofName.c_str());
     }
 
-    void check(std::string expected) {
+    void configure(Layout_t layout) {
+        std::string config = "log4j.rootLogger=DEBUG, FA\n"
+                "log4j.appender.FA=FileAppender\n"
+                "log4j.appender.FA.file=" + ofName + "\n";
+        switch (layout) {
+            case LAYOUT_SIMPLE:
+                config += "log4j.appender.FA.layout=SimpleLayout\n";
+                break;
+            case LAYOUT_PATTERN:
+                config += "log4j.appender.FA.layout=PatternLayout\n"
+                        "log4j.appender.FA.layout.ConversionPattern=%-5p %c %C %M (%F:%L) %l - %m - %X%n\n";
+                break;
+            case LAYOUT_COMPONENT:
+                config += "log4j.appender.FA.layout=PatternLayout\n"
+                        "log4j.appender.FA.layout.ConversionPattern=%-5p %c - %m%n\n";
+                break;
+        }
+        LOG_CONFIG_PROP(config);
+    }
+
+    void check(const std::string& expected) {
         std::ifstream t(ofName.c_str());
         std::string received((std::istreambuf_iterator<char>(t)),
                              std::istreambuf_iterator<char>());
