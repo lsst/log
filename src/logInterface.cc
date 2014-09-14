@@ -48,6 +48,10 @@ void configure_iface(std::string const& filename) {
     Log::configure(filename);
 }
 
+void configure_prop_iface(std::string const& properties) {
+    Log::configure_prop(properties);
+}
+
 std::string getDefaultLoggerName_iface(void) {
     return Log::getDefaultLoggerName();
 }
