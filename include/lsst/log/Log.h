@@ -67,15 +67,15 @@
 
 /**
   * @def LOG_DEFAULT_NAME()
-  * Get the current default logger name.
+  * Get the current default logger name. Returns empty string for root logger.
   * @return String containing the default logger name.
   */
 #define LOG_DEFAULT_NAME() lsst::log::Log::getDefaultLoggerName()
 
 /**
   * @def LOG_GET(logger)
-  * Returns a pointer to the log4cxx logger object associated with LOGGER.
-  * @return log4cxx::LoggerPtr corresponding to LOGGER.
+  * Returns a pointer to the log4cxx logger object associated with logger.
+  * @return log4cxx::LoggerPtr corresponding to logger.
   *
   * @param logger  Either a logger name or a log4cxx logger object.
   */
@@ -83,7 +83,7 @@
 
 /**
   * @def LOG_PUSHCTX(name)
-  * Pushes NAME onto the global hierarchical default logger name.
+  * Pushes name onto the global hierarchical default logger name.
   * Note that we only allow simple non-dotted names to be used for
   * context names, multi-level context name (e.g. "componen1.component2")
   * will result in exception.
@@ -93,7 +93,7 @@
   * using this in multi-threaded applications).
   *
   * @param name  String to push onto logging context.
-  * @throw std::invalid_argument if name contains dot.
+  * @throw std::invalid_argument raised when name contains dot.
   */
 #define LOG_PUSHCTX(name) lsst::log::Log::pushContext(name)
 
@@ -232,7 +232,7 @@
 /**
   * @def LOGF_TRACE(message)
   * Log a trace-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
@@ -247,7 +247,7 @@
 /**
   * @def LOGF_DEBUG(message)
   * Log a debug-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
@@ -262,7 +262,7 @@
 /**
   * @def LOGF_INFO(message)
   * Log a info-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
@@ -277,7 +277,7 @@
 /**
   * @def LOGF_WARN(message)
   * Log a warn-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
@@ -292,7 +292,7 @@
 /**
   * @def LOGF_ERROR(message)
   * Log a error-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
@@ -307,7 +307,7 @@
 /**
   * @def LOGF_FATAL(message)
   * Log a fatal-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
@@ -336,7 +336,7 @@
 /**
   * @def LOG_TRACE(message...)
   * Log a trace-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
@@ -350,7 +350,7 @@
 /**
   * @def LOG_DEBUG(message...)
   * Log a debug-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
@@ -364,7 +364,7 @@
 /**
   * @def LOG_INFO(message...)
   * Log a info-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
@@ -378,7 +378,7 @@
 /**
   * @def LOG_WARN(message...)
   * Log a warn-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
@@ -392,7 +392,7 @@
 /**
   * @def LOG_ERROR(message...)
   * Log a error-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
@@ -406,7 +406,7 @@
 /**
   * @def LOG_FATAL(message...)
   * Log a fatal-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
