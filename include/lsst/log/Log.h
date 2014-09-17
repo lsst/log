@@ -52,35 +52,49 @@
 #define LOG_CONFIG(filename) lsst::log::Log::configure(filename)
 
 /**
+  * @def LOG_CONFIG_PROP(string)
+  * Configures log4cxx from a string containing list of properties.
+  * This is equivalent to configuring with a file name containing the same
+  * data as a string.
+  *
+  * @note Use of this macro will likely produce hard-coded configuration
+  * which is not advised for general-use code. It may be useful where
+  * pre-defined hard-coded configuration is necessary, e.g. in unit tests.
+  *
+  * @param string  List of properties (lines separated by new line character)
+  */
+#define LOG_CONFIG_PROP(string) lsst::log::Log::configure_prop(string)
+
+/**
   * @def LOG_DEFAULT_NAME()
-  * Get the current default logger name.
+  * Get the current default logger name. Returns empty string for root logger.
   * @return String containing the default logger name.
   */
 #define LOG_DEFAULT_NAME() lsst::log::Log::getDefaultLoggerName()
 
 /**
   * @def LOG_GET(logger)
-  * Returns a pointer to the log4cxx logger object associated with LOGGER.
-  * @return log4cxx::LoggerPtr corresponding to LOGGER.
+  * Returns a pointer to the log4cxx logger object associated with logger.
+  * @return log4cxx::LoggerPtr corresponding to logger.
   *
   * @param logger  Either a logger name or a log4cxx logger object.
   */
 #define LOG_GET(logger) lsst::log::Log::getLogger(logger)
 
 /**
-  * @def LOG_NEWCTX(name)
-  * Create a new logging context object.
-  * @return LogContext object.
-  *
-  * @param name  String containing name to push onto the logging context.
-  */
-#define LOG_NEWCTX(name) (new lsst::log::LogContext(name))
-
-/**
   * @def LOG_PUSHCTX(name)
-  * Pushes NAME onto the global hierarchical default logger name.
+  * Pushes name onto the global hierarchical default logger name.
+  * Note that we only allow simple non-dotted names to be used for
+  * context names, multi-level context name (e.g. "componen1.component2")
+  * will result in exception. Empty context names are disallowed as
+  * well, exception will be raised for empty name.
+  *
+  * @note Call to this macro is not thread-safe, moreover context is
+  * global and applies to all threads (which means you want to avoid
+  * using this in multi-threaded applications).
   *
   * @param name  String to push onto logging context.
+  * @throw std::invalid_argument raised for empty name or when name contains dot.
   */
 #define LOG_PUSHCTX(name) lsst::log::Log::pushContext(name)
 
@@ -88,6 +102,8 @@
   * @def LOG_POPCTX()
   * Pops the last pushed name off the global hierarchical default logger
   * name.
+  *
+  * @note Call to this macro is not thread-safe.
   */
 #define LOG_POPCTX() lsst::log::Log::popContext()
 
@@ -151,7 +167,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_TRACE() \
-        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_TRACE)
+    LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())
 
 /**
   * @def LOG_CHECK_DEBUG()
@@ -160,7 +176,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_DEBUG() \
-        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_DEBUG)
+    LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())
 
 /**
   * @def LOG_CHECK_INFO()
@@ -169,7 +185,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_INFO() \
-        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_INFO)
+        lsst::log::Log::defaultLogger->isInfoEnabled()
 
 /**
   * @def LOG_CHECK_WARN()
@@ -178,7 +194,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_WARN() \
-        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_WARN)
+        lsst::log::Log::defaultLogger->isWarnEnabled()
 
 /**
   * @def LOG_CHECK_ERROR()
@@ -187,7 +203,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_ERROR() \
-        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_ERROR)
+        lsst::log::Log::defaultLogger->isErrorEnabled()
 
 /**
   * @def LOG_CHECK_FATAL()
@@ -196,7 +212,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_FATAL() \
-        lsst::log::Log::isEnabledFor(LOG_DEFAULT_NAME(), LOG_LVL_FATAL)
+        lsst::log::Log::defaultLogger->isFatalEnabled()
 
 /**
   * @def LOGF(logger, level, message)
@@ -209,99 +225,99 @@
   */
 #define LOGF(logger, level, message) \
     if (lsst::log::Log::isEnabledFor(logger, level)) { \
-        lsst::log::LogFormatter fmter_; \
+        lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::getLogger(logger)->forcedLog( \
-            log4cxx::Level::toLevel(level), (fmter_ % message).str().c_str(), \
+            log4cxx::Level::toLevel(level), (fmter_ % message).str(), \
             LOG4CXX_LOCATION); }
 
 /**
   * @def LOGF_TRACE(message)
   * Log a trace-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_TRACE(message) \
-    if (lsst::log::Log::defaultLogger->isTraceEnabled()) { \
-        lsst::log::LogFormatter fmter_; \
+    if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
+        lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getTrace(), (fmter_ % message).str().c_str(), \
+            log4cxx::Level::getTrace(), (fmter_ % message).str(), \
             LOG4CXX_LOCATION); }
 
 /**
   * @def LOGF_DEBUG(message)
   * Log a debug-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_DEBUG(message) \
-    if (lsst::log::Log::defaultLogger->isDebugEnabled()) { \
-        lsst::log::LogFormatter fmter_; \
+    if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
+        lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getDebug(), (fmter_ % message).str().c_str(), \
+            log4cxx::Level::getDebug(), (fmter_ % message).str(), \
             LOG4CXX_LOCATION); }
 
 /**
   * @def LOGF_INFO(message)
   * Log a info-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_INFO(message) \
     if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
-        lsst::log::LogFormatter fmter_; \
+        lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getInfo(), (fmter_ % message).str().c_str(), \
+            log4cxx::Level::getInfo(), (fmter_ % message).str(), \
             LOG4CXX_LOCATION); }
 
 /**
   * @def LOGF_WARN(message)
   * Log a warn-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_WARN(message) \
     if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
-        lsst::log::LogFormatter fmter_; \
+        lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getWarn(), (fmter_ % message).str().c_str(), \
+            log4cxx::Level::getWarn(), (fmter_ % message).str(), \
             LOG4CXX_LOCATION); }
 
 /**
   * @def LOGF_ERROR(message)
   * Log a error-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_ERROR(message) \
     if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
-        lsst::log::LogFormatter fmter_; \
+        lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getError(), (fmter_ % message).str().c_str(), \
+            log4cxx::Level::getError(), (fmter_ % message).str(), \
             LOG4CXX_LOCATION); }
 
 /**
   * @def LOGF_FATAL(message)
   * Log a fatal-level message to the default logger using a boost::format
-  * syle interface.
+  * style interface.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_FATAL(message) \
     if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
-        lsst::log::LogFormatter fmter_; \
+        lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getFatal(), (fmter_ % message).str().c_str(), \
+            log4cxx::Level::getFatal(), (fmter_ % message).str(), \
             LOG4CXX_LOCATION); }
 
 /**
@@ -321,13 +337,13 @@
 /**
   * @def LOG_TRACE(message...)
   * Log a trace-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOG_TRACE(message...) \
-    if (lsst::log::Log::defaultLogger->isTraceEnabled()) { \
+    if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getTrace(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); }
@@ -335,13 +351,13 @@
 /**
   * @def LOG_DEBUG(message...)
   * Log a debug-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOG_DEBUG(message...) \
-    if (lsst::log::Log::defaultLogger->isDebugEnabled()) { \
+    if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getDebug(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); }
@@ -349,7 +365,7 @@
 /**
   * @def LOG_INFO(message...)
   * Log a info-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
@@ -363,7 +379,7 @@
 /**
   * @def LOG_WARN(message...)
   * Log a warn-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
@@ -377,7 +393,7 @@
 /**
   * @def LOG_ERROR(message...)
   * Log a error-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
@@ -391,7 +407,7 @@
 /**
   * @def LOG_FATAL(message...)
   * Log a fatal-level message to the default logger using a varargs/printf
-  * syle interface.
+  * style interface.
   *
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
@@ -415,38 +431,41 @@
 namespace lsst {
 namespace log {
 
+namespace detail {
 /** This class is used by the LOGF_INFO and similar macros to support the
   * boost::format-like operators in the message parameter.
   */
 class LogFormatter {
 public:
-    LogFormatter(void);
-    ~LogFormatter(void);
+
+    LogFormatter() : _fmter(0) {}
+
+    ~LogFormatter() {
+      delete _fmter;
+    }
 
     /** Converts a format string into a boost::format object.
       * @return a new boost::format object
       *
       * @param fmt  format string
       */
-    template <typename T> boost::format& operator %(T fmt) {
-        _enabled = true;
+    template <typename T>
+    boost::format& operator %(T fmt) {
+        // we do not delete old _fmtiter because this method
+        // will not be called more than once per instance
         _fmter = new boost::format(fmt);
         return *_fmter;
     }
+
 private:
-    bool _enabled;
     boost::format* _fmter;
+
+    // instances cannot be copied
+    LogFormatter(const LogFormatter&);
+    LogFormatter& operator=(const LogFormatter&);
 };
 
-/** This class handles the default logger name of a logging context.
-  */
-class LogContext {
-public:
-    LogContext(std::string const& name);
-    ~LogContext(void);
-private:
-    std::string _name;
-};
+} // namespace detail
 
 /** This static class includes a variety of methods for interacting with the
   * the logging module. These methods are not meant for direct use. Rather,
@@ -459,6 +478,7 @@ public:
     static void initLog(void);
     static void configure(void);
     static void configure(std::string const& filename);
+    static void configure_prop(std::string const& properties);
     static std::string getDefaultLoggerName(void);
     static log4cxx::LoggerPtr getLogger(log4cxx::LoggerPtr logger);
     static log4cxx::LoggerPtr getLogger(std::string const& loggername);
@@ -481,10 +501,31 @@ public:
     static void log(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
                     std::string const& filename, std::string const& funcname,
                     unsigned int lineno, std::string const& fmt, ...);
-private:
-    static std::stack<std::string> context;
-    static std::string defaultLoggerName;
 };
+
+/** This class handles the default logger name of a logging context.
+  */
+class LogContext {
+public:
+    /** Create a logging context associated with a default logger name
+      * constructed by pushing \p name onto the pre-existing hierarchical default
+      * logger name. See comment to \c LOG_PUSHCTX about allowed names.
+      *
+      * @param name  String to push onto logging context.
+      */
+    explicit LogContext(std::string const& name) {
+        Log::pushContext(name);
+    }
+    ~LogContext() {
+        Log::popContext();
+    }
+
+private:
+    // cannot copy instances
+    LogContext(const LogContext&);
+    LogContext& operator=(const LogContext&);
+};
+
 
 }} // namespace lsst::log
 
