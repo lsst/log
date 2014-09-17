@@ -240,3 +240,17 @@ BOOST_FIXTURE_TEST_CASE(context_exc, LogFixture) {
     // multi-level context will result in exception
     BOOST_CHECK_THROW(LOG_PUSHCTX("x.y"), std::invalid_argument);
 }
+
+BOOST_FIXTURE_TEST_CASE(dm_1186, LogFixture) {
+    // Test for properly-behaved macro, see DM-1186. MAin point here is that
+    // it must compile without error without curly braces after if/else.
+    configure(LAYOUT_SIMPLE);
+
+    bool dummy = true;
+    if (dummy)
+    	LOG_INFO("This is INFO");
+    else
+    	LOG_WARN("This is WARN");
+
+    check("INFO - This is INFO\n");
+}

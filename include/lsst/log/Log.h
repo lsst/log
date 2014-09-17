@@ -224,11 +224,12 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF(logger, level, message) \
-    if (lsst::log::Log::isEnabledFor(logger, level)) { \
+    do { if (lsst::log::Log::isEnabledFor(logger, level)) { \
         lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::getLogger(logger)->forcedLog( \
             log4cxx::Level::toLevel(level), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); }
+            LOG4CXX_LOCATION); } \
+    } while (false)
 
 /**
   * @def LOGF_TRACE(message)
@@ -239,11 +240,12 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_TRACE(message) \
-    if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
         lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getTrace(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); }
+            LOG4CXX_LOCATION); } \
+    } while (false)
 
 /**
   * @def LOGF_DEBUG(message)
@@ -254,11 +256,12 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_DEBUG(message) \
-    if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
         lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getDebug(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); }
+            LOG4CXX_LOCATION); } \
+    } while (false)
 
 /**
   * @def LOGF_INFO(message)
@@ -269,11 +272,12 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_INFO(message) \
-    if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
         lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getInfo(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); }
+            LOG4CXX_LOCATION); } \
+    } while (false)
 
 /**
   * @def LOGF_WARN(message)
@@ -284,11 +288,12 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_WARN(message) \
-    if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
         lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getWarn(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); }
+            LOG4CXX_LOCATION); } \
+    } while (false)
 
 /**
   * @def LOGF_ERROR(message)
@@ -299,11 +304,12 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_ERROR(message) \
-    if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
         lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getError(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); }
+            LOG4CXX_LOCATION); } \
+    } while (false)
 
 /**
   * @def LOGF_FATAL(message)
@@ -314,11 +320,12 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_FATAL(message) \
-    if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
         lsst::log::detail::LogFormatter fmter_; \
         lsst::log::Log::defaultLogger->forcedLog( \
             log4cxx::Level::getFatal(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); }
+            LOG4CXX_LOCATION); } \
+    } while (false)
 
 /**
   * @def LOG(logger, level, message...)
@@ -330,9 +337,10 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG(logger, level, message...) \
-    if (lsst::log::Log::isEnabledFor(logger, level)) { \
+    do { if (lsst::log::Log::isEnabledFor(logger, level)) { \
         lsst::log::Log::log(logger, log4cxx::Level::toLevel(level), \
-        __BASE_FILE__, __PRETTY_FUNCTION__, __LINE__, message); }
+        __BASE_FILE__, __PRETTY_FUNCTION__, __LINE__, message); } \
+    } while (false)
 
 /**
   * @def LOG_TRACE(message...)
@@ -343,10 +351,11 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_TRACE(message...) \
-    if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getTrace(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); }
+            __LINE__, message); } \
+    } while (false)
 
 /**
   * @def LOG_DEBUG(message...)
@@ -357,10 +366,11 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_DEBUG(message...) \
-    if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getDebug(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); }
+            __LINE__, message); } \
+    } while (false)
 
 /**
   * @def LOG_INFO(message...)
@@ -371,10 +381,11 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_INFO(message...) \
-    if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getInfo(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); }
+            __LINE__, message); } \
+    } while (false)
 
 /**
   * @def LOG_WARN(message...)
@@ -385,10 +396,11 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_WARN(message...) \
-    if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getWarn(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); }
+            __LINE__, message); } \
+    } while (false)
 
 /**
   * @def LOG_ERROR(message...)
@@ -399,10 +411,11 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_ERROR(message...) \
-    if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getError(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); }
+            __LINE__, message); } \
+    } while (false)
 
 /**
   * @def LOG_FATAL(message...)
@@ -413,10 +426,11 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_FATAL(message...) \
-    if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getFatal(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); }
+            __LINE__, message); } \
+    } while (false)
 
 #define LOG_LVL_TRACE static_cast<int>(log4cxx::Level::TRACE_INT)
 #define LOG_LVL_DEBUG static_cast<int>(log4cxx::Level::DEBUG_INT)
