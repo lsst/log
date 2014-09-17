@@ -219,6 +219,11 @@ log4cxx::LoggerPtr Log::getLogger(std::string const& loggername) {
   * @param name  String to push onto logging context.
   */
 void Log::pushContext(std::string const& name) {
+    // can't handle empty names
+    if (name.empty()) {
+        throw std::invalid_argument("lsst::log::Log::pushContext(): "
+                "empty context name is not allowed");
+    }
     // we do not allow multi-level context (logger1.logger2)
     if (name.find('.') != std::string::npos) {
         throw std::invalid_argument("lsst::log::Log::pushContext(): "

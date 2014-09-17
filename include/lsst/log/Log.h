@@ -86,14 +86,15 @@
   * Pushes name onto the global hierarchical default logger name.
   * Note that we only allow simple non-dotted names to be used for
   * context names, multi-level context name (e.g. "componen1.component2")
-  * will result in exception.
+  * will result in exception. Empty context names are disallowed as
+  * well, exception will be raised for empty name.
   *
   * @note Call to this macro is not thread-safe, moreover context is
   * global and applies to all threads (which means you want to avoid
   * using this in multi-threaded applications).
   *
   * @param name  String to push onto logging context.
-  * @throw std::invalid_argument raised when name contains dot.
+  * @throw std::invalid_argument raised for empty name or when name contains dot.
   */
 #define LOG_PUSHCTX(name) lsst::log::Log::pushContext(name)
 
@@ -507,23 +508,22 @@ public:
 class LogContext {
 public:
     /** Create a logging context associated with a default logger name
-      * constructed by pushing NAME onto the pre-existing hierarchical default
-      * logger name.
+      * constructed by pushing \p name onto the pre-existing hierarchical default
+      * logger name. See comment to \c LOG_PUSHCTX about allowed names.
       *
       * @param name  String to push onto logging context.
       */
-    explicit LogContext(std::string const& name) : _doPushPop(not name.empty()) {
-        if (_doPushPop) {
-            Log::pushContext(name);
-        }
+    explicit LogContext(std::string const& name) {
+        Log::pushContext(name);
     }
     ~LogContext() {
-        if (_doPushPop) {
-            Log::popContext();
-        }
+        Log::popContext();
     }
+
 private:
-    bool _doPushPop;
+    // cannot copy instances
+    LogContext(const LogContext&);
+    LogContext& operator=(const LogContext&);
 };
 
 
