@@ -6,4 +6,4 @@ setupRequired(sconsUtils)
 
 envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
-envPrepend(PATH, ${PRODUCT_DIR}/bin)
+envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
