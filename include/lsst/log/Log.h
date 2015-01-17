@@ -22,7 +22,7 @@
 
 /**
  * @file Log.h
- * @brief LSST DM logging module built on log4cxx.
+ * @brief LSST DM logging module.
  *
  * @author Bill Chickering
  * Contact: chickering@cs.stanford.edu
@@ -40,12 +40,26 @@
 #include <vector>
 
 // Third-party headers
-#include <log4cxx/logger.h>
 #include <boost/format.hpp>
+#include <boost/scoped_ptr.hpp>
+
+#if defined(__GNUC__)
+#define __LOG_FUNC__ __PRETTY_FUNCTION__
+#else
+#define __LOG_FUNC__ ""
+#endif
+#define LOG_LOCATION lsst::log::LocationInfo(__FILE__, __LOG_FUNC__, __LINE__)
+
+#if __GNUC__ >= 3
+#define LOG_UNLIKELY(expr) __builtin_expect(expr, 0)
+#else
+#define LOG_UNLIKELY(expr) expr
+#endif
+
 
 /**
   * @def LOG_CONFIG(filename)
-  * Configures log4cxx and initializes logging module.
+  * Configures and initializes logging module.
   *
   * @param filename  Path to configuration file.
   */
@@ -53,7 +67,7 @@
 
 /**
   * @def LOG_CONFIG_PROP(string)
-  * Configures log4cxx from a string containing list of properties.
+  * Configures logging from a string containing list of properties.
   * This is equivalent to configuring with a file name containing the same
   * data as a string.
   *
@@ -74,10 +88,10 @@
 
 /**
   * @def LOG_GET(logger)
-  * Returns a pointer to the log4cxx logger object associated with logger.
-  * @return log4cxx::LoggerPtr corresponding to logger.
+  * Returns the logger object associated with logger.
+  * @return Log corresponding to logger.
   *
-  * @param logger  Either a logger name or a log4cxx logger object.
+  * @param logger  Either a logger name or a logger object.
   */
 #define LOG_GET(logger) lsst::log::Log::getLogger(logger)
 
@@ -142,7 +156,7 @@
   * Retrieve the logging threshold for LOGGER.
   * @return int Indicating the logging threshold.
   *
-  * @param logger  Either name of logger or log4cxx logger with threshold
+  * @param logger  Either name of logger or logger object with threshold
   *                to return.
   */
 #define LOG_GET_LVL(logger) \
@@ -154,7 +168,7 @@
   * to LEVEL.
   * @return Bool indicating whether or not logger is enabled.
   *
-  * @param logger  Either name of logger or log4cxx logger being queried.
+  * @param logger  Either name of logger or logger object being queried.
   * @param level   Logging threshold to check.
   */
 #define LOG_CHECK_LVL(logger, level) \
@@ -167,7 +181,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_TRACE() \
-    LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())
+    LOG_UNLIKELY(lsst::log::Log::defaultLogger.isTraceEnabled())
 
 /**
   * @def LOG_CHECK_DEBUG()
@@ -176,7 +190,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_DEBUG() \
-    LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())
+    LOG_UNLIKELY(lsst::log::Log::defaultLogger.isDebugEnabled())
 
 /**
   * @def LOG_CHECK_INFO()
@@ -185,7 +199,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_INFO() \
-        lsst::log::Log::defaultLogger->isInfoEnabled()
+        lsst::log::Log::defaultLogger.isInfoEnabled()
 
 /**
   * @def LOG_CHECK_WARN()
@@ -194,7 +208,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_WARN() \
-        lsst::log::Log::defaultLogger->isWarnEnabled()
+        lsst::log::Log::defaultLogger.isWarnEnabled()
 
 /**
   * @def LOG_CHECK_ERROR()
@@ -203,7 +217,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_ERROR() \
-        lsst::log::Log::defaultLogger->isErrorEnabled()
+        lsst::log::Log::defaultLogger.isErrorEnabled()
 
 /**
   * @def LOG_CHECK_FATAL()
@@ -212,13 +226,13 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_FATAL() \
-        lsst::log::Log::defaultLogger->isFatalEnabled()
+        lsst::log::Log::defaultLogger.isFatalEnabled()
 
 /**
   * @def LOGF(logger, level, message)
   * Log a message using a boost::format style interface.
   *
-  * @param logger   Either name of logger or log4cxx logger object.
+  * @param logger   Either name of logger or logger object.
   * @param level    Logging level associated with message.
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
@@ -226,9 +240,9 @@
 #define LOGF(logger, level, message) \
     do { if (lsst::log::Log::isEnabledFor(logger, level)) { \
         lsst::log::detail::LogFormatter fmter_; \
-        lsst::log::Log::getLogger(logger)->forcedLog( \
-            log4cxx::Level::toLevel(level), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::getLogger(logger).forcedLog( \
+            lsst::log::LogLevel::toLevel(level), (fmter_ % message).str(), \
+            LOG_LOCATION); } \
     } while (false)
 
 /**
@@ -240,11 +254,11 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_TRACE(message) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
+    do { if (LOG_UNLIKELY(lsst::log::Log::defaultLogger.isTraceEnabled())) { \
         lsst::log::detail::LogFormatter fmter_; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getTrace(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::defaultLogger.forcedLog( \
+            lsst::log::LogLevel::getTrace(), (fmter_ % message).str(), \
+            LOG_LOCATION); } \
     } while (false)
 
 /**
@@ -256,11 +270,11 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_DEBUG(message) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
+    do { if (LOG_UNLIKELY(lsst::log::Log::defaultLogger.isDebugEnabled())) { \
         lsst::log::detail::LogFormatter fmter_; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getDebug(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::defaultLogger.forcedLog( \
+            lsst::log::LogLevel::getDebug(), (fmter_ % message).str(), \
+            LOG_LOCATION); } \
     } while (false)
 
 /**
@@ -272,11 +286,11 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_INFO(message) \
-    do { if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isInfoEnabled()) { \
         lsst::log::detail::LogFormatter fmter_; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getInfo(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::defaultLogger.forcedLog( \
+            lsst::log::LogLevel::getInfo(), (fmter_ % message).str(), \
+            LOG_LOCATION); } \
     } while (false)
 
 /**
@@ -288,11 +302,11 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_WARN(message) \
-    do { if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isWarnEnabled()) { \
         lsst::log::detail::LogFormatter fmter_; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getWarn(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::defaultLogger.forcedLog( \
+            lsst::log::LogLevel::getWarn(), (fmter_ % message).str(), \
+            LOG_LOCATION); } \
     } while (false)
 
 /**
@@ -304,11 +318,11 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_ERROR(message) \
-    do { if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isErrorEnabled()) { \
         lsst::log::detail::LogFormatter fmter_; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getError(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::defaultLogger.forcedLog( \
+            lsst::log::LogLevel::getError(), (fmter_ % message).str(), \
+            LOG_LOCATION); } \
     } while (false)
 
 /**
@@ -320,25 +334,25 @@
   *                 zero, one, or more arguments separated by `%`.
   */
 #define LOGF_FATAL(message) \
-    do { if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isFatalEnabled()) { \
         lsst::log::detail::LogFormatter fmter_; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getFatal(), (fmter_ % message).str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::defaultLogger.forcedLog( \
+            lsst::log::LogLevel::getFatal(), (fmter_ % message).str(), \
+            LOG_LOCATION); } \
     } while (false)
 
 /**
   * @def LOG(logger, level, message...)
   * Log a message using a varargs/printf style interface.
   *
-  * @param logger      Either name of logger or log4cxx logger object.
+  * @param logger      Either name of logger or logger object.
   * @param level       Logging level associated with message.
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOG(logger, level, message...) \
     do { if (lsst::log::Log::isEnabledFor(logger, level)) { \
-        lsst::log::Log::log(logger, log4cxx::Level::toLevel(level), \
+        lsst::log::Log::log(logger, lsst::log::LogLevel::toLevel(level), \
         __BASE_FILE__, __PRETTY_FUNCTION__, __LINE__, message); } \
     } while (false)
 
@@ -351,9 +365,9 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_TRACE(message...) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
+    do { if (LOG_UNLIKELY(lsst::log::Log::defaultLogger.isTraceEnabled())) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getTrace(), __BASE_FILE__, __PRETTY_FUNCTION__, \
+            lsst::log::LogLevel::getTrace(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); } \
     } while (false)
 
@@ -366,9 +380,9 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_DEBUG(message...) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
+    do { if (LOG_UNLIKELY(lsst::log::Log::defaultLogger.isDebugEnabled())) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getDebug(), __BASE_FILE__, __PRETTY_FUNCTION__, \
+            lsst::log::LogLevel::getDebug(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); } \
     } while (false)
 
@@ -381,9 +395,9 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_INFO(message...) \
-    do { if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isInfoEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getInfo(), __BASE_FILE__, __PRETTY_FUNCTION__, \
+            lsst::log::LogLevel::getInfo(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); } \
     } while (false)
 
@@ -396,9 +410,9 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_WARN(message...) \
-    do { if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isWarnEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getWarn(), __BASE_FILE__, __PRETTY_FUNCTION__, \
+            lsst::log::LogLevel::getWarn(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); } \
     } while (false)
 
@@ -411,9 +425,9 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_ERROR(message...) \
-    do { if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isErrorEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getError(), __BASE_FILE__, __PRETTY_FUNCTION__, \
+            lsst::log::LogLevel::getError(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); } \
     } while (false)
 
@@ -426,26 +440,31 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_FATAL(message...) \
-    do { if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isFatalEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getFatal(), __BASE_FILE__, __PRETTY_FUNCTION__, \
+            lsst::log::LogLevel::getFatal(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); } \
     } while (false)
 
-#define LOG_LVL_TRACE static_cast<int>(log4cxx::Level::TRACE_INT)
-#define LOG_LVL_DEBUG static_cast<int>(log4cxx::Level::DEBUG_INT)
-#define LOG_LVL_INFO static_cast<int>(log4cxx::Level::INFO_INT)
-#define LOG_LVL_WARN static_cast<int>(log4cxx::Level::WARN_INT)
-#define LOG_LVL_ERROR static_cast<int>(log4cxx::Level::ERROR_INT)
-#define LOG_LVL_FATAL static_cast<int>(log4cxx::Level::FATAL_INT)
+#define LOG_LVL_TRACE lsst::log::LogLevel::TRACE_INT
+#define LOG_LVL_DEBUG lsst::log::LogLevel::DEBUG_INT
+#define LOG_LVL_INFO lsst::log::LogLevel::INFO_INT
+#define LOG_LVL_WARN lsst::log::LogLevel::WARN_INT
+#define LOG_LVL_ERROR lsst::log::LogLevel::ERROR_INT
+#define LOG_LVL_FATAL lsst::log::LogLevel::FATAL_INT
 
-#define LOG_LOGGER log4cxx::LoggerPtr
+#define LOG_LOGGER lsst::log::Log
 #define LOG_CTX lsst::log::LogContext
 
 namespace lsst {
 namespace log {
 
 namespace detail {
+
+// Forward declarations of implementation classes
+class LogImpl;
+class LogLevelImpl;
+
 /** This class is used by the LOGF_INFO and similar macros to support the
   * boost::format-like operators in the message parameter.
   */
@@ -481,6 +500,45 @@ private:
 
 } // namespace detail
 
+class LogLevel {
+public:
+    explicit LogLevel(int level);
+    explicit LogLevel(void* null);
+    LogLevel(LogLevel const& level);
+    LogLevel operator=(LogLevel const& level);
+    ~LogLevel();
+
+    int toInt() const;
+
+    static LogLevel toLevel(int level);
+    static LogLevel getTrace();
+    static LogLevel getDebug();
+    static LogLevel getInfo();
+    static LogLevel getWarn();
+    static LogLevel getError();
+    static LogLevel getFatal();
+    static int const TRACE_INT;
+    static int const DEBUG_INT;
+    static int const INFO_INT;
+    static int const WARN_INT;
+    static int const ERROR_INT;
+    static int const FATAL_INT;
+
+private:
+    explicit LogLevel(detail::LogLevelImpl const& impl);
+    friend class Log;
+
+    boost::scoped_ptr<detail::LogLevelImpl> _impl;
+};
+
+class LocationInfo {
+public:
+    LocationInfo(char const* fileName, char const* functionName, int lineNumber);
+    char const* _fileName;
+    char const* _functionName;
+    int _lineNumber;
+};
+
 /** This static class includes a variety of methods for interacting with the
   * the logging module. These methods are not meant for direct use. Rather,
   * they are used by the LOG* macros and the SWIG interface declared in
@@ -488,33 +546,58 @@ private:
   */
 class Log {
 public:
-    static log4cxx::LoggerPtr defaultLogger;
+    Log();
+    Log(Log const& log);
+    Log operator=(Log const& log);
+    explicit Log(std::string const& loggername);
+    ~Log();
+
+    Log getParent() const;
+    std::string getName() const;
+    LogLevel getLevel() const;
+    bool isTraceEnabled() const;
+    bool isDebugEnabled() const;
+    bool isInfoEnabled() const;
+    bool isWarnEnabled() const;
+    bool isErrorEnabled() const;
+    bool isFatalEnabled() const;
+    bool isEnabledFor(LogLevel const& level) const;
+    void setLevel(LogLevel const& level);
+    void forcedLog(LogLevel const& level, char const* msg, LocationInfo const& loc);
+    void forcedLog(LogLevel const& level, std::string const& msg, LocationInfo const& loc);
+
+    static Log defaultLogger;
     static void initLog(void);
     static void configure(void);
     static void configure(std::string const& filename);
     static void configure_prop(std::string const& properties);
     static std::string getDefaultLoggerName(void);
-    static log4cxx::LoggerPtr getLogger(log4cxx::LoggerPtr logger);
-    static log4cxx::LoggerPtr getLogger(std::string const& loggername);
+    static Log getLogger(Log logger);
+    static Log getLogger(std::string const& loggername);
     static void pushContext(std::string const& name);
     static void popContext(void);
     static void MDC(std::string const& key, std::string const& value);
     static void MDCRemove(std::string const& key);
-    static void setLevel(log4cxx::LoggerPtr logger, int level);
+    static void setLevel(Log logger, int level);
     static void setLevel(std::string const& loggername, int level);
-    static int getLevel(log4cxx::LoggerPtr logger);
+    static int getLevel(Log logger);
     static int getLevel(std::string const& loggername);
-    static bool isEnabledFor(log4cxx::LoggerPtr logger, int level);
+    static bool isEnabledFor(Log logger, int level);
     static bool isEnabledFor(std::string const& loggername, int level);
-    static void vlog(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
+    static void vlog(Log logger, LogLevel const& level,
                      std::string const& filename, std::string const& funcname,
                      unsigned int lineno, char const* fmt, va_list args);
-    static void log(std::string const& loggername, log4cxx::LevelPtr level,
+    static void log(std::string const& loggername, LogLevel const& level,
                     std::string const& filename, std::string const& funcname,
                     unsigned int lineno, char const* fmt, ...);
-    static void log(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
+    static void log(Log logger, LogLevel const& level,
                     std::string const& filename, std::string const& funcname,
                     unsigned int lineno, char const* fmt, ...);
+
+private:
+    explicit Log(detail::LogImpl const& impl);
+
+    boost::scoped_ptr<detail::LogImpl> _impl;
 };
 
 /** This class handles the default logger name of a logging context.

@@ -69,6 +69,8 @@ const char configEnv[] = "LSST_LOG_CONFIG";
  * - otherwise do basic configuration only
  */
 bool init() {
+    static bool initialized = init();
+    initialized = true;
     if (const char* env = getenv(::configEnv)) {
         // check that file actually exists
         if (env[0] and access(env, R_OK) == 0) {
@@ -85,25 +87,128 @@ bool init() {
     return true;
 }
 
-bool initialized = init();
-
 }
 
 
 namespace lsst {
 namespace log {
 
+namespace detail {
+
+class LogImpl {
+public:
+    LogImpl() : _log(log4cxx::Logger::getRootLogger()) { };
+    LogImpl(LogImpl const& impl) : _log(impl._log) { };
+    explicit LogImpl(log4cxx::LoggerPtr logger) : _log(logger) { };
+    explicit LogImpl(std::string const& loggername) : _log(log4cxx::Logger::getLogger(loggername)) { } ;
+
+    log4cxx::LoggerPtr _log;
+};
+
+class LogLevelImpl {
+public:
+    explicit LogLevelImpl(log4cxx::LevelPtr level) : _level(level) { };
+
+    log4cxx::LevelPtr _level;
+};
+
+} // namespace detail
+
+// LogLevel class
+
+LogLevel::LogLevel(int level) :
+    _impl(new detail::LogLevelImpl(log4cxx::Level::toLevel(level))) { }
+LogLevel::LogLevel(void*) :
+    _impl(new detail::LogLevelImpl(log4cxx::LevelPtr((log4cxx::Level*)NULL))) { }
+LogLevel::LogLevel(LogLevel const& level) :
+    _impl(new detail::LogLevelImpl(level._impl->_level)) { }
+LogLevel LogLevel::operator=(LogLevel const& level) {
+    _impl.reset(new detail::LogLevelImpl(level._impl->_level));
+    return *this;
+};
+LogLevel::LogLevel(detail::LogLevelImpl const& impl) :
+    _impl(new detail::LogLevelImpl(impl._level)) { }
+LogLevel::~LogLevel() { }
+
+int LogLevel::toInt() const { return _impl->_level->toInt(); }
+
+LogLevel LogLevel::toLevel(int level) { return LogLevel(level); };
+LogLevel LogLevel::getTrace() {
+    return LogLevel(detail::LogLevelImpl(log4cxx::Level::getTrace()));
+}
+LogLevel LogLevel::getDebug() {
+    return LogLevel(detail::LogLevelImpl(log4cxx::Level::getDebug()));
+}
+LogLevel LogLevel::getInfo() {
+    return LogLevel(detail::LogLevelImpl(log4cxx::Level::getInfo()));
+}
+LogLevel LogLevel::getWarn() {
+    return LogLevel(detail::LogLevelImpl(log4cxx::Level::getWarn()));
+}
+LogLevel LogLevel::getError() {
+    return LogLevel(detail::LogLevelImpl(log4cxx::Level::getError()));
+}
+LogLevel LogLevel::getFatal() {
+    return LogLevel(detail::LogLevelImpl(log4cxx::Level::getFatal()));
+}
+int const LogLevel::TRACE_INT = log4cxx::Level::TRACE_INT;
+int const LogLevel::DEBUG_INT = log4cxx::Level::DEBUG_INT;
+int const LogLevel::INFO_INT = log4cxx::Level::INFO_INT;
+int const LogLevel::WARN_INT = log4cxx::Level::WARN_INT;
+int const LogLevel::ERROR_INT = log4cxx::Level::ERROR_INT;
+int const LogLevel::FATAL_INT = log4cxx::Level::FATAL_INT;
+
+LocationInfo::LocationInfo(char const* fileName, char const* functionName, int lineNumber) :
+    _fileName(fileName), _functionName(functionName), _lineNumber(lineNumber) { }
+
 // Log class
+
+Log::Log() : _impl(new detail::LogImpl()) { }
+Log::Log(Log const& log) : _impl(new detail::LogImpl(*(log._impl))) { }
+Log Log::operator=(Log const& log) {
+    _impl.reset(new detail::LogImpl(*(log._impl)));
+    return *this;
+}
+Log::Log(detail::LogImpl const& impl) : _impl(new detail::LogImpl(impl)) { }
+Log::Log(std::string const& loggerName) : _impl(new detail::LogImpl(loggerName)) { }
+Log::~Log() { }
+
+// Forwarders
+
+Log Log::getParent() const { return Log(detail::LogImpl(_impl->_log->getParent())); }
+std::string Log::getName() const { return _impl->_log->getName(); }
+LogLevel Log::getLevel() const {
+    log4cxx::LevelPtr level = _impl->_log->getLevel();
+    if (level == NULL) return LogLevel((void*)NULL);
+    return LogLevel(level);
+}
+void Log::setLevel(LogLevel const& level) {
+    _impl->_log->setLevel(level._impl->_level);
+}
+bool Log::isTraceEnabled() const { return _impl->_log->isTraceEnabled(); }
+bool Log::isDebugEnabled() const { return _impl->_log->isDebugEnabled(); }
+bool Log::isInfoEnabled() const { return _impl->_log->isInfoEnabled(); }
+bool Log::isWarnEnabled() const { return _impl->_log->isWarnEnabled(); }
+bool Log::isErrorEnabled() const { return _impl->_log->isErrorEnabled(); }
+bool Log::isFatalEnabled() const { return _impl->_log->isFatalEnabled(); }
+
+void Log::forcedLog(LogLevel const& level, char const* msg, LocationInfo const& info) {
+    std::cerr << "forcedLog: " << msg << std::endl;
+    _impl->_log->forcedLog(level._impl->_level, msg, log4cxx::spi::LocationInfo(info._fileName, info._functionName, info._lineNumber));
+}
+void Log::forcedLog(LogLevel const& level, std::string const& msg, LocationInfo const& info) {
+    _impl->_log->forcedLog(level._impl->_level, msg, log4cxx::spi::LocationInfo(info._fileName, info._functionName, info._lineNumber));
+}
 
 /** Reference to the defaultLogger used by LOG* macros.
   */
-log4cxx::LoggerPtr Log::defaultLogger = log4cxx::Logger::getRootLogger();
+Log Log::defaultLogger;
 
 /** Initializes logging module (e.g. default logger and logging context).
   */
 void Log::initLog() {
     // Default logger initially set to root logger
-    defaultLogger = log4cxx::Logger::getRootLogger();
+    defaultLogger = Log();
 }
 
 /** Configures log4cxx and initializes logging system by invoking
@@ -183,7 +288,7 @@ void Log::configure_prop(std::string const& properties) {
   * @return String containing the default logger name.
   */
 std::string Log::getDefaultLoggerName() {
-    std::string name = defaultLogger->getName();
+    std::string name = defaultLogger.getName();
     if (name == "root") {
         name.clear();
     }
@@ -196,7 +301,7 @@ std::string Log::getDefaultLoggerName() {
   *
   * @param logger  log4cxx::LoggerPtr to return.
   */
-log4cxx::LoggerPtr Log::getLogger(log4cxx::LoggerPtr logger) {
+Log Log::getLogger(Log logger) {
     return logger;
 }
 
@@ -206,11 +311,11 @@ log4cxx::LoggerPtr Log::getLogger(log4cxx::LoggerPtr logger) {
   *
   * @param loggername  Name of logger to return.
   */
-log4cxx::LoggerPtr Log::getLogger(std::string const& loggername) {
+Log Log::getLogger(std::string const& loggername) {
     if (loggername.empty()){
         return defaultLogger;
     } else {
-        return log4cxx::Logger::getLogger(loggername);
+        return Log(loggername);
     }
 }
 
@@ -231,7 +336,7 @@ void Log::pushContext(std::string const& name) {
     }
 
     // Construct new default logger name
-    std::string newName = defaultLogger->getName();
+    std::string newName = defaultLogger.getName();
     if (newName == "root") {
         newName = name;
     } else {
@@ -239,7 +344,7 @@ void Log::pushContext(std::string const& name) {
         newName += name;
     }
     // Update defaultLogger
-    defaultLogger = log4cxx::Logger::getLogger(newName);
+    defaultLogger = Log(newName);
 }
 
 /** Pops the last pushed name off the global hierarchical default logger
@@ -248,9 +353,9 @@ void Log::pushContext(std::string const& name) {
 void Log::popContext() {
     // switch to parent logger, this assumes that loggers are not
     // re-parented between calls to push and pop
-    log4cxx::LoggerPtr parent = defaultLogger->getParent();
+    Log parent = defaultLogger.getParent();
     // root logger does not have parent, stay at root instead
-    if (parent) {
+    if (parent._impl->_log) {
         defaultLogger = parent;
     }
 }
@@ -280,8 +385,8 @@ void Log::MDCRemove(std::string const& key) {
   * @param logger  Logger with threshold to adjust.
   * @param level   New logging threshold.
   */
-void Log::setLevel(log4cxx::LoggerPtr logger, int level) {
-    logger->setLevel(log4cxx::Level::toLevel(level));
+void Log::setLevel(Log logger, int level) {
+    logger.setLevel(LogLevel(level));
 }
 
 /** Set the logging threshold for the logger named LOGGERNAME to LEVEL.
@@ -298,13 +403,8 @@ void Log::setLevel(std::string const& loggername, int level) {
   *
   * @param logger  Logger with threshold to return.
   */
-int Log::getLevel(log4cxx::LoggerPtr logger) {
-    log4cxx::LevelPtr level = logger->getLevel();
-    int levelno = -1;
-    if (level != NULL) {
-        levelno = level->toInt();
-    }
-    return levelno;
+int Log::getLevel(Log logger) {
+    return logger.getLevel().toInt();
 }
 
 /** Retrieve the logging threshold for the logger name LOGGERNAME.
@@ -323,8 +423,8 @@ int Log::getLevel(std::string const& loggername) {
   * @param logger  Logger being queried.
   * @param level   Logging threshold to check.
   */
-bool Log::isEnabledFor(log4cxx::LoggerPtr logger, int level) {
-    if (logger->isEnabledFor(log4cxx::Level::toLevel(level))) {
+bool Log::isEnabledFor(Log logger, int level) {
+    if (logger._impl->_log->isEnabledFor(log4cxx::Level::toLevel(level))) {
         return true;
     } else {
         return false;
@@ -342,8 +442,8 @@ bool Log::isEnabledFor(std::string const& loggername, int level) {
     return isEnabledFor(getLogger(loggername), level);
 }
 
-void Log::vlog(log4cxx::LoggerPtr logger,   ///< the logger
-               log4cxx::LevelPtr level,     ///< message level
+void Log::vlog(Log logger,   ///< the logger
+               LogLevel const& level,     ///< message level
                std::string const& filename, ///< source filename
                std::string const& funcname, ///< source function name
                unsigned int lineno,         ///< source line number
@@ -352,13 +452,12 @@ void Log::vlog(log4cxx::LoggerPtr logger,   ///< the logger
               ) {
     char msg[MAX_LOG_MSG_LEN];
     vsnprintf(msg, MAX_LOG_MSG_LEN, fmt, args);
-    logger->forcedLog(level, msg, log4cxx::spi::LocationInfo(filename.c_str(),
-                                                             funcname.c_str(),
-                                                             lineno));
+    logger.forcedLog(level, msg,
+                     LocationInfo(filename.c_str(), funcname.c_str(), lineno));
 }
 
 void Log::log(std::string const& loggername, ///< name of logger
-              log4cxx::LevelPtr level,       ///< message level
+              LogLevel const& level,       ///< message level
               std::string const& filename,   ///< source filename
               std::string const& funcname,   ///< source function name
               unsigned int lineno,           ///< source line number
@@ -373,8 +472,8 @@ void Log::log(std::string const& loggername, ///< name of logger
 /** Method used by LOG_INFO and similar macros to process a log message
   * with variable arguments along with associated metadata.
   */
-void Log::log(log4cxx::LoggerPtr logger,   ///< the logger
-              log4cxx::LevelPtr level,     ///< message level
+void Log::log(Log logger,   ///< the logger
+              LogLevel const& level,     ///< message level
               std::string const& filename, ///< source filename
               std::string const& funcname, ///< source function name
               unsigned int lineno,         ///< source line number
