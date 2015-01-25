@@ -144,13 +144,13 @@ BOOST_FIXTURE_TEST_CASE(basic, LogFixture) {
     LOGF_DEBUG("This is DEBUG");
     LOGF_WARN("This is WARN");
     LOGF_ERROR("This is ERROR");
-    LOGF_FATAL("This is FATAL");
+    LOG_FATAL("This is FATAL %d %s", 42, "logging");
     LOGF_INFO("Format %1% %2% %3%" % 3 % 2.71828 % "foo c++");
     check("INFO - This is INFO\n"
           "DEBUG - This is DEBUG\n"
           "WARN - This is WARN\n"
           "ERROR - This is ERROR\n"
-          "FATAL - This is FATAL\n"
+          "FATAL - This is FATAL 42 logging\n"
           "INFO - Format 3 2.71828 foo c++\n");
 }
 
@@ -366,4 +366,22 @@ BOOST_FIXTURE_TEST_CASE(dm_1186, LogFixture) {
     	LOG_WARN("This is WARN");
 
     check("INFO - This is INFO\n");
+}
+
+BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
+    configure(LAYOUT_SIMPLE);
+    lsst::log::Log logger("a");
+    LOG_SET_LVL("a", LOG_LVL_INFO);
+    LOGLF_TRACE(logger, "This is TRACE");
+    LOGLF_INFO(logger, "This is INFO");
+    LOGLF_DEBUG(logger, "This is DEBUG");
+    LOGLF_WARN(logger, "This is WARN");
+    LOGLF_ERROR(logger, "This is ERROR");
+    LOGL_FATAL(logger, "This is FATAL %d %s", 42, "logging");
+    LOGLF_INFO(logger, "Format %1% %2% %3%" % 3 % 2.71828 % "foo c++");
+    check("INFO - This is INFO\n"
+          "WARN - This is WARN\n"
+          "ERROR - This is ERROR\n"
+          "FATAL - This is FATAL 42 logging\n"
+          "INFO - Format 3 2.71828 foo c++\n");
 }

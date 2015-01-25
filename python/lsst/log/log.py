@@ -49,8 +49,7 @@ def configure_prop(properties):
     configure_prop_iface(properties)
 
 def getDefaultLoggerName():
-    name = getDefaultLoggerName_iface()
-    return name
+    return getDefaultLoggerName_iface()
 
 def pushContext(name):
     pushContext_iface(name)
@@ -83,11 +82,11 @@ def _getFuncName(depth):
     return inspect.stack()[depth+1][3]
 
 def log(loggername, level, fmt, *args, **kwargs):
-    if 'depth' in kwargs:
-        depth = kwargs['depth']
-    else:
-        depth = 1
     if isEnabledFor(loggername, level):
+        if 'depth' in kwargs:
+            depth = kwargs['depth']
+        else:
+            depth = 1
         frame = _getFrame(depth)
         forcedLog_iface(loggername, level,
                         path.split(frame.f_code.co_filename)[1],
@@ -111,7 +110,34 @@ def error(fmt, *args):
 def fatal(fmt, *args):
     log("", FATAL, fmt, *args, depth=2)
 
-class LogContext:
+class Logger(object):
+    def __init__(self, name):
+        with LogContext(name):
+            self.logger = getDefaultLoggerName()
+
+    def trace(self, fmt, *args):
+        self.log(TRACE, fmt, *args, depth=2)
+
+    def debug(self, fmt, *args):
+        self.log(DEBUG, fmt, *args, depth=2)
+
+    def info(self, fmt, *args):
+        self.log(INFO, fmt, *args, depth=2)
+
+    def warn(self, fmt, *args):
+        self.log(WARN, fmt, *args, depth=2)
+
+    def error(self, fmt, *args):
+        self.log(ERROR, fmt, *args, depth=2)
+
+    def fatal(self, fmt, *args):
+        self.log(FATAL, fmt, *args, depth=2)
+
+    def log(self, level, fmt, *args, **kwargs):
+        log(self.logger, level, fmt, *args, **kwargs)
+
+
+class LogContext(object):
 
     def __init__(self, name=None, level=None):
         self.name = name

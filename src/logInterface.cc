@@ -88,7 +88,7 @@ void forcedLog_iface(std::string const& loggername, int level,
                      std::string const& filename,
                      std::string const& funcname, int lineno,
                      std::string const& msg) {
-    Log::getLogger(loggername)->forcedLog(
+    Log::getLogger(loggername).forcedLog(
         log4cxx::Level::toLevel(level), msg.c_str(),
         log4cxx::spi::LocationInfo(filename.c_str(), funcname.c_str(), lineno)
     );
