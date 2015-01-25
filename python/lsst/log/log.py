@@ -114,7 +114,34 @@ def fatal(fmt, *args):
 def lwpID():
     return lwpID_iface()
 
-class LogContext:
+class Logger(object):
+    def __init__(self, name):
+        with LogContext(name):
+            self.logger = getDefaultLoggerName()
+
+    def trace(self, fmt, *args):
+        self.log(TRACE, fmt, *args, depth=2)
+
+    def debug(self, fmt, *args):
+        self.log(DEBUG, fmt, *args, depth=2)
+
+    def info(self, fmt, *args):
+        self.log(INFO, fmt, *args, depth=2)
+
+    def warn(self, fmt, *args):
+        self.log(WARN, fmt, *args, depth=2)
+
+    def error(self, fmt, *args):
+        self.log(ERROR, fmt, *args, depth=2)
+
+    def fatal(self, fmt, *args):
+        self.log(FATAL, fmt, *args, depth=2)
+
+    def log(self, level, fmt, *args, **kwargs):
+        log(self.logger, level, fmt, *args, **kwargs)
+
+
+class LogContext(object):
 
     def __init__(self, name=None, level=None):
         self.name = name

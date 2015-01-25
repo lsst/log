@@ -93,8 +93,8 @@ class TestLog(unittest.TestCase):
         """
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
+            log.log(log.getDefaultLoggerName(), log.INFO, "This is INFO")
             log.trace("This is TRACE")
-            log.info("This is INFO")
             log.debug("This is DEBUG")
             log.warn("This is WARN")
             log.error("This is ERROR")
@@ -328,6 +328,29 @@ log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
         lwp2 = log.lwpID()
 
         self.assertEqual(lwp1, lwp2)
+
+    def testLogger(self):
+        """
+        Test log object.
+        """
+        with TestLog.StdoutCapture(self.outputFilename):
+            log.configure()
+            logger = log.Logger("b")
+            logger.trace("This is TRACE")
+            logger.info("This is INFO")
+            logger.debug("This is DEBUG")
+            logger.warn("This is WARN")
+            logger.error("This is ERROR")
+            logger.fatal("This is FATAL")
+            logger.info("Format %d %g %s", 3, 2.71828, "foo")
+        self.check("""
+ INFO b null - This is INFO
+ DEBUG b null - This is DEBUG
+ WARN b null - This is WARN
+ ERROR b null - This is ERROR
+ FATAL b null - This is FATAL
+ INFO b null - Format 3 2.71828 foo
+""")
 
 ####################################################################################
 def main():

@@ -114,7 +114,7 @@ namespace log {
 
 /** Reference to the defaultLogger used by LOG* macros.
   */
-log4cxx::LoggerPtr Log::defaultLogger = log4cxx::Logger::getRootLogger();
+Log Log::defaultLogger(log4cxx::Logger::getRootLogger());
 
 /** Initializes logging module (e.g. default logger and logging context).
   */
@@ -200,7 +200,7 @@ void Log::configure_prop(std::string const& properties) {
   * @return String containing the default logger name.
   */
 std::string Log::getDefaultLoggerName() {
-    std::string name = defaultLogger->getName();
+    std::string name = defaultLogger._logger->getName();
     if (name == "root") {
         name.clear();
     }
@@ -213,11 +213,11 @@ std::string Log::getDefaultLoggerName() {
   *
   * @param loggername  Name of logger to return.
   */
-log4cxx::LoggerPtr Log::getLogger(std::string const& loggername) {
+Log Log::getLogger(std::string const& loggername) {
     if (loggername.empty()){
         return defaultLogger;
     } else {
-        return log4cxx::Logger::getLogger(loggername);
+        return Log(log4cxx::Logger::getLogger(loggername));
     }
 }
 
@@ -238,7 +238,7 @@ void Log::pushContext(std::string const& name) {
     }
 
     // Construct new default logger name
-    std::string newName = defaultLogger->getName();
+    std::string newName = defaultLogger._logger->getName();
     if (newName == "root") {
         newName = name;
     } else {
@@ -246,7 +246,7 @@ void Log::pushContext(std::string const& name) {
         newName += name;
     }
     // Update defaultLogger
-    defaultLogger = log4cxx::Logger::getLogger(newName);
+    defaultLogger = Log(log4cxx::Logger::getLogger(newName));
 }
 
 /** Pops the last pushed name off the global hierarchical default logger
@@ -255,10 +255,10 @@ void Log::pushContext(std::string const& name) {
 void Log::popContext() {
     // switch to parent logger, this assumes that loggers are not
     // re-parented between calls to push and pop
-    log4cxx::LoggerPtr parent = defaultLogger->getParent();
+    log4cxx::LoggerPtr parent = defaultLogger._logger->getParent();
     // root logger does not have parent, stay at root instead
     if (parent) {
-        defaultLogger = parent;
+        defaultLogger = Log(parent);
     }
 }
 
@@ -302,8 +302,8 @@ int Log::MDCRegisterInit(std::function<void()> function) {
   * @param logger  Logger with threshold to adjust.
   * @param level   New logging threshold.
   */
-void Log::setLevel(log4cxx::LoggerPtr logger, int level) {
-    logger->setLevel(log4cxx::Level::toLevel(level));
+void Log::setLevel(Log logger, int level) {
+    logger._logger->setLevel(log4cxx::Level::toLevel(level));
 }
 
 /** Set the logging threshold for the logger named LOGGERNAME to LEVEL.
@@ -320,8 +320,8 @@ void Log::setLevel(std::string const& loggername, int level) {
   *
   * @param logger  Logger with threshold to return.
   */
-int Log::getLevel(log4cxx::LoggerPtr logger) {
-    log4cxx::LevelPtr level = logger->getLevel();
+int Log::getLevel(Log logger) {
+    log4cxx::LevelPtr level = logger._logger->getLevel();
     int levelno = -1;
     if (level != NULL) {
         levelno = level->toInt();
@@ -345,8 +345,8 @@ int Log::getLevel(std::string const& loggername) {
   * @param logger  Logger being queried.
   * @param level   Logging threshold to check.
   */
-bool Log::isEnabledFor(log4cxx::LoggerPtr logger, int level) {
-    if (logger->isEnabledFor(log4cxx::Level::toLevel(level))) {
+bool Log::isEnabledFor(Log logger, int level) {
+    if (logger._logger->isEnabledFor(log4cxx::Level::toLevel(level))) {
         return true;
     } else {
         return false;
@@ -367,7 +367,7 @@ bool Log::isEnabledFor(std::string const& loggername, int level) {
 /** Method used by LOG_INFO and similar macros to process a log message
   * with variable arguments along with associated metadata.
   */
-void Log::log(log4cxx::LoggerPtr logger,   ///< the logger
+void Log::log(Log logger,   ///< the logger
               log4cxx::LevelPtr level,     ///< message level
               log4cxx::spi::LocationInfo const& location,  ///< message origin location
               char const* fmt,             ///< message format string
@@ -382,7 +382,7 @@ void Log::log(log4cxx::LoggerPtr logger,   ///< the logger
 
 /** Method used by LOGS_INFO and similar macros to process a log message..
   */
-void Log::logMsg(log4cxx::LoggerPtr logger,   ///< the logger
+void Log::logMsg(Log logger, ///< the logger
                  log4cxx::LevelPtr level,     ///< message level
                  log4cxx::spi::LocationInfo const& location,  ///< message origin location
                  std::string const& msg       ///< message string
@@ -405,7 +405,7 @@ void Log::logMsg(log4cxx::LoggerPtr logger,   ///< the logger
     }
 
     // forward everything to logger
-    logger->forcedLog(level, msg, location);
+    logger._logger->forcedLog(level, msg, location);
 }
 
 unsigned lwpID() {
