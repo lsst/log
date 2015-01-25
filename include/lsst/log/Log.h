@@ -75,10 +75,10 @@
 
 /**
   * @def LOG_GET(logger)
-  * Returns a pointer to the log4cxx logger object associated with logger.
-  * @return log4cxx::LoggerPtr corresponding to logger.
+  * Returns a Log object associated with logger.
+  * @return Log object corresponding to logger.
   *
-  * @param logger  Either a logger name or a log4cxx logger object.
+  * @param logger  Either a logger name or a Log object.
   */
 #define LOG_GET(logger) lsst::log::Log::getLogger(logger)
 
@@ -165,7 +165,7 @@
   * Retrieve the logging threshold for LOGGER.
   * @return int Indicating the logging threshold.
   *
-  * @param logger  Either name of logger or log4cxx logger with threshold
+  * @param logger  Either a logger name or a Log object with threshold
   *                to return.
   */
 #define LOG_GET_LVL(logger) \
@@ -177,7 +177,7 @@
   * to LEVEL.
   * @return Bool indicating whether or not logger is enabled.
   *
-  * @param logger  Either name of logger or log4cxx logger being queried.
+  * @param logger  Either a logger name or a Log object being queried.
   * @param level   Logging threshold to check.
   */
 #define LOG_CHECK_LVL(logger, level) \
@@ -190,7 +190,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_TRACE() \
-    LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())
+    LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isTraceEnabled())
 
 /**
   * @def LOG_CHECK_DEBUG()
@@ -199,7 +199,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_DEBUG() \
-    LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())
+    LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isDebugEnabled())
 
 /**
   * @def LOG_CHECK_INFO()
@@ -208,7 +208,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_INFO() \
-        lsst::log::Log::defaultLogger->isInfoEnabled()
+        lsst::log::Log::defaultLogger.isInfoEnabled()
 
 /**
   * @def LOG_CHECK_WARN()
@@ -217,7 +217,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_WARN() \
-        lsst::log::Log::defaultLogger->isWarnEnabled()
+        lsst::log::Log::defaultLogger.isWarnEnabled()
 
 /**
   * @def LOG_CHECK_ERROR()
@@ -226,7 +226,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_ERROR() \
-        lsst::log::Log::defaultLogger->isErrorEnabled()
+        lsst::log::Log::defaultLogger.isErrorEnabled()
 
 /**
   * @def LOG_CHECK_FATAL()
@@ -235,13 +235,13 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_FATAL() \
-        lsst::log::Log::defaultLogger->isFatalEnabled()
+        lsst::log::Log::defaultLogger.isFatalEnabled()
 
 /**
   * @def LOG(logger, level, message...)
   * Log a message using a varargs/printf style interface.
   *
-  * @param logger      Either name of logger or log4cxx logger object.
+  * @param logger      Either a logger name or a Log object.
   * @param level       Logging level associated with message.
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
@@ -262,7 +262,7 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_TRACE(message...) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isTraceEnabled())) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getTrace(), LOG4CXX_LOCATION, message); } \
     } while (false)
@@ -276,7 +276,7 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_DEBUG(message...) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isDebugEnabled())) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getDebug(), LOG4CXX_LOCATION, message); } \
     } while (false)
@@ -290,7 +290,7 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_INFO(message...) \
-    do { if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isInfoEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getInfo(), LOG4CXX_LOCATION, message); } \
     } while (false)
@@ -304,7 +304,7 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_WARN(message...) \
-    do { if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isWarnEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getWarn(), LOG4CXX_LOCATION, message); } \
     } while (false)
@@ -318,7 +318,7 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_ERROR(message...) \
-    do { if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isErrorEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getError(), LOG4CXX_LOCATION, message); } \
     } while (false)
@@ -332,7 +332,7 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_FATAL(message...) \
-    do { if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isFatalEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getFatal(), LOG4CXX_LOCATION, message); } \
     } while (false)
@@ -347,7 +347,7 @@
   * Usual caveat regarding commas inside macro arguments applies to
   * message argument.
   *
-  * @param logger   Either name of logger or log4cxx logger object.
+  * @param logger   Either a logger name or a Log object.
   * @param level    Logging level associated with message.
   * @param message  Message to be logged.
   */
@@ -372,7 +372,7 @@
   * @param message Message to be logged.
   */
 #define LOGS_TRACE(message) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isTraceEnabled())) { \
         std::ostringstream stream_; \
         stream_ << message; \
         lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
@@ -392,7 +392,7 @@
   * @param message Message to be logged.
   */
 #define LOGS_DEBUG(message) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isDebugEnabled())) { \
         std::ostringstream stream_; \
         stream_ << message; \
         lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
@@ -412,7 +412,7 @@
   * @param message Message to be logged.
   */
 #define LOGS_INFO(message) \
-    do { if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isInfoEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
         lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
@@ -432,7 +432,7 @@
   * @param message Message to be logged.
   */
 #define LOGS_WARN(message) \
-    do { if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isWarnEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
         lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
@@ -452,7 +452,7 @@
   * @param message Message to be logged.
   */
 #define LOGS_ERROR(message) \
-    do { if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isErrorEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
         lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
@@ -472,12 +472,96 @@
   * @param message Message to be logged.
   */
 #define LOGS_FATAL(message) \
-    do { if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isFatalEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
         lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getFatal(), LOG4CXX_LOCATION, \
             stream_.str()); } \
+    } while (false)
+
+/**
+  * @def LOGL_TRACE(logger, message...)
+  * Log a trace-level message using a varargs/printf style interface.
+  *
+  * @param logger   Either a logger name or a Log object.
+  * @param message  An sprintf-compatible format string followed by zero,
+  *                    one, or more comma-separated arguments.
+  */
+#define LOGL_TRACE(logger, message...) \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::getLogger(logger).isTraceEnabled())) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getTrace(), \
+            LOG4CXX_LOCATION, message); } \
+    } while (false)
+
+/**
+  * @def LOGL_DEBUG(logger, message...)
+  * Log a debug-level message using a varargs/printf style interface.
+  *
+  * @param logger   Either a logger name or a Log object.
+  * @param message  An sprintf-compatible format string followed by zero,
+  *                    one, or more comma-separated arguments.
+  */
+#define LOGL_DEBUG(logger, message...) \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::getLogger(logger).isDebugEnabled())) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getDebug(), \
+            LOG4CXX_LOCATION, message); } \
+    } while (false)
+
+/**
+  * @def LOGL_INFO(logger, message...)
+  * Log a info-level message using a varargs/printf style interface.
+  *
+  * @param logger   Either a logger name or a Log object.
+  * @param message  An sprintf-compatible format string followed by zero,
+  *                    one, or more comma-separated arguments.
+  */
+#define LOGL_INFO(logger, message...) \
+    do { if (lsst::log::Log::getLogger(logger).isInfoEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getInfo(), \
+            LOG4CXX_LOCATION, message); } \
+    } while (false)
+
+/**
+  * @def LOGL_WARN(logger, message...)
+  * Log a warn-level message using a varargs/printf style interface.
+  *
+  * @param logger   Either a logger name or a Log object.
+  * @param message  An sprintf-compatible format string followed by zero,
+  *                    one, or more comma-separated arguments.
+  */
+#define LOGL_WARN(logger, message...) \
+    do { if (lsst::log::Log::getLogger(logger).isWarnEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getWarn(), \
+            LOG4CXX_LOCATION, message); } \
+    } while (false)
+
+/**
+  * @def LOGL_ERROR(logger, message...)
+  * Log a error-level message using a varargs/printf style interface.
+  *
+  * @param logger   Either a logger name or a Log object.
+  * @param message  An sprintf-compatible format string followed by zero,
+  *                    one, or more comma-separated arguments.
+  */
+#define LOGL_ERROR(logger, message...) \
+    do { if (lsst::log::Log::getLogger(logger).isErrorEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getError(), \
+            LOG4CXX_LOCATION, message); } \
+    } while (false)
+
+/**
+  * @def LOGL_FATAL(logger, message...)
+  * Log a fatal-level message using a varargs/printf style interface.
+  *
+  * @param logger   Either a logger name or a Log object.
+  * @param message  An sprintf-compatible format string followed by zero,
+  *                    one, or more comma-separated arguments.
+  */
+#define LOGL_FATAL(logger, message...) \
+    do { if (lsst::log::Log::getLogger(logger).isFatalEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getFatal(), \
+            LOG4CXX_LOCATION, message); } \
     } while (false)
 
 #define LOG_LVL_TRACE static_cast<int>(log4cxx::Level::TRACE_INT)
@@ -487,7 +571,7 @@
 #define LOG_LVL_ERROR static_cast<int>(log4cxx::Level::ERROR_INT)
 #define LOG_LVL_FATAL static_cast<int>(log4cxx::Level::FATAL_INT)
 
-#define LOG_LOGGER log4cxx::LoggerPtr
+#define LOG_LOGGER lsst::log::Log
 #define LOG_CTX lsst::log::LogContext
 
 namespace lsst {
@@ -500,31 +584,68 @@ namespace log {
   */
 class Log {
 public:
-    static log4cxx::LoggerPtr defaultLogger;
+    Log() : _logger(defaultLogger._logger) { }
+    Log(std::string const& contextName) {
+        pushContext(contextName);
+        _logger = defaultLogger._logger;
+        popContext();
+    }
+
+    /**
+     *  Check whether the logger is enabled for the DEBUG Level
+     */
+    bool isDebugEnabled(void) const { return _logger->isDebugEnabled(); }
+    /**
+     *  Check whether the logger is enabled for the ERROR Level
+     */
+    bool isErrorEnabled(void) const { return _logger->isErrorEnabled(); }
+    /**
+     *  Check whether the logger is enabled for the FATAL Level
+     */
+    bool isFatalEnabled(void) const { return _logger->isFatalEnabled(); }
+    /**
+     *  Check whether the logger is enabled for the INFO Level
+     */
+    bool isInfoEnabled(void) const { return _logger->isInfoEnabled(); }
+    /**
+     *  Check whether the logger is enabled for the TRACE Level
+     */
+    bool isTraceEnabled(void) const { return _logger->isTraceEnabled(); }
+    /**
+     *  Check whether the logger is enabled for the WARN Level
+     */
+    bool isWarnEnabled(void) const { return _logger->isWarnEnabled(); }
+
+    static Log defaultLogger;
     static void initLog(void);
     static void configure(void);
     static void configure(std::string const& filename);
     static void configure_prop(std::string const& properties);
     static std::string getDefaultLoggerName(void);
-    static log4cxx::LoggerPtr getLogger(log4cxx::LoggerPtr logger) { return logger; }
-    static log4cxx::LoggerPtr getLogger(std::string const& loggername);
+    static Log getLogger(Log logger) { return logger; }
+    static Log getLogger(std::string const& loggername);
     static void pushContext(std::string const& name);
     static void popContext(void);
     static void MDC(std::string const& key, std::string const& value);
     static void MDCRemove(std::string const& key);
     static int MDCRegisterInit(std::function<void()> function);
-    static void setLevel(log4cxx::LoggerPtr logger, int level);
+    static void setLevel(Log logger, int level);
     static void setLevel(std::string const& loggername, int level);
-    static int getLevel(log4cxx::LoggerPtr logger);
+    static int getLevel(Log logger);
     static int getLevel(std::string const& loggername);
-    static bool isEnabledFor(log4cxx::LoggerPtr logger, int level);
+    static bool isEnabledFor(Log logger, int level);
     static bool isEnabledFor(std::string const& loggername, int level);
-    static void log(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
+    static void log(Log logger, log4cxx::LevelPtr level,
                     log4cxx::spi::LocationInfo const& location,
                     char const* fmt, ...);
-    static void logMsg(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
+    static void logMsg(Log logger, log4cxx::LevelPtr level,
                        log4cxx::spi::LocationInfo const& location,
                        std::string const& msg);
+
+private:
+    Log(log4cxx::LoggerPtr const& logger) : _logger(logger) { }
+
+    log4cxx::LoggerPtr _logger;
 };
 
 /** This class handles the default logger name of a logging context.

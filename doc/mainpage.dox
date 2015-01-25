@@ -102,6 +102,12 @@ In C++, the following varargs/printf style logging macros are available:
 - `LOG_WARN(fmt...)` Log a message of level `LOG_LVL_WARN` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
 - `LOG_ERROR(fmt...)` Log a message of level `LOG_LVL_ERROR` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
 - `LOG_FATAL(fmt...)` Log a message of level `LOG_LVL_FATAL` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
+- `LOGL_TRACE(logger, fmt...)` Log a message of level `LOG_LVL_TRACE` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
+- `LOGL_DEBUG(logger, fmt...)` Log a message of level `LOG_LVL_DEBUG` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
+- `LOGL_INFO(logger, fmt...)` Log a message of level `LOG_LVL_INFO` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
+- `LOGL_WARN(logger, fmt...)` Log a message of level `LOG_LVL_WARN` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
+- `LOGL_ERROR(logger, fmt...)` Log a message of level `LOG_LVL_ERROR` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
+- `LOGL_FATAL(logger, fmt...)` Log a message of level `LOG_LVL_FATAL` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
 
 Alternative set of macros allows one to use iostream-based formatting. In the macros below `expression` is any C++ expression which can appear on the right side of the stream insertion operator, e.g. `LOGS_DEBUG("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding  commas inside macro arguments applies to `expression` argument:
 - `LOGS(loggername, level, expression)` Log a message of level '''`level`''' to the logger named '''`loggername`'''.
