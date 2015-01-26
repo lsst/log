@@ -711,11 +711,6 @@ namespace log {
 class Log {
 public:
     Log() : _logger(defaultLogger._logger) { }
-    Log(std::string const& contextName) {
-        pushContext(contextName);
-        _logger = defaultLogger._logger;
-        popContext();
-    }
 
     /**
      *  Check whether the logger is enabled for the DEBUG Level

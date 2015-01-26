@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(lwp_id) {
 BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
     configure(LAYOUT_SIMPLE);
     std::string loggerName = "a";
-    lsst::log::Log logger(loggerName);
+    lsst::log::Log logger = lsst::log::Log::getLogger(loggerName);
     LOG_SET_LVL(loggerName, LOG_LVL_INFO);
     LOG(loggerName, LOG_LVL_INFO, "This is INFO 1");
     LOG(logger, LOG_LVL_INFO, "This is INFO 2");
