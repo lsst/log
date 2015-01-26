@@ -617,9 +617,11 @@ public:
     static int getLevel(std::string const& loggername);
     static bool isEnabledFor(Log logger, int level);
     static bool isEnabledFor(std::string const& loggername, int level);
+#ifndef SWIG
     static void vlog(Log logger, log4cxx::LevelPtr level,
                      std::string const& filename, std::string const& funcname,
                      unsigned int lineno, char const* fmt, va_list args);
+#endif
     static void log(std::string const& loggername, log4cxx::LevelPtr level,
                     std::string const& filename, std::string const& funcname,
                     unsigned int lineno, char const* fmt, ...);
