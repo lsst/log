@@ -584,11 +584,12 @@ private:
   */
 class Log {
 public:
+    Log() { _logger = defaultLogger._logger; };
     Log(std::string const& contextName) {
         pushContext(contextName);
         _logger = defaultLogger._logger;
         popContext();
-    };;
+    };
     void forcedLog(log4cxx::LevelPtr const& level, std::string const& message,
                    log4cxx::spi::LocationInfo const& location) const {
         return _logger->forcedLog(level, message, location);
