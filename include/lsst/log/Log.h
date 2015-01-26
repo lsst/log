@@ -535,6 +535,7 @@
 #define LOG_LVL_ERROR static_cast<int>(log4cxx::Level::ERROR_INT)
 #define LOG_LVL_FATAL static_cast<int>(log4cxx::Level::FATAL_INT)
 
+#define LOG_LOGGER lsst::log::Log
 #define LOG_CTX lsst::log::LogContext
 
 namespace lsst {
