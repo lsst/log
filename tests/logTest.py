@@ -294,7 +294,7 @@ DEBUG - This is DEBUG
         """
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
-            logger = log.Logger("b")
+            logger = log.Log("b")
             logger.trace("This is TRACE")
             logger.info("This is INFO")
             logger.debug("This is DEBUG")

@@ -22,122 +22,68 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from lsst.log import (configure_iface, configure_prop_iface,
-                      getDefaultLoggerName_iface, pushContext_iface,
-                      popContext_iface, MDC_iface, MDCRemove_iface,
-                      getLevel_iface, setLevel_iface,
-                      isEnabledFor_iface, forcedLog_iface)
 import logging
 import inspect
 from os import path
 
-# logging levels (these conform to standard log4cxx levels)
-TRACE = 5000
-DEBUG = 10000
-INFO = 20000
-WARN = 30000
-ERROR = 40000
-FATAL = 50000
+from .logLib import Log
+
+TRACE = Log.TRACE
+DEBUG = Log.DEBUG
+INFO = Log.INFO
+WARN = Log.WARN
+ERROR = Log.ERROR
+FATAL = Log.FATAL
+
+# Export static functions from Log class to module namespace
 
 def configure(*args):
-    if len(args) > 0:
-        configure_iface(args[0])
-    else:
-        configure_iface()
+    Log.configure(*args)
 
 def configure_prop(properties):
-    configure_prop_iface(properties)
+    Log.configure_prop(properties)
 
 def getDefaultLoggerName():
-    return getDefaultLoggerName_iface()
+    return Log.getDefaultLoggerName()
 
 def pushContext(name):
-    pushContext_iface(name)
+    Log.pushContext(name)
 
 def popContext():
-    popContext_iface()
-    
+    Log.popContext()
+
 def MDC(key, value):
-    MDC_iface(str(key), str(value))
+    Log.MDC(key, str(value))
 
 def MDCRemove(key):
-    MDCRemove_iface(str(key))
+    Log.MDCRemove(key)
 
-def setLevel(loggername, level):
-    setLevel_iface(loggername, level)
-
-def getLevel(loggername):
-    return getLevel_iface(loggername)
-
-def isEnabledFor(loggername, level):
-    return isEnabledFor_iface(loggername, level)
-    
-def _getFrame(depth):
-    frame = inspect.currentframe().f_back
-    for i in range(depth):
-        frame = frame.f_back
-    return frame
-
-def _getFuncName(depth):
-    return inspect.stack()[depth+1][3]
+def isEnabledFor(logger, level):
+    Log.isEnabledFor(Log.getLogger(logger), level)
 
 def log(loggername, level, fmt, *args, **kwargs):
-    if isEnabledFor(loggername, level):
-        if 'depth' in kwargs:
-            depth = kwargs['depth']
-        else:
-            depth = 1
-        frame = _getFrame(depth)
-        forcedLog_iface(loggername, level,
-                        path.split(frame.f_code.co_filename)[1],
-                        _getFuncName(depth), frame.f_lineno, fmt % args)
+    Log.getLogger(loggername)._log(level, fmt, *args)
 
 def trace(fmt, *args):
-    log("", TRACE, fmt, *args, depth=2)
+    Log.getDefaultLogger()._log(TRACE, fmt, *args)
 
 def debug(fmt, *args):
-    log("", DEBUG, fmt, *args, depth=2)
+    Log.getDefaultLogger()._log(DEBUG, fmt, *args)
 
 def info(fmt, *args):
-    log("", INFO, fmt, *args, depth=2)
+    Log.getDefaultLogger()._log(INFO, fmt, *args)
 
 def warn(fmt, *args):
-    log("", WARN, fmt, *args, depth=2)
+    Log.getDefaultLogger()._log(WARN, fmt, *args)
 
 def error(fmt, *args):
-    log("", ERROR, fmt, *args, depth=2)
+    Log.getDefaultLogger()._log(ERROR, fmt, *args)
 
 def fatal(fmt, *args):
-    log("", FATAL, fmt, *args, depth=2)
-
-class Logger(object):
-    def __init__(self, name):
-        with LogContext(name):
-            self.logger = getDefaultLoggerName()
-
-    def trace(self, fmt, *args):
-        self.log(TRACE, fmt, *args, depth=2)
-
-    def debug(self, fmt, *args):
-        self.log(DEBUG, fmt, *args, depth=2)
-
-    def info(self, fmt, *args):
-        self.log(INFO, fmt, *args, depth=2)
-
-    def warn(self, fmt, *args):
-        self.log(WARN, fmt, *args, depth=2)
-
-    def error(self, fmt, *args):
-        self.log(ERROR, fmt, *args, depth=2)
-
-    def fatal(self, fmt, *args):
-        self.log(FATAL, fmt, *args, depth=2)
-
-    def log(self, level, fmt, *args, **kwargs):
-        log(self.logger, level, fmt, *args, **kwargs)
-
+    Log.getDefaultLogger()._log(FATAL, fmt, *args)
 
 class LogContext(object):
+    """Context manager for logging."""
 
     def __init__(self, name=None, level=None):
         self.name = name
@@ -155,25 +101,27 @@ class LogContext(object):
 
     def open(self):
         if self.name is not None:
-            pushContext(self.name)
+            Log.pushContext(self.name)
         if self.level is not None:
-            setLevel("", self.level)
+            Log.setLevel("", self.level)
 
     def close(self):
         if self.name is not None:
-            popContext()
+            Log.popContext()
             self.name = None
 
     def setLevel(self, level):
-        setLevel("", level)
+        Log.setLevel("", level)
 
     def getLevel(self):
-        return getLevel("")
+        return Log.getLevel("")
 
     def isEnabledFor(self, level):
-        return isEnabledFor("", level)
+        return Log.isEnabledFor("", level)
 
 class LogHandler(logging.Handler):
+    """Handler for Python logging module that emits to LSST logging."""
+
     def __init__(self, name=None, level=None):
         self.context = LogContext(name=name, level=level)
         self.context.open()
@@ -193,8 +141,10 @@ class LogHandler(logging.Handler):
             logging.Handler.handle(self, record)
 
     def emit(self, record):
-        forcedLog_iface("", self.translateLevel(record.levelno), record.filename,
-                  record.funcName, record.lineno, record.msg % record.args)
+        Log.log(Log.getDefaultLogger(),
+                self.translateLevel(record.levelno),
+                record.filename, record.funcName, record.lineno,
+                record.msg % record.args)
 
     def translateLevel(self, levelno):
         """
