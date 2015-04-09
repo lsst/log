@@ -1,6 +1,5 @@
 setupRequired(boost)
 setupRequired(log4cxx)
-setupRequired(utils)
 #setupRequired(pex_exceptions)
 setupRequired(sconsUtils)
 
