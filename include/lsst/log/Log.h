@@ -499,6 +499,7 @@ public:
     static void pushContext(std::string const& name);
     static void popContext(void);
     static void MDC(std::string const& key, std::string const& value);
+    static void MDCPutPid();
     static void MDCRemove(std::string const& key);
     static void setLevel(log4cxx::LoggerPtr logger, int level);
     static void setLevel(std::string const& loggername, int level);

@@ -31,6 +31,8 @@
  */
 
 // System headers
+#include <iostream>
+#include <sstream>
 #include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +42,7 @@
 #include <log4cxx/consoleappender.h>
 #include <log4cxx/helpers/bytearrayinputstream.h>
 #include <log4cxx/logmanager.h>
+#include <log4cxx/mdc.h>
 #include <log4cxx/propertyconfigurator.h>
 #include <log4cxx/simplelayout.h>
 #include <log4cxx/xml/domconfigurator.h>
@@ -255,7 +258,7 @@ void Log::popContext() {
     }
 }
 
-/** Places a KEY/VALUE pair in the Mapped Diagnostic Context (MDC) for the
+/** Places a (KEY, VALUE) pair in the Mapped Diagnostic Context (MDC) for the
   * current thread. The VALUE may then be included in log messages by using
   * the following the `X` conversion character within a pattern layout as
   * `%X{KEY}`.
