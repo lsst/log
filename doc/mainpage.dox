@@ -357,7 +357,7 @@ The following is a simple recipe for emulating additional debugging levels using
     debugAt(4, "Debug 4 statement that will NOT display")
     debugAt(5, "Debug 5 statement that will display")
 
-\section mappedDC Mapped Diagnostic Context
+\section MDC Mapped Diagnostic Context
 
 User-specified metadata in the form of key/value pairs may be given to lsst.log using the macro `LOG_MDC(key, value)` within C++, or the `lsst.log` function `MDC(key, value)` within Python. These metadata may then be automatically included as part of any/all subsequent log messages by specifying the corresponding key in the appender's formatting string as per standard log4cxx. These metadata are handled using log4cxx's mapped diagnostic context (MDC) feature, which has thread-level scope.
 
@@ -373,6 +373,32 @@ In C++, the following MDC macros are available:
 In Python, the `lsst.log` module provides the following MDC functions:
 - `MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender. Note that `value` is converted to a string by Python before it is stored in the MDC. 
 - `MDCRemove(key)` Delete the existing value from the global map that is associated with '''`key`'''.
+
+\subsection PID Display PID in the LSST logs
+
+PID can be displayed in the logs using code below: 
+
+In C++:
+
+    #include/lsst/log/Log.h
+    ...
+    // Add a PID key in MDC
+    LOG_MDC("PID", std::to_string(getpid()));
+    // Then configure lsst/log
+    ...
+
+In python:
+
+    import lsst.log as log
+    ...
+    # Add a PID key in MDC
+    log.MDC("PID", os.getpid())
+    # Then configure lsst/log
+    ...
+
+This has to be done after fork() and corresponding formatting code needs to be added to the logger configuration:
+
+    log4j.appender.FILE.layout.conversionPattern=%X{PID} - %m%n
 
 \section benchmarks Benchmarks
 

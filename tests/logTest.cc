@@ -26,7 +26,13 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
+#include <vector>
+
+// Third-party headers
+#include <boost/format.hpp>
 
 // Local headers
 #include "lsst/log/Log.h"
@@ -37,6 +43,25 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
+
+/* Compute line numbers in expected debug log messages
+ *
+ * This enforces consistency of string containing
+ * expected log messages in case this source file
+ * is modified
+ *
+ */
+#define LOGF_DEBUG_LINENO(message, args) \
+    LOGF_DEBUG(message); \
+    lineno_helper(__LINE__, args);
+
+/* Compute line numbers in expected info log messages
+ */
+#define LOGF_INFO_LINENO(message, args) \
+    LOGF_INFO(message); \
+    lineno_helper(__LINE__, args);
+
+#define MDC_PID_KEY "PID"
 
 struct LogFixture {
     std::string ofName;
@@ -70,12 +95,45 @@ struct LogFixture {
         LOG_CONFIG_PROP(config);
     }
 
+    std::string format_range(const std::string& format_string, const std::vector<std::string>& args)
+    {
+        boost::format f(format_string);
+        for (std::vector<std::string>::const_iterator it = args.begin(); it != args.end(); ++it) {
+            f % *it;
+        }
+        return f.str();
+    }
+
     void check(const std::string& expected) {
         std::ifstream t(ofName.c_str());
         std::string received((std::istreambuf_iterator<char>(t)),
                              std::istreambuf_iterator<char>());
         BOOST_CHECK_EQUAL(expected, received);
-    }    
+    }
+
+    void lineno_helper(const long& line, std::vector<std::string>& args) {
+        std::stringstream ss;
+        ss << line;
+        args.push_back(std::to_string(line));
+    }
+
+    void pid_log_helper(const std::string& msg, std::vector<std::string>& args) {
+
+        std::stringstream ss;
+
+        configure(LAYOUT_PATTERN);
+        LOG_MDC(MDC_PID_KEY, std::to_string(getpid()));
+
+        LOGF_INFO_LINENO(msg, args);
+
+        LOG_MDC_REMOVE(MDC_PID_KEY);
+
+        // Add args for building expected log message
+        args.push_back(msg);
+        ss << getpid();
+        args.push_back(ss.str());
+    }
+
 };
 
 
@@ -154,46 +212,98 @@ BOOST_FIXTURE_TEST_CASE(context, LogFixture) {
 
 
 BOOST_FIXTURE_TEST_CASE(pattern, LogFixture) {
+
+    std::string expected_msg =
+          "INFO  root pattern test_method (tests/logTest.cc:%1%) tests/logTest.cc(%1%) - This is INFO - {}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:%2%) tests/logTest.cc(%2%) - This is DEBUG - {}\n"
+          "INFO  root pattern test_method (tests/logTest.cc:%3%) tests/logTest.cc(%3%) - This is INFO 2 - {{x,3}{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:%4%) tests/logTest.cc(%4%) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/logTest.cc:%5%) tests/logTest.cc(%5%) - This is INFO 3 - {{x,3}{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/logTest.cc:%6%) tests/logTest.cc(%6%) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern test_method (tests/logTest.cc:%7%) tests/logTest.cc(%7%) - This is INFO 4 - {{y,foo}}\n"
+          "DEBUG component pattern test_method (tests/logTest.cc:%8%) tests/logTest.cc(%8%) - This is DEBUG 4 - {{y,foo}}\n"
+          "INFO  root pattern test_method (tests/logTest.cc:%9%) tests/logTest.cc(%9%) - This is INFO 5 - {{y,foo}}\n"
+          "DEBUG root pattern test_method (tests/logTest.cc:%10%) tests/logTest.cc(%10%) - This is DEBUG 5 - {{y,foo}}\n";
+    std::vector<std::string> args;
+
     configure(LAYOUT_PATTERN);
 
     LOGF_TRACE("This is TRACE");
-    LOGF_INFO("This is INFO");
-    LOGF_DEBUG("This is DEBUG");
+    LOGF_INFO_LINENO("This is INFO", args);
+    LOGF_DEBUG_LINENO("This is DEBUG", args);
 
     LOG_MDC("x", "3");
     LOG_MDC("y", "foo");
 
     LOGF_TRACE("This is TRACE 2");
-    LOGF_INFO("This is INFO 2");
-    LOGF_DEBUG("This is DEBUG 2");
+    LOGF_INFO_LINENO("This is INFO 2", args);
+    LOGF_DEBUG_LINENO("This is DEBUG 2", args);
     LOG_MDC_REMOVE("z");
 
     {
         LOG_CTX context("component");
         LOGF_TRACE("This is TRACE 3");
-        LOGF_INFO("This is INFO 3");
-        LOGF_DEBUG("This is DEBUG 3");
+        LOGF_INFO_LINENO("This is INFO 3", args);
+        LOGF_DEBUG_LINENO("This is DEBUG 3", args);
         LOG_MDC_REMOVE("x");
         LOGF_TRACE("This is TRACE 4");
-        LOGF_INFO("This is INFO 4");
-        LOGF_DEBUG("This is DEBUG 4");
+        LOGF_INFO_LINENO("This is INFO 4", args);
+        LOGF_DEBUG_LINENO("This is DEBUG 4", args);
     }
     LOGF_TRACE("This is TRACE 5");
-    LOGF_INFO("This is INFO 5");
-    LOGF_DEBUG("This is DEBUG 5");
+    LOGF_INFO_LINENO("This is INFO 5", args);
+    LOGF_DEBUG_LINENO("This is DEBUG 5", args);
 
     LOG_MDC_REMOVE("y");
 
-    check("INFO  root pattern test_method (tests/logTest.cc:160) tests/logTest.cc(160) - This is INFO - {}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:161) tests/logTest.cc(161) - This is DEBUG - {}\n"
-          "INFO  root pattern test_method (tests/logTest.cc:167) tests/logTest.cc(167) - This is INFO 2 - {{x,3}{y,foo}}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:168) tests/logTest.cc(168) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern test_method (tests/logTest.cc:174) tests/logTest.cc(174) - This is INFO 3 - {{x,3}{y,foo}}\n"
-          "DEBUG component pattern test_method (tests/logTest.cc:175) tests/logTest.cc(175) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern test_method (tests/logTest.cc:178) tests/logTest.cc(178) - This is INFO 4 - {{y,foo}}\n"
-          "DEBUG component pattern test_method (tests/logTest.cc:179) tests/logTest.cc(179) - This is DEBUG 4 - {{y,foo}}\n"
-          "INFO  root pattern test_method (tests/logTest.cc:182) tests/logTest.cc(182) - This is INFO 5 - {{y,foo}}\n"
-          "DEBUG root pattern test_method (tests/logTest.cc:183) tests/logTest.cc(183) - This is DEBUG 5 - {{y,foo}}\n");
+    expected_msg = format_range(expected_msg, args);
+
+    check(expected_msg);
+
+}
+
+BOOST_FIXTURE_TEST_CASE(MDCPutPid, LogFixture) {
+
+    std::string msg;
+    std::string expected_msg = "INFO  root LogFixture pid_log_helper (tests/logTest.cc:%1%) "
+                               "tests/logTest.cc(%1%) - %2% - "
+                               "{{" MDC_PID_KEY ",%3%}}\n";
+    std::vector<std::string> args;
+    pid_t pid = fork();
+
+    BOOST_CHECK_MESSAGE(pid >= 0, "fork() failed!");
+    if (pid == 0) {
+        msg = "This is INFO in child process";
+
+        // create a log file dedicated to child process
+        ofName = std::tmpnam(NULL);
+
+        pid_log_helper(msg, args);
+    }
+    else if (pid > 0) {
+        msg = "This is INFO in parent process";
+
+        pid_log_helper(msg, args);
+
+        int status;
+
+        int w = wait(&status);
+        if (w == -1) {
+            perror("waitpid");
+            exit(EXIT_FAILURE);
+        }
+        BOOST_CHECK_EQUAL(0, status);
+
+
+    }
+    expected_msg = format_range(expected_msg, args);
+
+    check(expected_msg);
+
+    if (pid == 0) {
+        exit(0);
+    }
+
 }
 
 BOOST_FIXTURE_TEST_CASE(context1, LogFixture) {
