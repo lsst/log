@@ -139,7 +139,7 @@ In the absence of an explicit call to one of the configuration macros, lsst.log 
 
 The same configuration algorithm applies to the C++ macro `LOG_CONFIG()` and the Python `lsst.log` module function `configure()`, which do not take a file path argument (which makes calls to this method/macro optional).
 
-Below is an example of an XML file that configures three appenders and two loggers: the root logger and the named logger "debugs". Each of the appenders contains a layout that defines which metadata to display and how to format log messages. 
+Below is an example of an XML file that configures three appenders and two loggers: the root logger and the named logger "debugs". Each of the appenders contains a layout that defines which metadata to display and how to format log messages.
 
 
 
@@ -153,7 +153,7 @@ Below is an example of an XML file that configures three appenders and two logge
                 <param name="ConversionPattern" value="%d{yyyyMMdd HH:mm:ss,SSS} %t %-5p %m%n"/>
             </layout>
       </appender>
-    
+
       <!-- Output the log message to log file
         -->
       <appender name="appxFileAppender" class="org.apache.log4j.FileAppender">
@@ -163,7 +163,7 @@ Below is an example of an XML file that configures three appenders and two logge
           <param name="ConversionPattern" value="%d %-5p %c{2} - %m%n" />
         </layout>
       </appender>
-    
+
       <!-- My debugging file
         -->
       <appender name="debugsAppender" class="org.apache.log4j.FileAppender">
@@ -173,19 +173,19 @@ Below is an example of an XML file that configures three appenders and two logge
           <param name="ConversionPattern" value="%d [%t] %-5p %c{2} %M (%F:%L) - %m%n" />
         </layout>
       </appender>
-    
+
       <root>
             <priority value="info" />
             <appender-ref ref="appxFileAppender"/>
             <appender-ref ref="appxConsoleAppender"/>
       </root>
-    
+
       <!-- Specify the level and appender for my logger -->
       <category name="debugs" additivity="false" >
             <priority value ="debug" />
             <appender-ref ref="debugsAppender"/>
       </category>
-    
+
      </log4j:configuration>
 
 The root logger is setup to append to both the console and the file `var/log/qserv-master.log` with a threshold of "INFO". The named logger "debugs", meanwhile, is set to exclusively append to the file `var/log/debugs.log` with a threshold of "DEBUG". In this way, "debugs" may capture and isolate verbose debugging messages without polluting the main log. This behavior is triggered by setting the `additivity` attribute of the `category` tag to `"false"`. If `additivity` were set to `"true"` (the default value), all messages sent to "debugs" that met its threshold of "DEBUG" would also be sent to the console and `var/log/qserv-master.log`, the targets of the appenders associated with the root logger.
@@ -194,10 +194,10 @@ Note that as an alternative to XML, a configuration file containing log4j Java p
 
     # Set root logger level to DEBUG and its only appender to A1.
     log4j.rootLogger=DEBUG, A1
-    
+
     # A1 is set to be a ConsoleAppender.
     log4j.appender.A1=org.apache.log4j.ConsoleAppender
-    
+
     # A1 uses PatternLayout.
     log4j.appender.A1.layout=org.apache.log4j.PatternLayout
     log4j.appender.A1.layout.ConversionPattern=%-4r [%t] %-5p %c %x - %m%n
@@ -312,20 +312,20 @@ The following is a simple recipe for emulating additional debugging levels using
         Returns the logger name that corresponds to fine-level debugging number NUM.
         """
         return '%s.debug%d' % (lsst.log.getDefaultLoggerName(), num)
-    
+
     def debugAt(num, fmt, *args):
         """
         Sends the log message created from FMT and *ARGS to the logger corresponding to fine-level debugging number NUM.
         """
         lsst.log.log(debugLoggerName(num), lsst.log.DEBUG, fmt, *args)
-    
+
     def debugSetAt(num):
         """
         Adjusts logging level thresholds to emulate debugging with fine-level NUM.
         """
         for i in range(5):
             lsst.log.setLevel(debugLoggerName(i), lsst.log.INFO if i < num else lsst.log.DEBUG)
-    
+
     debugSetAt(1)
     debugAt(1, "Debug 1 statement that will display")
     debugAt(2, "Debug 2 statement that will display")
@@ -371,12 +371,12 @@ In C++, the following MDC macros are available:
 - `LOG_MDC_REMOVE(key)` Delete the existing value from the global map that is associated with '''`key`'''.
 
 In Python, the `lsst.log` module provides the following MDC functions:
-- `MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender. Note that `value` is converted to a string by Python before it is stored in the MDC. 
+- `MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender. Note that `value` is converted to a string by Python before it is stored in the MDC.
 - `MDCRemove(key)` Delete the existing value from the global map that is associated with '''`key`'''.
 
 \subsection PID Display PID in the LSST logs
 
-PID can be displayed in the logs using code below: 
+PID can be displayed in the logs using code below:
 
 In C++:
 
