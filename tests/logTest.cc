@@ -112,9 +112,8 @@ struct LogFixture {
     }
 
     void lineno_helper(const long& line, std::vector<std::string>& args) {
-        std::stringstream ss;
-        ss << line;
-        args.push_back(std::to_string(line));
+        // cast is to work around a compiler problem; remove when upgrading
+        args.push_back(std::to_string(static_cast<long long>(line)));
     }
 
     void pid_log_helper(const std::string& msg, std::vector<std::string>& args) {
@@ -122,7 +121,8 @@ struct LogFixture {
         std::stringstream ss;
 
         configure(LAYOUT_PATTERN);
-        LOG_MDC(MDC_PID_KEY, std::to_string(getpid()));
+        // cast is to work around a compiler problem; remove when upgrading
+        LOG_MDC(MDC_PID_KEY, std::to_string(static_cast<long long>(getpid())));
 
         LOGF_INFO_LINENO(msg, args);
 
