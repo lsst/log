@@ -36,13 +36,13 @@
 #include <stdlib.h>
 
 // Third-party headers
-#include <log4cxx/consoleappender.h>
-#include <log4cxx/simplelayout.h>
-#include <log4cxx/logmanager.h>
 #include <log4cxx/basicconfigurator.h>
-#include <log4cxx/xml/domconfigurator.h>
-#include <log4cxx/propertyconfigurator.h>
+#include <log4cxx/consoleappender.h>
 #include <log4cxx/helpers/bytearrayinputstream.h>
+#include <log4cxx/logmanager.h>
+#include <log4cxx/propertyconfigurator.h>
+#include <log4cxx/simplelayout.h>
+#include <log4cxx/xml/domconfigurator.h>
 
 // Local headers
 #include "lsst/log/Log.h"
@@ -289,8 +289,8 @@ void Log::setLevel(log4cxx::LoggerPtr logger, int level) {
   * @param loggername  Name of logger with threshold to adjust.
   * @param level       New logging threshold.
   */
-void Log::setLevel(std::string const& loggername, int level) { 
-    setLevel(getLogger(loggername), level); 
+void Log::setLevel(std::string const& loggername, int level) {
+    setLevel(getLogger(loggername), level);
 }
 
 /** Retrieve the logging threshold for LOGGER.

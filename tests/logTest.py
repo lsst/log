@@ -2,7 +2,7 @@
 
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -10,14 +10,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 
 """
@@ -210,6 +210,48 @@ DEBUG component  testPattern (logTest.py:{0[7]}) logTest.py({0[7]}) - This is DE
 INFO  root  testPattern (logTest.py:{0[8]}) logTest.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (logTest.py:{0[9]}) logTest.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
 """.format([x + 173 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)]))
+
+
+    def testMDCPutPid(self):
+        """
+        Test add of PID Mapped Diagnostic Context (MDC).
+        """
+        pid = os.fork()
+        try:
+
+            log.MDC("PID", os.getpid())
+            self.configure("""
+log4j.rootLogger=DEBUG, CA
+log4j.appender.CA=ConsoleAppender
+log4j.appender.CA.layout=PatternLayout
+log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %l - %m%n
+""")
+            self.assertGreaterEqual(pid, 0, "Failed to fork")
+
+            msg = "This is INFO"
+            if pid == 0:
+                self.tempDir = tempfile.mkdtemp()
+                self.outputFilename = os.path.join(self.tempDir, "log-child.out")
+                msg += " in child process"
+            elif pid > 0:
+                child_pid, child_status = os.wait()
+                self.assertEqual(child_status, 0, "Child returns incorrect code")
+                msg += " in parent process"
+
+            with TestLog.StdoutCapture(self.outputFilename):
+                    log.info(msg)
+                    line = 242
+        finally:
+            log.MDCRemove("PID")
+
+        # Use format to make line numbers easier to change.
+        self.check("""
+INFO  PID:{1} root  testMDCPutPid (logTest.py:{0}) logTest.py({0}) - {2}
+""".format(line, os.getpid(), msg))
+
+        # don't pass other tests in child process
+        if pid is 0:
+            os._exit(0)
 
     def testFileAppender(self):
         """Test configuring logging to go to a file."""
