@@ -83,10 +83,7 @@ def _getFuncName(depth):
     return inspect.stack()[depth+1][3]
 
 def log(loggername, level, fmt, *args, **kwargs):
-    if 'depth' in kwargs:
-        depth = kwargs['depth']
-    else:
-        depth = 1
+    depth = kwargs.get("depth", 1)
     if isEnabledFor(loggername, level):
         frame = _getFrame(depth)
         forcedLog_iface(loggername, level,
@@ -111,7 +108,62 @@ def error(fmt, *args):
 def fatal(fmt, *args):
     log("", FATAL, fmt, *args, depth=2)
 
-class LogContext:
+class Log(object):
+    """A logger that logs using a particular name and depth
+    """
+    def __init__(self, name="", threshold=None, depth=1):
+        self.name = name
+        if threshold is None:
+            threshold = getLevel(name)
+        self.threshold = threshold
+        self.depth = int(depth)
+
+    def makeLog(self, name=None, threshold=None, depth=None):
+        """Make a new Log with, by default, the same name, threshold and depth
+        """
+        return Log(
+            name = name if name is not None else self.name,
+            threshold = threshold if threshold is not None else self.threshold,
+            name = name if name is not None else self.name,
+        )
+
+    def log(self, level, fmt, *args):
+        """Log a message at a specified level
+        """
+        log(self.name, level, fmt, *args, depth=self.depth)
+
+    def trace(self, fmt, *args):
+        """Log a message at TRACE level
+        """
+        log(self.name, TRACE, fmt, *args, depth=self.depth)
+
+    def debug(self, fmt, *args):
+        """Log a message at DEBUG level
+        """
+        log(self.name, DEBUG, fmt, *args, depth=self.depth)
+
+    def info(self, fmt, *args):
+        """Log a message at INFO level
+        """
+        log(self.name, INFO, fmt, *args, depth=self.depth)
+
+    def warn(self, fmt, *args):
+        """Log a message at WARN level
+        """
+        log(self.name, WARN, fmt, *args, depth=self.depth)
+
+    def error(self, fmt, *args):
+        """Log a message at ERROR level
+        """
+        log(self.name, ERROR, fmt, *args, depth=self.depth)
+
+    def fatal(self, fmt, *args):
+        """Log a message at FATAL level
+        """
+        log(self.name, FATAL, fmt, *args, depth=self.depth)
+
+
+class LogContext(object):
 
     def __init__(self, name=None, level=None):
         self.name = name
