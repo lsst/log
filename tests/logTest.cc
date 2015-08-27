@@ -287,7 +287,10 @@ BOOST_FIXTURE_TEST_CASE(MDCPutPid, LogFixture) {
 
         int status;
 
-        int w = wait(&status);
+        int w;
+        do {
+          w = wait(&status);
+        } while (w == -1 && errno == EINTR);
         if (w == -1) {
             perror("waitpid");
             exit(EXIT_FAILURE);
