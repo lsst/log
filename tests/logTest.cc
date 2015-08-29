@@ -304,6 +304,7 @@ BOOST_FIXTURE_TEST_CASE(MDCPutPid, LogFixture) {
     check(expected_msg);
 
     if (pid == 0) {
+        unlink(ofName.c_str());
         exit(0);
     }
 
