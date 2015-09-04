@@ -29,6 +29,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdio.h>
 #include <vector>
 
 // Third-party headers
@@ -65,14 +67,36 @@
 
 struct LogFixture {
     std::string ofName;
+    int fd = -1;
     enum Layout_t { LAYOUT_SIMPLE, LAYOUT_PATTERN, LAYOUT_COMPONENT };
 
     LogFixture() {
-        ofName = std::tmpnam(NULL);
+        ofName = _tmpnam();
     }
 
     ~LogFixture() {
-        unlink(ofName.c_str());
+        _unlink_tmp(ofName, fd);
+    }
+
+    std::string _tmpnam()
+    {
+        // PATH_MAX should be more than enough to hold the temp dir and file name
+        char cname[PATH_MAX];
+        strncpy(cname, P_tmpdir "/logTest-XXXXXXXXX", sizeof(cname));
+        cname[sizeof(cname)-1] = '\0';  // Just in case
+        fd = mkstemp(cname);
+        if (fd == -1) {
+          throw std::runtime_error("Failed to create temporary file.");
+        }
+        return std::string (cname);
+    }
+
+    void _unlink_tmp(std::string& name, int _fd)
+    {
+        if (_fd != -1) {
+            unlink(name.c_str());
+            close(_fd);
+      }
     }
 
     void configure(Layout_t layout) {
@@ -276,7 +300,7 @@ BOOST_FIXTURE_TEST_CASE(MDCPutPid, LogFixture) {
         msg = "This is INFO in child process";
 
         // create a log file dedicated to child process
-        ofName = std::tmpnam(NULL);
+        ofName = _tmpnam();
 
         pid_log_helper(msg, args);
     }
@@ -304,6 +328,7 @@ BOOST_FIXTURE_TEST_CASE(MDCPutPid, LogFixture) {
     check(expected_msg);
 
     if (pid == 0) {
+        _unlink_tmp(ofName, fd);
         exit(0);
     }
 
