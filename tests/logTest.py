@@ -201,15 +201,15 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c %C %M (%F:%L) %l - %m - %X%n
         self.check("""
 INFO  root  testPattern (logTest.py:{0[0]}) logTest.py({0[0]}) - This is INFO - {{}}
 DEBUG root  testPattern (logTest.py:{0[1]}) logTest.py({0[1]}) - This is DEBUG - {{}}
-INFO  root  testPattern (logTest.py:{0[2]}) logTest.py({0[2]}) - This is INFO 2 - {{{{x,3}}{{y,foo}}{{z,<class '__main__.TestLog'>}}}}
-DEBUG root  testPattern (logTest.py:{0[3]}) logTest.py({0[3]}) - This is DEBUG 2 - {{{{x,3}}{{y,foo}}{{z,<class '__main__.TestLog'>}}}}
+INFO  root  testPattern (logTest.py:{0[2]}) logTest.py({0[2]}) - This is INFO 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
+DEBUG root  testPattern (logTest.py:{0[3]}) logTest.py({0[3]}) - This is DEBUG 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
 INFO  component  testPattern (logTest.py:{0[4]}) logTest.py({0[4]}) - This is INFO 3 - {{{{x,3}}{{y,foo}}}}
 DEBUG component  testPattern (logTest.py:{0[5]}) logTest.py({0[5]}) - This is DEBUG 3 - {{{{x,3}}{{y,foo}}}}
 INFO  component  testPattern (logTest.py:{0[6]}) logTest.py({0[6]}) - This is INFO 4 - {{{{y,foo}}}}
 DEBUG component  testPattern (logTest.py:{0[7]}) logTest.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (logTest.py:{0[8]}) logTest.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (logTest.py:{0[9]}) logTest.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 173 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)]))
+""".format([x + 173 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))
 
 
     def testMDCPutPid(self):
