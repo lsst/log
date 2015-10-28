@@ -167,7 +167,7 @@ class LogHandler(logging.Handler):
             logging.Handler.handle(self, record)
 
     def emit(self, record):
-        forcedLog_iface("", self.translateLevel(record.levelno), record.filename,
+        forcedLog_iface(record.name, self.translateLevel(record.levelno), record.filename,
                   record.funcName, record.lineno, record.msg % record.args)
 
     def translateLevel(self, levelno):
