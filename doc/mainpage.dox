@@ -56,16 +56,21 @@ A logger object may be retrieved and used to avoid the cost of excessive lookups
     lsst.log.log("myLogger", lsst.log.INFO, "Here is some information about %s.", subject)
 
 
+    lsst.log.debug("My debugging statement.")
 
-    lssglog.debug("My debugging statement.")
 
-
-The standard Python `logging` module may also be used:
+The standard Python `logging` module may also be used (and it is recommended
+for applications mixing Python logging and C++ logging):
 
     lgr = logging.getLogger()
-    lgr.setLevel(logging.INFO)
+    lgr.setLevel(logging.DEBUG)
     lgr.addHandler(lsst.log.LogHandler())
     lgr.info("This is an info statement via the logging module.")
+
+Note that in this case messages from Python logging are forwarded to log4cxx,
+and they are filtered by both Python logging and log4cxx. It is easiest to
+avoid filtering on Python side by setting logging level to DEBUG for root
+logger and instead configure log4cxx with proper logging level.
 
 
 \section exampleOutput Example output
