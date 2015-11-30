@@ -46,6 +46,10 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
+// used to stringify line numbers to make some names below unique
+#define STR(X) XSTR(X)
+#define XSTR(X) #X
+
 /* Compute line numbers in expected debug log messages
  *
  * This enforces consistency of string containing
@@ -56,11 +60,17 @@
 #define LOGF_DEBUG_LINENO(message, args) \
     LOGF_DEBUG(message); \
     lineno_helper(__LINE__, args);
+#define LOGS_DEBUG_LINENO(message, args) \
+    LOGS_DEBUG(message); \
+    lineno_helper(__LINE__, args);
 
 /* Compute line numbers in expected info log messages
  */
 #define LOGF_INFO_LINENO(message, args) \
     LOGF_INFO(message); \
+    lineno_helper(__LINE__, args);
+#define LOGS_INFO_LINENO(message, args) \
+    LOGS_INFO(message); \
     lineno_helper(__LINE__, args);
 
 #define MDC_PID_KEY "PID"
@@ -179,13 +189,31 @@ BOOST_FIXTURE_TEST_CASE(basic, LogFixture) {
 }
 
 
+BOOST_FIXTURE_TEST_CASE(basic_stream, LogFixture) {
+    configure(LAYOUT_SIMPLE);
+    LOGS_TRACE("This is TRACE");
+    LOGS_INFO("This is INFO");
+    LOGS_DEBUG("This is DEBUG");
+    LOGS_WARN("This is WARN");
+    LOGS_ERROR("This is ERROR");
+    LOGS_FATAL("This is FATAL");
+    LOGS_INFO("Format " << 3 << " " << 2.71828 << " foo c++");
+    check("INFO - This is INFO\n"
+          "DEBUG - This is DEBUG\n"
+          "WARN - This is WARN\n"
+          "ERROR - This is ERROR\n"
+          "FATAL - This is FATAL\n"
+          "INFO - Format 3 2.71828 foo c++\n");
+}
+
+
 BOOST_FIXTURE_TEST_CASE(context, LogFixture) {
     configure(LAYOUT_SIMPLE);
     LOGF_TRACE("This is TRACE");
     LOGF_INFO("This is INFO");
     LOGF_DEBUG("This is DEBUG");
     {
-        LOG_CTX context("component");
+        LOG_CTX context("component" STR(__LINE__));
         LOGF_TRACE("This is TRACE");
         LOGF_INFO("This is INFO");
         LOGF_DEBUG("This is DEBUG");
@@ -194,7 +222,7 @@ BOOST_FIXTURE_TEST_CASE(context, LogFixture) {
     LOGF_INFO("This is INFO 2");
     LOGF_DEBUG("This is DEBUG 2");
     {
-        LOG_CTX context("comp");
+        LOG_CTX context("comp" STR(__LINE__));
         LOGF_TRACE("This is TRACE 3");
         LOGF_INFO("This is INFO 3");
         LOGF_DEBUG("This is DEBUG 3");
@@ -205,7 +233,7 @@ BOOST_FIXTURE_TEST_CASE(context, LogFixture) {
         LOGF_INFO("This is INFO 3a");
         LOGF_DEBUG("This is DEBUG 3a");
         {
-            LOG_CTX context("subcomp");
+            LOG_CTX context("subcomp" STR(__LINE__));
             LOG_SET_LVL(LOG_DEFAULT_NAME(), LOG_LVL_TRACE);
             BOOST_CHECK_EQUAL(LOG_GET_LVL(LOG_DEFAULT_NAME()), 
                               LOG_LVL_TRACE);
@@ -232,6 +260,62 @@ BOOST_FIXTURE_TEST_CASE(context, LogFixture) {
           "TRACE - This is TRACE 5\n"
           "INFO - This is INFO 5\n"
           "DEBUG - This is DEBUG 5\n");
+}
+
+
+BOOST_FIXTURE_TEST_CASE(context_stream, LogFixture) {
+    configure(LAYOUT_COMPONENT);
+
+    LOGS_TRACE("This is TRACE");
+    LOGS_INFO("This is INFO");
+    LOGS_DEBUG("This is DEBUG");
+    {
+        LOG_CTX context("componentX");
+        LOGS_TRACE("This is TRACE 1");
+        LOGS_INFO("This is INFO 1");
+        LOGS_DEBUG("This is DEBUG 1");
+    }
+    LOGS_TRACE("This is TRACE 2");
+    LOGS_INFO("This is INFO 2");
+    LOGS_DEBUG("This is DEBUG 2");
+    {
+        LOG_CTX context("compY");
+        LOGS_TRACE("This is TRACE 3");
+        LOGS_INFO("This is INFO 3");
+        LOGS_DEBUG("This is DEBUG 3");
+        LOG_SET_LVL(LOG_DEFAULT_NAME(), LOG_LVL_INFO);
+        BOOST_CHECK_EQUAL(LOG_GET_LVL(LOG_DEFAULT_NAME()),
+                          LOG_LVL_INFO);
+        LOGS_TRACE("This is TRACE 3a");
+        LOGS_INFO("This is INFO 3a");
+        LOGS_DEBUG("This is DEBUG 3a");
+        {
+            LOG_CTX context("subcompZ");
+            LOG_SET_LVL(LOG_DEFAULT_NAME(), LOG_LVL_TRACE);
+            BOOST_CHECK_EQUAL(LOG_GET_LVL(LOG_DEFAULT_NAME()),
+                              LOG_LVL_TRACE);
+            LOGS_TRACE("This is TRACE 4");
+            LOGS_INFO("This is INFO 4");
+            LOGS_DEBUG("This is DEBUG 4");
+        }
+        LOGS_TRACE("This is TRACE 5");
+        LOGS_INFO("This is INFO 5");
+        LOGS_DEBUG("This is DEBUG 5");
+    }
+
+    check("INFO  root - This is INFO\n"
+          "DEBUG root - This is DEBUG\n"
+          "INFO  componentX - This is INFO 1\n"
+          "DEBUG componentX - This is DEBUG 1\n"
+          "INFO  root - This is INFO 2\n"
+          "DEBUG root - This is DEBUG 2\n"
+          "INFO  compY - This is INFO 3\n"
+          "DEBUG compY - This is DEBUG 3\n"
+          "INFO  compY - This is INFO 3a\n"
+          "TRACE compY.subcompZ - This is TRACE 4\n"
+          "INFO  compY.subcompZ - This is INFO 4\n"
+          "DEBUG compY.subcompZ - This is DEBUG 4\n"
+          "INFO  compY - This is INFO 5\n");
 }
 
 
@@ -277,6 +361,57 @@ BOOST_FIXTURE_TEST_CASE(pattern, LogFixture) {
     LOGF_TRACE("This is TRACE 5");
     LOGF_INFO_LINENO("This is INFO 5", args);
     LOGF_DEBUG_LINENO("This is DEBUG 5", args);
+
+    LOG_MDC_REMOVE("y");
+
+    expected_msg = format_range(expected_msg, args);
+
+    check(expected_msg);
+
+}
+
+BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
+
+    std::string expected_msg =
+          "INFO  root pattern_stream test_method (tests/logTest.cc:%1%) tests/logTest.cc(%1%) - This is INFO - {}\n"
+          "DEBUG root pattern_stream test_method (tests/logTest.cc:%2%) tests/logTest.cc(%2%) - This is DEBUG - {}\n"
+          "INFO  root pattern_stream test_method (tests/logTest.cc:%3%) tests/logTest.cc(%3%) - This is INFO 2 - {{x,3}{y,foo}}\n"
+          "DEBUG root pattern_stream test_method (tests/logTest.cc:%4%) tests/logTest.cc(%4%) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern_stream test_method (tests/logTest.cc:%5%) tests/logTest.cc(%5%) - This is INFO 3 - {{x,3}{y,foo}}\n"
+          "DEBUG component pattern_stream test_method (tests/logTest.cc:%6%) tests/logTest.cc(%6%) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern_stream test_method (tests/logTest.cc:%7%) tests/logTest.cc(%7%) - This is INFO 4 - {{y,foo}}\n"
+          "DEBUG component pattern_stream test_method (tests/logTest.cc:%8%) tests/logTest.cc(%8%) - This is DEBUG 4 - {{y,foo}}\n"
+          "INFO  root pattern_stream test_method (tests/logTest.cc:%9%) tests/logTest.cc(%9%) - This is INFO 5 - {{y,foo}}\n"
+          "DEBUG root pattern_stream test_method (tests/logTest.cc:%10%) tests/logTest.cc(%10%) - This is DEBUG 5 - {{y,foo}}\n";
+    std::vector<std::string> args;
+
+    configure(LAYOUT_PATTERN);
+
+    LOGS_TRACE("This is TRACE");
+    LOGS_INFO_LINENO("This is INFO", args);
+    LOGS_DEBUG_LINENO("This is DEBUG", args);
+
+    LOG_MDC("x", "3");
+    LOG_MDC("y", "foo");
+
+    LOGS_TRACE("This is TRACE 2");
+    LOGS_INFO_LINENO("This is INFO 2", args);
+    LOGS_DEBUG_LINENO("This is DEBUG 2", args);
+    LOG_MDC_REMOVE("z");
+
+    {
+        LOG_CTX context("component");
+        LOGS_TRACE("This is TRACE 3");
+        LOGS_INFO_LINENO("This is INFO 3", args);
+        LOGS_DEBUG_LINENO("This is DEBUG 3", args);
+        LOG_MDC_REMOVE("x");
+        LOGS_TRACE("This is TRACE 4");
+        LOGS_INFO_LINENO("This is INFO 4", args);
+        LOGS_DEBUG_LINENO("This is DEBUG 4", args);
+    }
+    LOGS_TRACE("This is TRACE 5");
+    LOGS_INFO_LINENO("This is INFO 5", args);
+    LOGS_DEBUG_LINENO("This is DEBUG 5", args);
 
     LOG_MDC_REMOVE("y");
 
@@ -370,6 +505,44 @@ BOOST_FIXTURE_TEST_CASE(context1, LogFixture) {
           "INFO  component3 - default logger name is 'component3'\n"
           "INFO  root - default logger name is ''\n"
           "INFO  root - default logger name is ''\n");
+}
+
+BOOST_FIXTURE_TEST_CASE(context1_stream, LogFixture) {
+    configure(LAYOUT_COMPONENT);
+
+    LOGS_INFO("default logger name is " << LOG_DEFAULT_NAME());
+    LOG_PUSHCTX("component1");
+    LOGS_INFO("default logger name is " << LOG_DEFAULT_NAME());
+    LOG_PUSHCTX("component2");
+    LOGS_INFO("default logger name is " << LOG_DEFAULT_NAME());
+    LOG_POPCTX();
+    LOGS_INFO("default logger name is " << LOG_DEFAULT_NAME());
+    LOG_POPCTX();
+
+    {
+        LOG_CTX context1("component3");
+        LOGS_INFO("default logger name is " << LOG_DEFAULT_NAME());
+        {
+            LOG_CTX context1("component4");
+            LOGS_INFO("default logger name is " << LOG_DEFAULT_NAME());
+        }
+        LOGS_INFO("default logger name is " << LOG_DEFAULT_NAME());
+    }
+    LOGS_INFO("default logger name is " << LOG_DEFAULT_NAME());
+
+    // unmatched POP will leave us at root logger
+    LOG_POPCTX();
+    LOGS_INFO("default logger name is " << LOG_DEFAULT_NAME());
+
+    check("INFO  root - default logger name is \n"
+          "INFO  component1 - default logger name is component1\n"
+          "INFO  component1.component2 - default logger name is component1.component2\n"
+          "INFO  component1 - default logger name is component1\n"
+          "INFO  component3 - default logger name is component3\n"
+          "INFO  component3.component4 - default logger name is component3.component4\n"
+          "INFO  component3 - default logger name is component3\n"
+          "INFO  root - default logger name is \n"
+          "INFO  root - default logger name is \n");
 }
 
 BOOST_FIXTURE_TEST_CASE(context_exc, LogFixture) {

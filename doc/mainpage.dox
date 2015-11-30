@@ -38,6 +38,11 @@ The `boost::format` style interface:
     LOGF("myLogger", LOG_LVL_INFO, "Here is some information about %s." % subject);
 
 
+The `iostream` style interface:
+
+    subject = "important stuff";
+    LOGS("myLogger", LOG_LVL_INFO, "Here is some information about " << subject << ".");
+
 
 Using the default logger:
 
@@ -46,7 +51,7 @@ Using the default logger:
 
 A logger object may be retrieved and used to avoid the cost of excessive lookups:
 
-    LOG_LOGGER logger = LOG_GET("myLogger");
+    static LOG_LOGGER logger = LOG_GET("myLogger");
     LOG(logger, LOG_LVL_WARN, "Here is a warning sent using a logging object.");
 
 
@@ -104,7 +109,7 @@ In C++, the following varargs/printf style logging macros are available:
 - `LOG_ERROR(fmt...)` Log a message of level `LOG_LVL_ERROR` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
 - `LOG_FATAL(fmt...)` Log a message of level `LOG_LVL_FATAL` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
 
-In addition to the above macros, in C++, the following `boost::format` style logging macros are offered:
+In addition to the above macros, in C++, the following `boost::format` style logging macros are offered (use of these macros is now deprecated, please switch to LOGS series of macro):
 - `LOGF(loggername, level, fmt)` Log a message of level '''`level`''' with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the logger named '''`loggername`'''.
 - `LOGF_TRACE(fmt)` Log a message of level `LOG_LVL_TRACE` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
 - `LOGF_DEBUG(fmt)` Log a message of level `LOG_LVL_DEBUG` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
@@ -112,6 +117,15 @@ In addition to the above macros, in C++, the following `boost::format` style log
 - `LOGF_WARN(fmt)` Log a message of level `LOG_LVL_WARN` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
 - `LOGF_ERROR(fmt)` Log a message of level `LOG_LVL_ERROR` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
 - `LOGF_FATAL(fmt)` Log a message of level `LOG_LVL_FATAL` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
+
+Alternative set of macros allows one to use iostream-based formatting. In the macros below `expression` is any C++ expression which can appear on the right side of the stream insertion operator, e.g. `LOGS_DEBUG("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding  commas inside macro arguments applies to `expression` argument:
+- `LOGS(loggername, level, expression)` Log a message of level '''`level`''' to the logger named '''`loggername`'''.
+- `LOGS_TRACE(expression)` Log a message of level `LOG_LVL_TRACE` to the default logger.
+- `LOGS_DEBUG(expression)` Log a message of level `LOG_LVL_DEBUG` to the default logger.
+- `LOGS_INFO(expression)` Log a message of level `LOG_LVL_INFO` to the default logger.
+- `LOGS_WARN(expression)` Log a message of level `LOG_LVL_WARN` to the default logger.
+- `LOGS_ERROR(expression)` Log a message of level `LOG_LVL_ERROR` to the default logger.
+- `LOGS_FATAL(expression)` Log a message of level `LOG_LVL_FATAL` to the default logger.
 
 In Python, the following logging functions are available in the `lsst.log` module. These functions take a variable number of arguments following a format string in the style of `printf()`. The use of `*args` is recommended over the use of the `%` operator so that formatting of log messages that do not meet the level threshold can be avoided.
 - `log(loggername, level, fmt, *args)` Log a message of level '''`level`''' with format string '''`fmt`''' and variable arguments '''`*args`''' to the logger named '''`loggername`'''.

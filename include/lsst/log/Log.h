@@ -34,7 +34,7 @@
 
 
 // System headers
-#include <stack>
+#include <sstream>
 #include <stdarg.h>
 #include <string>
 #include <vector>
@@ -218,6 +218,8 @@
   * @def LOGF(logger, level, message)
   * Log a message using a boost::format style interface.
   *
+  * @deprecated Use LOGS family of macros instead.
+  *
   * @param logger   Either name of logger or log4cxx logger object.
   * @param level    Logging level associated with message.
   * @param message  A boost::format compatible format string followed by
@@ -236,6 +238,8 @@
   * Log a trace-level message to the default logger using a boost::format
   * style interface.
   *
+  * @deprecated Use LOGS family of macros instead.
+  *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
   */
@@ -251,6 +255,8 @@
   * @def LOGF_DEBUG(message)
   * Log a debug-level message to the default logger using a boost::format
   * style interface.
+  *
+  * @deprecated Use LOGS family of macros instead.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
@@ -268,6 +274,8 @@
   * Log a info-level message to the default logger using a boost::format
   * style interface.
   *
+  * @deprecated Use LOGS family of macros instead.
+  *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
   */
@@ -283,6 +291,8 @@
   * @def LOGF_WARN(message)
   * Log a warn-level message to the default logger using a boost::format
   * style interface.
+  *
+  * @deprecated Use LOGS family of macros instead.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
@@ -300,6 +310,8 @@
   * Log a error-level message to the default logger using a boost::format
   * style interface.
   *
+  * @deprecated Use LOGS family of macros instead.
+  *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
   */
@@ -315,6 +327,8 @@
   * @def LOGF_FATAL(message)
   * Log a fatal-level message to the default logger using a boost::format
   * style interface.
+  *
+  * @deprecated Use LOGS family of macros instead.
   *
   * @param message  A boost::format compatible format string followed by
   *                 zero, one, or more arguments separated by `%`.
@@ -430,6 +444,149 @@
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
             log4cxx::Level::getFatal(), __BASE_FILE__, __PRETTY_FUNCTION__, \
             __LINE__, message); } \
+    } while (false)
+
+/**
+  * @def LOGS(logger, level, message)
+  * Log a message using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGS("logger", LOG_LVL_DEBUG, "coordinates: x=" << x << " y=" << y);`.
+  * Usual caveat regarding commas inside macro arguments applies to
+  * message argument.
+  *
+  * @param logger   Either name of logger or log4cxx logger object.
+  * @param level    Logging level associated with message.
+  * @param message  Message to be logged.
+  */
+#define LOGS(logger, level, message) \
+    do { if (lsst::log::Log::isEnabledFor(logger, level)) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::getLogger(logger)->forcedLog( \
+            log4cxx::Level::toLevel(level), stream_.str(), \
+            LOG4CXX_LOCATION); } \
+    } while (false)
+
+/**
+  * @def LOGS_TRACE(message)
+  * Log a trace-level message to the default logger using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGS_TRACE("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param message Message to be logged.
+  */
+#define LOGS_TRACE(message) \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::defaultLogger->forcedLog( \
+            log4cxx::Level::getTrace(), stream_.str(), \
+            LOG4CXX_LOCATION); } \
+    } while (false)
+
+/**
+  * @def LOGS_DEBUG(message)
+  * Log a debug-level message to the default logger using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGS_DEBUG("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param message Message to be logged.
+  */
+#define LOGS_DEBUG(message) \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::defaultLogger->forcedLog( \
+            log4cxx::Level::getDebug(), stream_.str(), \
+            LOG4CXX_LOCATION); } \
+    } while (false)
+
+/**
+  * @def LOGS_INFO(message)
+  * Log a info-level message to the default logger using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGS_INFO("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param message Message to be logged.
+  */
+#define LOGS_INFO(message) \
+    do { if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::defaultLogger->forcedLog( \
+            log4cxx::Level::getInfo(), stream_.str(), \
+            LOG4CXX_LOCATION); } \
+    } while (false)
+
+/**
+  * @def LOGS_WARN(message)
+  * Log a warning-level message to the default logger using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGS_WARN("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param message Message to be logged.
+  */
+#define LOGS_WARN(message) \
+    do { if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::defaultLogger->forcedLog( \
+            log4cxx::Level::getWarn(), stream_.str(), \
+            LOG4CXX_LOCATION); } \
+    } while (false)
+
+/**
+  * @def LOGS_ERROR(message)
+  * Log a error-level message to the default logger using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGS_ERROR("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param message Message to be logged.
+  */
+#define LOGS_ERROR(message) \
+    do { if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::defaultLogger->forcedLog( \
+            log4cxx::Level::getError(), stream_.str(), \
+            LOG4CXX_LOCATION); } \
+    } while (false)
+
+/**
+  * @def LOGS_FATAL(message)
+  * Log a fatal-level message to the default logger using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGS_FATAL("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param message Message to be logged.
+  */
+#define LOGS_FATAL(message) \
+    do { if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::defaultLogger->forcedLog( \
+            log4cxx::Level::getFatal(), stream_.str(), \
+            LOG4CXX_LOCATION); } \
     } while (false)
 
 #define LOG_LVL_TRACE static_cast<int>(log4cxx::Level::TRACE_INT)
