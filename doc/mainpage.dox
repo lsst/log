@@ -32,12 +32,6 @@ The varargs/printf style interface:
     LOG("myLogger", LOG_LVL_INFO, "Here is some information about %s.", subject);
 
 
-The `boost::format` style interface:
-
-    subject = "important stuff";
-    LOGF("myLogger", LOG_LVL_INFO, "Here is some information about %s." % subject);
-
-
 The `iostream` style interface:
 
     subject = "important stuff";
@@ -108,15 +102,6 @@ In C++, the following varargs/printf style logging macros are available:
 - `LOG_WARN(fmt...)` Log a message of level `LOG_LVL_WARN` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
 - `LOG_ERROR(fmt...)` Log a message of level `LOG_LVL_ERROR` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
 - `LOG_FATAL(fmt...)` Log a message of level `LOG_LVL_FATAL` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
-
-In addition to the above macros, in C++, the following `boost::format` style logging macros are offered (use of these macros is now deprecated, please switch to LOGS series of macro):
-- `LOGF(loggername, level, fmt)` Log a message of level '''`level`''' with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the logger named '''`loggername`'''.
-- `LOGF_TRACE(fmt)` Log a message of level `LOG_LVL_TRACE` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
-- `LOGF_DEBUG(fmt)` Log a message of level `LOG_LVL_DEBUG` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
-- `LOGF_INFO(fmt)` Log a message of level `LOG_LVL_INFO` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
-- `LOGF_WARN(fmt)` Log a message of level `LOG_LVL_WARN` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
-- `LOGF_ERROR(fmt)` Log a message of level `LOG_LVL_ERROR` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
-- `LOGF_FATAL(fmt)` Log a message of level `LOG_LVL_FATAL` with format string '''`fmt`''' and corresponding '''`%`''' separated arguments to the default logger.
 
 Alternative set of macros allows one to use iostream-based formatting. In the macros below `expression` is any C++ expression which can appear on the right side of the stream insertion operator, e.g. `LOGS_DEBUG("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding  commas inside macro arguments applies to `expression` argument:
 - `LOGS(loggername, level, expression)` Log a message of level '''`level`''' to the logger named '''`loggername`'''.
@@ -426,15 +411,15 @@ Measuring the performance of lsst.log when actually writing log messages to outp
     LOG_INFO("Hello default logger!");
 
 
-The same holds for the `boost::format` style interface (also 26 nanoseconds):
+The same holds for the `iostream` style interface (also 26 nanoseconds):
 
-    LOGF_INFO("Hello default logger!");
+    LOGS_INFO("Hello default logger!");
 
 
 Importantly, the overhead is unaffected when formatting is introduced since the CPU will not encounter these instructions when the logging threshold is not met. For example, the average time required to submit the following suppressed log message is also 26 nanoseconds:
 
     const char* info_stuff = "important stuff";
-    LOGF_INFO("Hello default logger with %s." % info_stuff);
+    LOGS_INFO("Hello default logger with " << info_stuff);
 
 
 Note that these timings are indistinguishable from those using log4cxx directly, without the Log layer.
@@ -444,10 +429,10 @@ Meanwhile, the situation is quite different when looking up the logger by name. 
     LOG("myLogger", LOG_LVL_INFO, "Hello my logger!");
 
 
-The same holds when using the `boost::format` style interface or when formatting. That is, the following the example also takes 1.0 microseconds:
+The same holds when using the `iostream` style interface or when formatting. That is, the following the example also takes 1.0 microseconds:
 
     const char* info_stuff = "important stuff";
-    LOGF("myLogger", LOG_LVL_INFO, "Hello my logger with %s." % info_stuff);
+    LOGS("myLogger", LOG_LVL_INFO, "Hello my logger with " << info_stuff);
 
 
 As an alternative to using the default logger, intermediate performance can be achieved for suppressed log messages using logger objects. Retrieve the logger object by name:

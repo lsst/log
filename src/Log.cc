@@ -190,7 +190,7 @@ std::string Log::getDefaultLoggerName() {
     return name;
 }
 
-/** This method exists solely to simplify the LOGF macro. It merely returns
+/** This method exists solely to simplify the LOG macro. It merely returns
   * the argument LOGGER.
   * @return log4cxx::LoggerPtr passed in.
   *
