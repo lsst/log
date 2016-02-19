@@ -1,4 +1,5 @@
 // -*- LSST-C++ -*-
+
 /*
  * LSST Data Management System
  * Copyright 2016 LSST Corporation.
@@ -20,52 +21,15 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-
-#if defined(__linux__)
-
-// System Headers
-#include <cstdint>
-#include <sys/syscall.h>
-#include <thread>
-#include <unistd.h>
+#ifndef LSST_LOG_LWPID_H
+#define LSST_LOG_LWPID_H
 
 namespace lsst {
 namespace log {
+namespace detail {
 
-    thread_local uint64_t lwpID =
-                          static_cast<uint64_t>(syscall(SYS_gettid));
+unsigned lwpID();
 
-}} // namespace lsst::qserv::util
+}}} // namespace lsst::log::detail
 
-#elif defined(__APPLE__)
-
-// System Headers
-#include <cstdint>
-#include <pthread.h>
-#include <thread>
-
-namespace lsst {
-namespace log {
-
-    thread_local uint64_t lwpID =
-           static_cast<uint64_t>(pthread_mach_thread_np(pthread_self()));
-
-}} // namespace lsst::qserv::util
-
-#else
-
-// System Headers
-#include <atomic>
-#include <cstdint>
-#include <thread>
-
-namespace lsst {
-namespace log {
-
-   std::atomic_ullong threadNum(0);
-   thread_local uint64_t lwpID = ++threadNum;
-
-}} // namespace lsst::log
-
-#endif
-
+#endif // LSST_LOG_LWPID_H

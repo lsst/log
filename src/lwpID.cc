@@ -1,5 +1,4 @@
 // -*- LSST-C++ -*-
-
 /*
  * LSST Data Management System
  * Copyright 2016 LSST Corporation.
@@ -21,30 +20,44 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-#ifndef LSST_LOG_LWPID_H
-#define LSST_LOG_LWPID_H
 
-// System headers
-#include <cstdint>
-#include <thread>
+// System Headers
+#include <iostream>
+#include <string>
+#if defined(__linux__)
+#include <sys/syscall.h>
+#include <unistd.h>
+#elif defined(__APPLE__)
+#include <pthread.h>
+#else
+#include <atomic>
+#endif
 
 namespace lsst {
 namespace log {
+namespace detail {
 
-//-----------------------------------------------------------------------------
-//! @brief Provide access to the light weight process (LWP) identifier.
-//!
-//! This interface provides the LWP number in Linux and MacOS. It is a
-//! monotonically increasing unique number for all other operating systems.
-//! The variable defined below holds the LWP number. Use the define macro to
-//! isolate your code from future changes in the LWP number interface.
-//-----------------------------------------------------------------------------
+unsigned lwpID() {
 
-extern thread_local uint64_t lwpID;
+#if defined(__linux__)
 
-#define LWP_ID lsst::log::lwpID
+    // On Linux have to do syscall
+    auto lwp = syscall(SYS_gettid);
 
-}} // namespace lsst::log
+#elif defined(__APPLE__)
 
-#endif // LSST_LOG_LWPID_H
+    // OSX has a special Pthreads function to find out PID
+    auto lwp = pthread_mach_thread_np(pthread_self());
 
+#else
+
+    // On all other system just generate incremental number and call it LWP
+    static std::atomic<unsigned> threadNum(0);
+    thread_local static auto lwp = ++threadNum;
+
+#endif
+
+    return static_cast<unsigned>(lwp);
+}
+
+}}} // namespace lsst::log::detail
