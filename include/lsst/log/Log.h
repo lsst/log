@@ -34,6 +34,7 @@
 
 
 // System headers
+#include <functional>
 #include <sstream>
 #include <stdarg.h>
 #include <string>
@@ -126,6 +127,28 @@
   * @param key  Key identifying value to remove.
   */
 #define LOG_MDC_REMOVE(key) lsst::log::Log::MDCRemove(key)
+
+/**
+  * @def LOG_MDC_INIT(function)
+  * Register function for initialization of MDC. This function will be called
+  * for current thread and every new thread (but not for other existing
+  * threads) before any message is logged using one of the macros below. Its
+  * main purpose is to initialize MDC (using LOG_MDC macro). In some cases the
+  * function may be called more than once per thread.
+  *
+  * This macro is thread safe, but typically it will be called from main
+  * thread before any other LOG macro.
+  *
+  * Macro returns an integer number, the value is not specified, but this
+  * allows it to be used in one-time initialization constructs like:
+  *
+  *     @code
+  *     static int dummyMdcInit = LOG_MDC_INIT(some_init_func);
+  *     @code
+  *
+  * @param func Any function object which takes no arguments and returns void.
+  */
+#define LOG_MDC_INIT(func) lsst::log::Log::MDCRegisterInit(std::function<void()>(func))
 
 /**
   * @def LOG_SET_LVL(logger, level)
@@ -225,8 +248,9 @@
   */
 #define LOG(logger, level, message...) \
     do { if (lsst::log::Log::isEnabledFor(logger, level)) { \
-        lsst::log::Log::log(logger, log4cxx::Level::toLevel(level), \
-        __BASE_FILE__, __PRETTY_FUNCTION__, __LINE__, message); } \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), \
+        log4cxx::Level::toLevel(level), \
+        LOG4CXX_LOCATION, message); } \
     } while (false)
 
 /**
@@ -240,8 +264,7 @@
 #define LOG_TRACE(message...) \
     do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getTrace(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); } \
+            log4cxx::Level::getTrace(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
 /**
@@ -255,8 +278,7 @@
 #define LOG_DEBUG(message...) \
     do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getDebug(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); } \
+            log4cxx::Level::getDebug(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
 /**
@@ -270,8 +292,7 @@
 #define LOG_INFO(message...) \
     do { if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getInfo(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); } \
+            log4cxx::Level::getInfo(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
 /**
@@ -285,8 +306,7 @@
 #define LOG_WARN(message...) \
     do { if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getWarn(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); } \
+            log4cxx::Level::getWarn(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
 /**
@@ -300,8 +320,7 @@
 #define LOG_ERROR(message...) \
     do { if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getError(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); } \
+            log4cxx::Level::getError(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
 /**
@@ -315,8 +334,7 @@
 #define LOG_FATAL(message...) \
     do { if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
         lsst::log::Log::log(lsst::log::Log::defaultLogger, \
-            log4cxx::Level::getFatal(), __BASE_FILE__, __PRETTY_FUNCTION__, \
-            __LINE__, message); } \
+            log4cxx::Level::getFatal(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
 /**
@@ -337,9 +355,9 @@
     do { if (lsst::log::Log::isEnabledFor(logger, level)) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::getLogger(logger)->forcedLog( \
-            log4cxx::Level::toLevel(level), stream_.str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::logMsg(lsst::log::Log::getLogger(logger), \
+            log4cxx::Level::toLevel(level), LOG4CXX_LOCATION, \
+            stream_.str()); } \
     } while (false)
 
 /**
@@ -357,9 +375,9 @@
     do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isTraceEnabled())) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getTrace(), stream_.str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
+            log4cxx::Level::getTrace(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
     } while (false)
 
 /**
@@ -377,9 +395,9 @@
     do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger->isDebugEnabled())) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getDebug(), stream_.str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
+            log4cxx::Level::getDebug(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
     } while (false)
 
 /**
@@ -397,9 +415,9 @@
     do { if (lsst::log::Log::defaultLogger->isInfoEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getInfo(), stream_.str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
+            log4cxx::Level::getInfo(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
     } while (false)
 
 /**
@@ -417,9 +435,9 @@
     do { if (lsst::log::Log::defaultLogger->isWarnEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getWarn(), stream_.str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
+            log4cxx::Level::getWarn(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
     } while (false)
 
 /**
@@ -437,9 +455,9 @@
     do { if (lsst::log::Log::defaultLogger->isErrorEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getError(), stream_.str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
+            log4cxx::Level::getError(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
     } while (false)
 
 /**
@@ -457,9 +475,9 @@
     do { if (lsst::log::Log::defaultLogger->isFatalEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::defaultLogger->forcedLog( \
-            log4cxx::Level::getFatal(), stream_.str(), \
-            LOG4CXX_LOCATION); } \
+        lsst::log::Log::logMsg(lsst::log::Log::defaultLogger, \
+            log4cxx::Level::getFatal(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
     } while (false)
 
 #define LOG_LVL_TRACE static_cast<int>(log4cxx::Level::TRACE_INT)
@@ -488,27 +506,25 @@ public:
     static void configure(std::string const& filename);
     static void configure_prop(std::string const& properties);
     static std::string getDefaultLoggerName(void);
-    static log4cxx::LoggerPtr getLogger(log4cxx::LoggerPtr logger);
+    static log4cxx::LoggerPtr getLogger(log4cxx::LoggerPtr logger) { return logger; }
     static log4cxx::LoggerPtr getLogger(std::string const& loggername);
     static void pushContext(std::string const& name);
     static void popContext(void);
     static void MDC(std::string const& key, std::string const& value);
     static void MDCRemove(std::string const& key);
+    static int MDCRegisterInit(std::function<void()> function);
     static void setLevel(log4cxx::LoggerPtr logger, int level);
     static void setLevel(std::string const& loggername, int level);
     static int getLevel(log4cxx::LoggerPtr logger);
     static int getLevel(std::string const& loggername);
     static bool isEnabledFor(log4cxx::LoggerPtr logger, int level);
     static bool isEnabledFor(std::string const& loggername, int level);
-    static void vlog(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
-                     std::string const& filename, std::string const& funcname,
-                     unsigned int lineno, char const* fmt, va_list args);
-    static void log(std::string const& loggername, log4cxx::LevelPtr level,
-                    std::string const& filename, std::string const& funcname,
-                    unsigned int lineno, char const* fmt, ...);
     static void log(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
-                    std::string const& filename, std::string const& funcname,
-                    unsigned int lineno, char const* fmt, ...);
+                    log4cxx::spi::LocationInfo const& location,
+                    char const* fmt, ...);
+    static void logMsg(log4cxx::LoggerPtr logger, log4cxx::LevelPtr level,
+                       log4cxx::spi::LocationInfo const& location,
+                       std::string const& msg);
 };
 
 /** This class handles the default logger name of a logging context.
@@ -534,6 +550,15 @@ private:
     LogContext& operator=(const LogContext&);
 };
 
+
+/**
+ * Function which returns LWP ID on platforms which support it.
+ *
+ * On all other platforms a small incremental integer number (counting number
+ * of threads) is returned. This function can be used to produce more
+ * human-friendly thread ID for logging instead of regular %t format.
+ */
+int lwpID();
 
 }} // namespace lsst::log
 

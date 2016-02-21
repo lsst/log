@@ -72,6 +72,10 @@ void MDCRemove_iface(std::string const& key) {
     Log::MDCRemove(key);
 }
 
+int MDCRegisterInit_iface(std::function<void()> function) {
+    Log::MDCRegisterInit(function);
+}
+
 void setLevel_iface(std::string const& loggername, int level) {
     Log::setLevel(loggername, level);
 }
@@ -88,10 +92,14 @@ void forcedLog_iface(std::string const& loggername, int level,
                      std::string const& filename,
                      std::string const& funcname, int lineno,
                      std::string const& msg) {
-    Log::getLogger(loggername)->forcedLog(
-        log4cxx::Level::toLevel(level), msg.c_str(),
-        log4cxx::spi::LocationInfo(filename.c_str(), funcname.c_str(), lineno)
-    );
+    Log::logMsg(Log::getLogger(loggername),
+                log4cxx::Level::toLevel(level),
+                log4cxx::spi::LocationInfo(filename.c_str(), funcname.c_str(), lineno),
+                msg);
+}
+
+int lwpID_iface() {
+    return lwpID();
 }
 
 }}  // namespace lsst::log
