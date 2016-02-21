@@ -33,6 +33,8 @@
 #ifndef LSST_LOG_LOGINTERFACE_H
 #define LSST_LOG_LOGINTERFACE_H
 
+#include <functional>
+
 namespace lsst {
 namespace log {
 
@@ -44,13 +46,14 @@ void pushContext_iface(std::string const& name);
 void popContext_iface();
 void MDC_iface(std::string const& key, std::string const& value);
 void MDCRemove_iface(std::string const& key);
+int MDCRegisterInit_iface(std::function<void()> function);
 void setLevel_iface(std::string const& loggername, int level);
 int getLevel_iface(std::string const& loggername);
 bool isEnabledFor_iface(std::string const& loggername, int level);
 void forcedLog_iface(std::string const& loggername, int level,
                      std::string const& filename, std::string const& funcname,
                      int lineno, std::string const& mdg);
-
+unsigned lwpID_iface();
 }} // namespace lsst::log
 
 #endif // LSST_LOG_LOGINTERFACE_H
