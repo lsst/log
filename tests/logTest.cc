@@ -31,6 +31,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <thread>
 #include <vector>
 
 // Third-party headers
@@ -72,7 +73,7 @@
 struct LogFixture {
     std::string ofName;
     int fd = -1;
-    enum Layout_t { LAYOUT_SIMPLE, LAYOUT_PATTERN, LAYOUT_COMPONENT };
+    enum Layout_t { LAYOUT_SIMPLE, LAYOUT_PATTERN, LAYOUT_COMPONENT, LAYOUT_MDC };
 
     LogFixture() {
         ofName = _tmpnam();
@@ -118,6 +119,10 @@ struct LogFixture {
             case LAYOUT_COMPONENT:
                 config += "log4j.appender.FA.layout=PatternLayout\n"
                         "log4j.appender.FA.layout.ConversionPattern=%-5p %c - %m%n\n";
+                break;
+            case LAYOUT_MDC:
+                config += "log4j.appender.FA.layout=PatternLayout\n"
+                        "log4j.appender.FA.layout.ConversionPattern=%-5p - %m %X%n\n";
                 break;
         }
         LOG_CONFIG_PROP(config);
@@ -395,4 +400,41 @@ BOOST_FIXTURE_TEST_CASE(dm_1186, LogFixture) {
     	LOG_WARN("This is WARN");
 
     check("INFO - This is INFO\n");
+}
+
+BOOST_FIXTURE_TEST_CASE(mdc_init, LogFixture) {
+
+    std::string expected_msg =
+          "INFO  - main thread {{MDC_INIT,OK}}\n"
+          "INFO  - thread 1 {{MDC_INIT,OK}}\n"
+          "INFO  - thread 2 {{MDC_INIT,OK}}\n";
+
+    configure(LAYOUT_MDC);
+
+    auto fun = [](){ LOG_MDC("MDC_INIT", "OK"); };
+    LOG_MDC_INIT(fun);
+
+    LOGS_INFO("main thread");
+
+    std::thread thread1([]() { LOGS_INFO("thread 1"); });
+    thread1.join();
+
+    std::thread thread2([]() { LOGS_INFO("thread 2"); });
+    thread2.join();
+
+    check(expected_msg);
+
+    LOG_MDC_REMOVE("MDC_INIT");
+}
+
+BOOST_AUTO_TEST_CASE(lwp_id) {
+
+    unsigned lwp1 = lsst::log::lwpID();
+    unsigned lwp2 = lsst::log::lwpID();
+    unsigned pid = static_cast<unsigned>(getpid());
+
+    BOOST_CHECK_EQUAL(lwp1, lwp2);
+    // LWP should be the same as PID in the main thread
+    // or it can be a small number on platforms not supporting LWP
+    BOOST_CHECK(lwp1 == pid or lwp1 < 10);
 }
