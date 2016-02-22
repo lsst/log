@@ -31,9 +31,11 @@
  */
 
 // System headers
+#include <mutex>
 #include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 
 // Third-party headers
 #include <log4cxx/basicconfigurator.h>
@@ -46,11 +48,11 @@
 
 // Local headers
 #include "lsst/log/Log.h"
+#include "lwpID.h"
 
 
 // Max message length for varargs/printf style logging
 #define MAX_LOG_MSG_LEN 1024
-
 
 namespace {
 
@@ -87,11 +89,16 @@ bool init() {
 
 bool initialized = init();
 
+// List of the MDC initialization functions
+std::vector<std::function<void()>> mdcInitFunctions;
+std::mutex mdcInitMutex;
+
 }
 
 
 namespace lsst {
 namespace log {
+
 
 // Log class
 
@@ -190,16 +197,6 @@ std::string Log::getDefaultLoggerName() {
     return name;
 }
 
-/** This method exists solely to simplify the LOG macro. It merely returns
-  * the argument LOGGER.
-  * @return log4cxx::LoggerPtr passed in.
-  *
-  * @param logger  log4cxx::LoggerPtr to return.
-  */
-log4cxx::LoggerPtr Log::getLogger(log4cxx::LoggerPtr logger) {
-    return logger;
-}
-
 /** Returns a pointer to the log4cxx logger object associated with
   * LOGGERNAME.
   * @return log4cxx::LoggerPtr corresponding to LOGGERNAME.
@@ -275,6 +272,21 @@ void Log::MDCRemove(std::string const& key) {
     log4cxx::MDC::remove(key);
 }
 
+int Log::MDCRegisterInit(std::function<void()> function) {
+
+    std::lock_guard<std::mutex> lock(mdcInitMutex);
+
+    // store function for later use
+    ::mdcInitFunctions.push_back(function);
+
+    // logMsg may have been called already in this thread, to make sure that
+    // this function is executed in this thread call it explicitly
+    function();
+
+    // return arbitrary number
+    return 1;
+}
+
 /** Set the logging threshold for LOGGER to LEVEL.
   *
   * @param logger  Logger with threshold to adjust.
@@ -342,48 +354,46 @@ bool Log::isEnabledFor(std::string const& loggername, int level) {
     return isEnabledFor(getLogger(loggername), level);
 }
 
-void Log::vlog(log4cxx::LoggerPtr logger,   ///< the logger
-               log4cxx::LevelPtr level,     ///< message level
-               std::string const& filename, ///< source filename
-               std::string const& funcname, ///< source function name
-               unsigned int lineno,         ///< source line number
-               char const* fmt,             ///< message format string
-               va_list args                 ///< message arguments
-              ) {
-    char msg[MAX_LOG_MSG_LEN];
-    vsnprintf(msg, MAX_LOG_MSG_LEN, fmt, args);
-    logger->forcedLog(level, msg, log4cxx::spi::LocationInfo(filename.c_str(),
-                                                             funcname.c_str(),
-                                                             lineno));
-}
-
-void Log::log(std::string const& loggername, ///< name of logger
-              log4cxx::LevelPtr level,       ///< message level
-              std::string const& filename,   ///< source filename
-              std::string const& funcname,   ///< source function name
-              unsigned int lineno,           ///< source line number
-              char const* fmt,               ///< message format string
-              ...                            ///< message arguments
-             ) {
-    va_list args;
-    va_start(args, fmt);
-    vlog(getLogger(loggername), level, filename, funcname, lineno, fmt, args);
-}
-
 /** Method used by LOG_INFO and similar macros to process a log message
   * with variable arguments along with associated metadata.
   */
 void Log::log(log4cxx::LoggerPtr logger,   ///< the logger
               log4cxx::LevelPtr level,     ///< message level
-              std::string const& filename, ///< source filename
-              std::string const& funcname, ///< source function name
-              unsigned int lineno,         ///< source line number
+              log4cxx::spi::LocationInfo const& location,
               char const* fmt,             ///< message format string
               ...                          ///< message arguments
              ) {
     va_list args;
     va_start(args, fmt);
-    vlog(logger, level, filename, funcname, lineno, fmt, args);
+    char msg[MAX_LOG_MSG_LEN];
+    vsnprintf(msg, MAX_LOG_MSG_LEN, fmt, args);
+    logMsg(logger, level, location, msg);
+}
+
+/** Method used by LOGS_INFO and similar macros to process a log message..
+  */
+void Log::logMsg(log4cxx::LoggerPtr logger,
+                 log4cxx::LevelPtr level,
+                 log4cxx::spi::LocationInfo const& location,
+                 std::string const& msg) {
+
+    // do one-time per-thread initialization
+    thread_local static bool threadInit = false;
+    if (not threadInit) {
+        threadInit = true;
+        std::lock_guard<std::mutex> lock(mdcInitMutex);
+		// call all functions in the MDC init list
+        for (auto& fun: mdcInitFunctions) {
+            fun();
+        }
+    }
+
+    // forward everything to logger
+    logger->forcedLog(level, msg, location);
+}
+
+int lwpID() {
+    return detail::lwpID();
 }
 
 }} // namespace lsst::log
