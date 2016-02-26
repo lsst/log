@@ -369,6 +369,9 @@ For example, a session id may be included by using the following formatting stri
 
     "%d [%t] %-5p %c{2} (%X{session}) %m%n"
 
+or alternatively using `%%X` format code without additional key to display full MDC:
+
+    "%d [%t] %-5p %c{2} %m%n MDC=%X"
 
 In C++, the following MDC macros are available:
 - `LOG_MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender.
@@ -384,11 +387,11 @@ PID can be displayed in the logs using code below:
 
 In C++:
 
-    #include/lsst/log/Log.h
+    #include "lsst/log/Log.h"
     ...
-    // Add a PID key in MDC
+    -- Add a PID key in MDC
     LOG_MDC("PID", std::to_string(getpid()));
-    // Then configure lsst/log
+    -- Then configure lsst/log
     ...
 
 In python:
@@ -403,6 +406,66 @@ In python:
 This has to be done after fork() and corresponding formatting code needs to be added to the logger configuration:
 
     log4j.appender.FILE.layout.conversionPattern=%X{PID} - %m%n
+
+\subsection TID Display thread ID
+
+The conversion pattern in log4cxx has special conversion code (`%t`) to render "thread ID", the rendered value is a pointer to `thread_t` object (on POSIX systems) and is rendered as a long string of hexadecimal digits which makes it difficult to read for non-hardcore programmers. `lsst.log` provides more human-friendly way to print thread-identifying information. Special function `lsst::log::lwpID()` returns light-weight process ID (LWP) on the plaftorms that support this feature and small incremental integer number on other platforms. Using this function one can add LWP to MDC and configure output format to include this special MDC key:
+
+In C++:
+
+    #include "lsst/log/Log.h"
+    ...
+      -- Add LWP key to MDC
+      LOG_MDC("LWP", std::to_string(lsst::log::lwpID()));
+
+In Python:
+
+    import lsst.log as log
+    ...
+    # Add LWP key to MDC
+    log.MDC("LWP", log.lwpID())
+
+
+\subsection MDCthreads MDC and multi-threading
+
+MDC is a great tool to associate some context information with the messages but its use in multi-threaded applications can be complicated. MDC is per-thread instance and it is initialized as empty in every new thread. If application adds somethig to MDC in main thread this information will not exist in other threads unless it is explicitly set in those other threads. This may be an issue for applications which do not have complete control over thread lifetime.
+
+This package provides a mechanism to initialize MDC in all threads started by a process. Special macro `LOG_MDC_INIT(function)` can be used to register a function to be called in in every new thread (and in current thread) before any logging message is sent to a logging system. This function can do anything but its main pupose is to initialize MDC with useful values.
+
+Here is an example of this:
+
+    #include "lsst/log/Log.h"
+    ...
+    void init_mdc() { LOG_MDC("PID", std::to_string(getpid())); }
+    ...
+    int main(int, char**) {
+        LOG_MDC_INIT(init_mdc);
+        ....
+    }
+
+or in Python:
+
+    import lsst.log as log
+    ...
+    def init_mdc()
+        log.MDC("PID", os.getpid())
+    ...
+    log.MDCRegisterInit(init_mdc)
+
+
+`LOG_MDC_INIT(function)` returns some unspecified integer value, this can be used to do one-time initialization (e.g. in some shared library):
+
+    #include "lsst/log/Log.h"
+    ...
+    void init_mdc() { LOG_MDC("MY_CONTEXT", "data"); }
+    ...
+    void foo() {
+        static int dummyMdcInit = LOG_MDC_INIT(init_mdc);
+        ....
+    }
+
+One should note that this initialization function will only be called in the current thread from which `LOG_MDC_INIT()` was called and all new threads, if there are some other threads running at a time of this call the function will not be called for them. Normally the function registered with `LOG_MDC_INIT()` will be called only once per thread but under some circumstances it may be called more than once. Registering the same function multiple times will result is multiple calls to the same function.
+
 
 \section benchmarks Benchmarks
 

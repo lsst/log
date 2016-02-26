@@ -25,8 +25,8 @@
 from lsst.log import (configure_iface, configure_prop_iface,
                       getDefaultLoggerName_iface, pushContext_iface,
                       popContext_iface, MDC_iface, MDCRemove_iface,
-                      getLevel_iface, setLevel_iface,
-                      isEnabledFor_iface, forcedLog_iface)
+                      MDCRegisterInit_iface, getLevel_iface, setLevel_iface,
+                      isEnabledFor_iface, forcedLog_iface, lwpID_iface)
 import logging
 import inspect
 from os import path
@@ -57,12 +57,15 @@ def pushContext(name):
 
 def popContext():
     popContext_iface()
-    
+
 def MDC(key, value):
     MDC_iface(str(key), str(value))
 
 def MDCRemove(key):
     MDCRemove_iface(str(key))
+
+def MDCRegisterInit(func):
+    MDCRegisterInit_iface(func)
 
 def setLevel(loggername, level):
     setLevel_iface(loggername, level)
@@ -72,7 +75,7 @@ def getLevel(loggername):
 
 def isEnabledFor(loggername, level):
     return isEnabledFor_iface(loggername, level)
-    
+
 def _getFrame(depth):
     frame = inspect.currentframe().f_back
     for i in range(depth):
@@ -83,10 +86,7 @@ def _getFuncName(depth):
     return inspect.stack()[depth+1][3]
 
 def log(loggername, level, fmt, *args, **kwargs):
-    if 'depth' in kwargs:
-        depth = kwargs['depth']
-    else:
-        depth = 1
+    depth = kwargs.get('depth', 1)
     if isEnabledFor(loggername, level):
         frame = _getFrame(depth)
         forcedLog_iface(loggername, level,
@@ -110,6 +110,9 @@ def error(fmt, *args):
 
 def fatal(fmt, *args):
     log("", FATAL, fmt, *args, depth=2)
+
+def lwpID():
+    return lwpID_iface()
 
 class LogContext:
 
