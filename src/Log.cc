@@ -32,6 +32,7 @@
 
 // System headers
 #include <mutex>
+#include <pthread.h>
 #include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
@@ -92,6 +93,15 @@ bool initialized = init();
 // List of the MDC initialization functions
 std::vector<std::function<void()>> mdcInitFunctions;
 std::mutex mdcInitMutex;
+
+// more efficient alternative to pthread_once
+struct PthreadKey {
+    PthreadKey() {
+        // we don't need destructor for a key
+        pthread_key_create(&key, nullptr);
+    }
+    pthread_key_t key;
+} pthreadKey;
 
 }
 
@@ -378,10 +388,15 @@ void Log::logMsg(log4cxx::LoggerPtr logger,   ///< the logger
                  std::string const& msg       ///< message string
                  ) {
 
-    // do one-time per-thread initialization
-    thread_local static bool threadInit = false;
-    if (not threadInit) {
-        threadInit = true;
+    // do one-time per-thread initialization, this was implemented
+    // with thread_local initially but clang on OS X did not support it
+    void *ptr = pthread_getspecific(::pthreadKey.key);
+    if (ptr == nullptr) {
+
+        // use pointer value as a flag, don't care where it points to
+        ptr = static_cast<void*>(&::pthreadKey);
+        pthread_setspecific(::pthreadKey.key, ptr);
+
         std::lock_guard<std::mutex> lock(mdcInitMutex);
 		// call all functions in the MDC init list
         for (auto& fun: mdcInitFunctions) {
