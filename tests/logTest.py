@@ -326,12 +326,8 @@ log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
         """Test log.lwpID() method."""
         lwp1 = log.lwpID()
         lwp2 = log.lwpID()
-        pid = os.getpid()
 
         self.assertEqual(lwp1, lwp2)
-        # LWP should be the same as PID in the main thread
-        # or it can be a small number on platforms not supporting LWP
-        self.assert_(lwp1 == pid or lwp1 < 10)
 
 ####################################################################################
 def main():

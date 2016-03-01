@@ -431,10 +431,6 @@ BOOST_AUTO_TEST_CASE(lwp_id) {
 
     unsigned lwp1 = lsst::log::lwpID();
     unsigned lwp2 = lsst::log::lwpID();
-    unsigned pid = static_cast<unsigned>(getpid());
 
     BOOST_CHECK_EQUAL(lwp1, lwp2);
-    // LWP should be the same as PID in the main thread
-    // or it can be a small number on platforms not supporting LWP
-    BOOST_CHECK(lwp1 == pid or lwp1 < 10);
 }
