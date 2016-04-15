@@ -564,6 +564,132 @@
             LOG4CXX_LOCATION, message); } \
     } while (false)
 
+/**
+  * @def LOGLS_TRACE(logger, message)
+  * Log a trace-level message using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGLS_TRACE(logger, "coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param logger  Either a logger name or a Log object.
+  * @param message Message to be logged.
+  */
+#define LOGLS_TRACE(logger, message) \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::getLogger(logger).isTraceEnabled())) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::logMsg(lsst::log::Log::getLogger(logger), \
+            log4cxx::Level::getTrace(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
+    } while (false)
+
+/**
+  * @def LOGLS_DEBUG(logger, message)
+  * Log a debug-level message using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGLS_DEBUG(logger, "coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param logger  Either a logger name or a Log object.
+  * @param message Message to be logged.
+  */
+#define LOGLS_DEBUG(logger, message) \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::getLogger(logger).isDebugEnabled())) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::logMsg(lsst::log::Log::getLogger(logger), \
+            log4cxx::Level::getDebug(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
+    } while (false)
+
+/**
+  * @def LOGLS_INFO(logger, message)
+  * Log a info-level message using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGLS_INFO(logger, "coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param logger  Either a logger name or a Log object.
+  * @param message Message to be logged.
+  */
+#define LOGLS_INFO(logger, message) \
+    do { if (lsst::log::Log::getLogger(logger).isInfoEnabled()) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::logMsg(lsst::log::Log::getLogger(logger), \
+            log4cxx::Level::getInfo(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
+    } while (false)
+
+/**
+  * @def LOGLS_WARN(logger, message)
+  * Log a warn-level message using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGLS_WARN(logger, "coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param logger  Either a logger name or a Log object.
+  * @param message Message to be logged.
+  */
+#define LOGLS_WARN(logger, message) \
+    do { if (lsst::log::Log::getLogger(logger).isWarnEnabled()) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::logMsg(lsst::log::Log::getLogger(logger), \
+            log4cxx::Level::getWarn(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
+    } while (false)
+
+/**
+  * @def LOGLS_ERROR(logger, message)
+  * Log a error-level message using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGLS_ERROR(logger, "coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param logger  Either a logger name or a Log object.
+  * @param message Message to be logged.
+  */
+#define LOGLS_ERROR(logger, message) \
+    do { if (lsst::log::Log::getLogger(logger).isErrorEnabled()) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::logMsg(lsst::log::Log::getLogger(logger), \
+            log4cxx::Level::getError(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
+    } while (false)
+
+/**
+  * @def LOGLS_FATAL(logger, message)
+  * Log a fatal-level message using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGLS_FATAL(logger, "coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param logger  Either a logger name or a Log object.
+  * @param message Message to be logged.
+  */
+#define LOGLS_FATAL(logger, message) \
+    do { if (lsst::log::Log::getLogger(logger).isFatalEnabled()) { \
+        std::ostringstream stream_; \
+        stream_ << message; \
+        lsst::log::Log::logMsg(lsst::log::Log::getLogger(logger), \
+            log4cxx::Level::getFatal(), LOG4CXX_LOCATION, \
+            stream_.str()); } \
+    } while (false)
+
 #define LOG_LVL_TRACE static_cast<int>(log4cxx::Level::TRACE_INT)
 #define LOG_LVL_DEBUG static_cast<int>(log4cxx::Level::DEBUG_INT)
 #define LOG_LVL_INFO static_cast<int>(log4cxx::Level::INFO_INT)
