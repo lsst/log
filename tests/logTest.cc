@@ -456,6 +456,19 @@ BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
     LOGL_ERROR(logger, "This is ERROR");
     LOGL_FATAL(loggerName, "This is FATAL %d %.4f %s", 65, 42.123, "logging");
     LOGL_FATAL(logger, "This is FATAL %d %.4f %s", 65, 42.123, "logging");
+    LOGLS_TRACE(loggerName, "This is TRACE");
+    LOGLS_TRACE(logger, "This is TRACE");
+    LOGLS_INFO(loggerName, "This is INFO");
+    LOGLS_INFO(logger, "This is INFO");
+    LOGLS_DEBUG(loggerName, "This is DEBUG");
+    LOGLS_DEBUG(logger, "This is DEBUG");
+    LOGLS_WARN(loggerName, "This is WARN");
+    LOGLS_WARN(logger, "This is WARN");
+    LOGLS_ERROR(loggerName, "This is ERROR");
+    LOGLS_ERROR(logger, "This is ERROR");
+    LOGLS_FATAL(loggerName, "This is FATAL " << 43 << " logging");
+    LOGLS_FATAL(logger, "This is FATAL " << 43 << " logging");
+    LOGLS_INFO(logger, "Format " << 3 << " " << 2.71828 << " foo c++");
     check("INFO - This is INFO 1\n"
           "INFO - This is INFO 2\n"
           "INFO - This is INFO 3\n"
@@ -467,5 +480,14 @@ BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
           "ERROR - This is ERROR\n"
           "ERROR - This is ERROR\n"
           "FATAL - This is FATAL 65 42.1230 logging\n"
-          "FATAL - This is FATAL 65 42.1230 logging\n");
+          "FATAL - This is FATAL 65 42.1230 logging\n"
+          "INFO - This is INFO\n"
+          "INFO - This is INFO\n"
+          "WARN - This is WARN\n"
+          "WARN - This is WARN\n"
+          "ERROR - This is ERROR\n"
+          "ERROR - This is ERROR\n"
+          "FATAL - This is FATAL 43 logging\n"
+          "FATAL - This is FATAL 43 logging\n"
+          "INFO - Format 3 2.71828 foo c++\n");
 }

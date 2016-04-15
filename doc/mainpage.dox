@@ -117,6 +117,12 @@ Alternative set of macros allows one to use iostream-based formatting. In the ma
 - `LOGS_WARN(expression)` Log a message of level `LOG_LVL_WARN` to the default logger.
 - `LOGS_ERROR(expression)` Log a message of level `LOG_LVL_ERROR` to the default logger.
 - `LOGS_FATAL(expression)` Log a message of level `LOG_LVL_FATAL` to the default logger.
+- `LOGLS_TRACE(logger, expression)` Log a message of level `LOG_LVL_TRACE` to the logger '''`logger`'''.
+- `LOGLS_DEBUG(logger, expression)` Log a message of level `LOG_LVL_DEBUG` to the logger '''`logger`'''.
+- `LOGLS_INFO(logger, expression)` Log a message of level `LOG_LVL_INFO` to the logger '''`logger`'''.
+- `LOGLS_WARN(logger, expression)` Log a message of level `LOG_LVL_WARN` to the logger '''`logger`'''.
+- `LOGLS_ERROR(logger, expression)` Log a message of level `LOG_LVL_ERROR` to the logger '''`logger`'''.
+- `LOGLS_FATAL(logger, expression)` Log a message of level `LOG_LVL_FATAL` to the logger '''`logger`'''.
 
 In Python, the following logging functions are available in the `lsst.log` module. These functions take a variable number of arguments following a format string in the style of `printf()`. The use of `*args` is recommended over the use of the `%` operator so that formatting of log messages that do not meet the level threshold can be avoided.
 - `log(loggername, level, fmt, *args)` Log a message of level '''`level`''' with format string '''`fmt`''' and variable arguments '''`*args`''' to the logger named '''`loggername`'''.
