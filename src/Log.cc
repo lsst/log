@@ -200,7 +200,14 @@ void Log::configure_prop(std::string const& properties) {
   * @return String containing the default logger name.
   */
 std::string Log::getDefaultLoggerName() {
-    std::string name = defaultLogger._logger->getName();
+    return defaultLogger.getName();
+}
+
+/** Get the logger name associated with the Log object.
+  * @return String containing the logger name.
+  */
+std::string Log::getName() const {
+    std::string name = _logger->getName();
     if (name == "root") {
         name.clear();
     }

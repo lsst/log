@@ -462,8 +462,8 @@ BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
     LOGLS_INFO(logger, "This is INFO");
     LOGLS_DEBUG(loggerName, "This is DEBUG");
     LOGLS_DEBUG(logger, "This is DEBUG");
-    LOGLS_WARN(loggerName, "This is WARN");
-    LOGLS_WARN(logger, "This is WARN");
+    LOGLS_WARN(loggerName, "This is WARN and the logger name is " << logger.getName());
+    LOGLS_WARN(logger, "This is WARN and the logger name is " << logger.getName());
     LOGLS_ERROR(loggerName, "This is ERROR");
     LOGLS_ERROR(logger, "This is ERROR");
     LOGLS_FATAL(loggerName, "This is FATAL " << 43 << " logging");
@@ -483,8 +483,8 @@ BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
           "FATAL - This is FATAL 65 42.1230 logging\n"
           "INFO - This is INFO\n"
           "INFO - This is INFO\n"
-          "WARN - This is WARN\n"
-          "WARN - This is WARN\n"
+          "WARN - This is WARN and the logger name is a\n"
+          "WARN - This is WARN and the logger name is a\n"
           "ERROR - This is ERROR\n"
           "ERROR - This is ERROR\n"
           "FATAL - This is FATAL 43 logging\n"
