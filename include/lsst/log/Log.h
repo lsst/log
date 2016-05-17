@@ -737,6 +737,7 @@ public:
      */
     bool isWarnEnabled(void) const { return _logger->isWarnEnabled(); }
 
+    std::string getName(void) const;
     static Log defaultLogger;
     static void initLog(void);
     static void configure(void);

@@ -338,6 +338,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
             logger = log.Log.getLogger("b")
+            self.assertEqual(logger.getName(), "b")
             logger.trace("This is TRACE")
             logger.info("This is INFO")
             logger.debug("This is DEBUG")
@@ -367,6 +368,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c (%F)- %m%n
 """)
             self.assertEqual(log.Log.getLevel(log.Log.getDefaultLogger()), log.TRACE)
             logger = log.Log.getLogger("a.b")
+            self.assertEqual(logger.getName(), "a.b")
             logger.trace("This is TRACE")
             logger.setLevel(logger, log.INFO)
             self.assertEqual(logger.getLevel(logger), log.INFO)
@@ -375,6 +377,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c (%F)- %m%n
             logger.fatal("Format %d %g %s", 3, 2.71828, "foo")
 
             logger = log.Log.getLogger("a.b.c")
+            self.assertEqual(logger.getName(), "a.b.c")
             logger.trace("This is TRACE")
             logger.debug("This is DEBUG")
             logger.warn("This is WARN")
