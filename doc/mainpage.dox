@@ -72,6 +72,12 @@ avoid filtering on Python side by setting logging level to DEBUG for root
 logger and instead configure log4cxx with proper logging level.
 
 
+Alternatively, get a logger through lsst.log.Log:
+
+    lgr = lsst.log.Log.getLogger("myLogger")
+    lgr.setLevel(lgr.DEBUG)
+    lgr.info("This is an info statement via %s", "lsst.log.Log interface.")
+
 \section exampleOutput Example output
 
     20140313 00:30:06,226 0x7f1f06bf6700 INFO  Here is some information about important stuff.

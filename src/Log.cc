@@ -304,31 +304,19 @@ int Log::MDCRegisterInit(std::function<void()> function) {
     return 1;
 }
 
-/** Set the logging threshold for LOGGER to LEVEL.
+/** Set the logging threshold to LEVEL.
   *
-  * @param logger  Logger with threshold to adjust.
   * @param level   New logging threshold.
   */
-void Log::setLevel(Log logger, int level) {
-    logger._logger->setLevel(log4cxx::Level::toLevel(level));
+void Log::setLevel(int level) {
+    _logger->setLevel(log4cxx::Level::toLevel(level));
 }
 
-/** Set the logging threshold for the logger named LOGGERNAME to LEVEL.
-  *
-  * @param loggername  Name of logger with threshold to adjust.
-  * @param level       New logging threshold.
-  */
-void Log::setLevel(std::string const& loggername, int level) {
-    setLevel(getLogger(loggername), level);
-}
-
-/** Retrieve the logging threshold for LOGGER.
+/** Retrieve the logging threshold.
   * @return int Indicating the logging threshold.
-  *
-  * @param logger  Logger with threshold to return.
   */
-int Log::getLevel(Log logger) {
-    log4cxx::LevelPtr level = logger._logger->getLevel();
+int Log::getLevel() {
+    log4cxx::LevelPtr level = _logger->getLevel();
     int levelno = -1;
     if (level != NULL) {
         levelno = level->toInt();
@@ -336,39 +324,33 @@ int Log::getLevel(Log logger) {
     return levelno;
 }
 
-/** Retrieve the logging threshold for the logger name LOGGERNAME.
-  * @return Int indicating the logging threshold.
-  *
-  * @param loggername  Name of logger with threshold to return.
-  */
-int Log::getLevel(std::string const& loggername) {
-    return getLevel(getLogger(loggername));
-}
-
-/** Return whether the logging threshold of LOGGER is less than or equal
+/** Return whether the logging threshold of the logger is less than or equal
   * to LEVEL.
   * @return Bool indicating whether or not logger is enabled.
   *
-  * @param logger  Logger being queried.
   * @param level   Logging threshold to check.
   */
-bool Log::isEnabledFor(Log logger, int level) {
-    if (logger._logger->isEnabledFor(log4cxx::Level::toLevel(level))) {
+bool Log::isEnabledFor(int level) {
+    if (_logger->isEnabledFor(log4cxx::Level::toLevel(level))) {
         return true;
     } else {
         return false;
     }
 }
 
-/** Return whether the logging threshold of the logger named LOGGERNAME
-  * is less than or equal to LEVEL.
-  * @return Bool indicating whether or not logger is enabled.
-  *
-  * @param loggername  Name of logger being queried.
-  * @param level       Logging threshold to check.
+/** Method used by LOG_INFO and similar macros to process a log message
+  * with variable arguments along with associated metadata.
   */
-bool Log::isEnabledFor(std::string const& loggername, int level) {
-    return isEnabledFor(getLogger(loggername), level);
+void Log::log(log4cxx::LevelPtr level,     ///< message level
+              log4cxx::spi::LocationInfo const& location,  ///< message origin location
+              char const* fmt,             ///< message format string
+              ...                          ///< message arguments
+             ) {
+    va_list args;
+    va_start(args, fmt);
+    char msg[MAX_LOG_MSG_LEN];
+    vsnprintf(msg, MAX_LOG_MSG_LEN, fmt, args);
+    logMsg(level, location, msg);
 }
 
 /** Method used by LOG_INFO and similar macros to process a log message
@@ -384,13 +366,12 @@ void Log::log(Log logger,   ///< the logger
     va_start(args, fmt);
     char msg[MAX_LOG_MSG_LEN];
     vsnprintf(msg, MAX_LOG_MSG_LEN, fmt, args);
-    logMsg(logger, level, location, msg);
+    logger.logMsg(level, location, msg);
 }
 
 /** Method used by LOGS_INFO and similar macros to process a log message..
   */
-void Log::logMsg(Log logger, ///< the logger
-                 log4cxx::LevelPtr level,     ///< message level
+void Log::logMsg(log4cxx::LevelPtr level,     ///< message level
                  log4cxx::spi::LocationInfo const& location,  ///< message origin location
                  std::string const& msg       ///< message string
                  ) {
@@ -412,7 +393,17 @@ void Log::logMsg(Log logger, ///< the logger
     }
 
     // forward everything to logger
-    logger._logger->forcedLog(level, msg, location);
+    _logger->forcedLog(level, msg, location);
+}
+
+/** Method used by LOGS_INFO and similar macros to process a log message..
+  */
+void Log::logMsg(Log logger, ///< the logger
+                 log4cxx::LevelPtr level,     ///< message level
+                 log4cxx::spi::LocationInfo const& location,  ///< message origin location
+                 std::string const& msg       ///< message string
+                 ) {
+    logger.logMsg(level, location, msg);
 }
 
 unsigned lwpID() {

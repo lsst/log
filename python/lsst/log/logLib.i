@@ -57,12 +57,12 @@ import os
 
 %extend lsst::log::Log {
     static lsst::log::Log getDefaultLogger() { return lsst::log::Log::defaultLogger; };
-    static void log(Log logger, int level, std::string const& filename,
-                    std::string const& funcname, unsigned int lineno,
-                    std::string const& msg) {
-        lsst::log::Log::log(logger, log4cxx::Level::toLevel(level),
-                            log4cxx::spi::LocationInfo(filename.c_str(), funcname.c_str(), lineno),
-                            msg.c_str());
+    void log(int level, std::string const& filename,
+             std::string const& funcname, unsigned int lineno,
+             std::string const& msg) {
+        self->log(log4cxx::Level::toLevel(level),
+                  log4cxx::spi::LocationInfo(filename.c_str(), funcname.c_str(), lineno),
+                  msg.c_str());
     };
     unsigned lwpID() { return lsst::log::lwpID(); };
 
@@ -93,11 +93,11 @@ import os
         self._log(Log.FATAL, fmt, *args)
 
     def _log(self, level, fmt, *args):
-        if Log.isEnabledFor(self, level):
+        if self.isEnabledFor(level):
             frame = inspect.currentframe().f_back    # calling method
             frame = frame.f_back    # original log location
-            Log.log(self, level, os.path.split(frame.f_code.co_filename)[1],
-                    inspect.stack()[2][3], frame.f_lineno, fmt % args)
+            self.log(level, os.path.split(frame.f_code.co_filename)[1],
+                     inspect.stack()[2][3], frame.f_lineno, fmt % args)
     }
 }
 
