@@ -304,45 +304,24 @@ int Log::MDCRegisterInit(std::function<void()> function) {
     return 1;
 }
 
-/** Set the logging threshold for LOGGER to LEVEL.
+/** Set the logging threshold to LEVEL.
   *
-  * @param logger  Logger with threshold to adjust.
   * @param level   New logging threshold.
   */
-void Log::setLevel(Log logger, int level) {
-    logger._logger->setLevel(log4cxx::Level::toLevel(level));
+void Log::setLevel(int level) {
+    _logger->setLevel(log4cxx::Level::toLevel(level));
 }
 
-/** Set the logging threshold for the logger named LOGGERNAME to LEVEL.
-  *
-  * @param loggername  Name of logger with threshold to adjust.
-  * @param level       New logging threshold.
-  */
-void Log::setLevel(std::string const& loggername, int level) {
-    setLevel(getLogger(loggername), level);
-}
-
-/** Retrieve the logging threshold for LOGGER.
+/** Retrieve the logging threshold.
   * @return int Indicating the logging threshold.
-  *
-  * @param logger  Logger with threshold to return.
   */
-int Log::getLevel(Log logger) {
-    log4cxx::LevelPtr level = logger._logger->getLevel();
+int Log::getLevel() {
+    log4cxx::LevelPtr level = _logger->getLevel();
     int levelno = -1;
     if (level != NULL) {
         levelno = level->toInt();
     }
     return levelno;
-}
-
-/** Retrieve the logging threshold for the logger name LOGGERNAME.
-  * @return Int indicating the logging threshold.
-  *
-  * @param loggername  Name of logger with threshold to return.
-  */
-int Log::getLevel(std::string const& loggername) {
-    return getLevel(getLogger(loggername));
 }
 
 /** Return whether the logging threshold of LOGGER is less than or equal

@@ -60,10 +60,10 @@ def MDCRegisterInit(func):
     Log.MDCRegisterInit(func)
 
 def setLevel(loggername, level):
-    Log.setLevel(Log.getLogger(loggername), level)
+    Log.getLogger(loggername).setLevel(level)
 
 def getLevel(loggername):
-    Log.getLevel(Log.getLogger(loggername))
+    Log.getLogger(loggername).getLevel()
 
 def isEnabledFor(logger, level):
     Log.isEnabledFor(Log.getLogger(logger), level)
@@ -113,7 +113,7 @@ class LogContext(object):
         if self.name is not None:
             Log.pushContext(self.name)
         if self.level is not None:
-            Log.setLevel(Log.getDefaultLogger(), self.level)
+            Log.getDefaultLogger().setLevel(self.level)
 
     def close(self):
         if self.name is not None:
@@ -121,10 +121,10 @@ class LogContext(object):
             self.name = None
 
     def setLevel(self, level):
-        Log.setLevel(Log.getDefaultLogger(), level)
+        Log.getDefaultLogger().setLevel(level)
 
     def getLevel(self):
-        return Log.getLevel(Log.getDefaultLogger())
+        return Log.getDefaultLogger().getLevel()
 
     def isEnabledFor(self, level):
         return Log.isEnabledFor(Log.getDefaultLogger(), level)

@@ -158,7 +158,7 @@
   * @param level   New logging threshold.
   */
 #define LOG_SET_LVL(logger, level) \
-    lsst::log::Log::setLevel(logger, level)
+    lsst::log::Log::getLogger(logger).setLevel(level)
 
 /**
   * @def LOG_GET_LVL(logger)
@@ -169,7 +169,7 @@
   *                to return.
   */
 #define LOG_GET_LVL(logger) \
-    lsst::log::Log::getLevel(logger)
+    lsst::log::Log::getLogger(logger).getLevel()
 
 /**
   * @def LOG_CHECK_LVL(logger, level)
@@ -738,6 +738,8 @@ public:
     bool isWarnEnabled(void) const { return _logger->isWarnEnabled(); }
 
     std::string getName(void) const;
+    void setLevel(int level);
+    int getLevel(void);
     static Log defaultLogger;
     static void initLog(void);
     static void configure(void);
@@ -751,10 +753,6 @@ public:
     static void MDC(std::string const& key, std::string const& value);
     static void MDCRemove(std::string const& key);
     static int MDCRegisterInit(std::function<void()> function);
-    static void setLevel(Log logger, int level);
-    static void setLevel(std::string const& loggername, int level);
-    static int getLevel(Log logger);
-    static int getLevel(std::string const& loggername);
     static bool isEnabledFor(Log logger, int level);
     static bool isEnabledFor(std::string const& loggername, int level);
     static void log(Log logger, log4cxx::LevelPtr level,

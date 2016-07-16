@@ -65,8 +65,6 @@ import os
                             msg.c_str());
     };
     unsigned lwpID() { return lsst::log::lwpID(); };
-    int getLevel() { return lsst::log::Log::getLevel(self->getName()); };
-    void setLevel(int level) { lsst::log::Log::setLevel(self->getName(), level); };
 
     %pythoncode {
     TRACE = 5000
