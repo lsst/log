@@ -324,30 +324,18 @@ int Log::getLevel() {
     return levelno;
 }
 
-/** Return whether the logging threshold of LOGGER is less than or equal
+/** Return whether the logging threshold of the logger is less than or equal
   * to LEVEL.
   * @return Bool indicating whether or not logger is enabled.
   *
-  * @param logger  Logger being queried.
   * @param level   Logging threshold to check.
   */
-bool Log::isEnabledFor(Log logger, int level) {
-    if (logger._logger->isEnabledFor(log4cxx::Level::toLevel(level))) {
+bool Log::isEnabledFor(int level) {
+    if (_logger->isEnabledFor(log4cxx::Level::toLevel(level))) {
         return true;
     } else {
         return false;
     }
-}
-
-/** Return whether the logging threshold of the logger named LOGGERNAME
-  * is less than or equal to LEVEL.
-  * @return Bool indicating whether or not logger is enabled.
-  *
-  * @param loggername  Name of logger being queried.
-  * @param level       Logging threshold to check.
-  */
-bool Log::isEnabledFor(std::string const& loggername, int level) {
-    return isEnabledFor(getLogger(loggername), level);
 }
 
 /** Method used by LOG_INFO and similar macros to process a log message

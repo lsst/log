@@ -93,7 +93,7 @@ import os
         self._log(Log.FATAL, fmt, *args)
 
     def _log(self, level, fmt, *args):
-        if Log.isEnabledFor(self, level):
+        if self.isEnabledFor(level):
             frame = inspect.currentframe().f_back    # calling method
             frame = frame.f_back    # original log location
             Log.log(self, level, os.path.split(frame.f_code.co_filename)[1],

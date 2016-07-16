@@ -181,7 +181,7 @@
   * @param level   Logging threshold to check.
   */
 #define LOG_CHECK_LVL(logger, level) \
-    lsst::log::Log::isEnabledFor(logger, level)
+    lsst::log::Log::getLogger(logger).isEnabledFor(level)
 
 /**
   * @def LOG_CHECK_TRACE()
@@ -247,7 +247,7 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG(logger, level, message...) \
-    do { if (lsst::log::Log::isEnabledFor(logger, level)) { \
+    do { if (lsst::log::Log::getLogger(logger).isEnabledFor(level)) { \
         lsst::log::Log::log(lsst::log::Log::getLogger(logger), \
         log4cxx::Level::toLevel(level), \
         LOG4CXX_LOCATION, message); } \
@@ -352,7 +352,7 @@
   * @param message  Message to be logged.
   */
 #define LOGS(logger, level, message) \
-    do { if (lsst::log::Log::isEnabledFor(logger, level)) { \
+    do { if (lsst::log::Log::getLogger(logger).isEnabledFor(level)) { \
         std::ostringstream stream_; \
         stream_ << message; \
         lsst::log::Log::logMsg(lsst::log::Log::getLogger(logger), \
@@ -740,6 +740,7 @@ public:
     std::string getName(void) const;
     void setLevel(int level);
     int getLevel(void);
+    bool isEnabledFor(int level);
     static Log defaultLogger;
     static void initLog(void);
     static void configure(void);
@@ -753,8 +754,6 @@ public:
     static void MDC(std::string const& key, std::string const& value);
     static void MDCRemove(std::string const& key);
     static int MDCRegisterInit(std::function<void()> function);
-    static bool isEnabledFor(Log logger, int level);
-    static bool isEnabledFor(std::string const& loggername, int level);
     static void log(Log logger, log4cxx::LevelPtr level,
                     log4cxx::spi::LocationInfo const& location,
                     char const* fmt, ...);

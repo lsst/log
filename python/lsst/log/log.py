@@ -66,7 +66,7 @@ def getLevel(loggername):
     Log.getLogger(loggername).getLevel()
 
 def isEnabledFor(logger, level):
-    Log.isEnabledFor(Log.getLogger(logger), level)
+    Log.getLogger(logger).isEnabledFor(level)
 
 def log(loggername, level, fmt, *args, **kwargs):
     Log.getLogger(loggername)._log(level, fmt, *args)
@@ -127,7 +127,7 @@ class LogContext(object):
         return Log.getDefaultLogger().getLevel()
 
     def isEnabledFor(self, level):
-        return Log.isEnabledFor(Log.getDefaultLogger(), level)
+        return Log.getDefaultLogger().isEnabledFor(level)
 
 class LogHandler(logging.Handler):
     """Handler for Python logging module that emits to LSST logging."""
