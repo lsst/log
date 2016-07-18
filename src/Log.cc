@@ -114,13 +114,16 @@ namespace log {
 
 /** Reference to the defaultLogger used by LOG* macros.
   */
-Log Log::defaultLogger(log4cxx::Logger::getRootLogger());
+Log & Log::defaultLogger() {
+    static Log _default(log4cxx::Logger::getRootLogger());
+    return _default;
+}
 
 /** Initializes logging module (e.g. default logger and logging context).
   */
 void Log::initLog() {
     // Default logger initially set to root logger
-    defaultLogger = log4cxx::Logger::getRootLogger();
+    defaultLogger() = log4cxx::Logger::getRootLogger();
 }
 
 /** Configures log4cxx and initializes logging system by invoking
@@ -200,7 +203,7 @@ void Log::configure_prop(std::string const& properties) {
   * @return String containing the default logger name.
   */
 std::string Log::getDefaultLoggerName() {
-    return defaultLogger.getName();
+    return defaultLogger().getName();
 }
 
 /** Get the logger name associated with the Log object.
@@ -222,7 +225,7 @@ std::string Log::getName() const {
   */
 Log Log::getLogger(std::string const& loggername) {
     if (loggername.empty()){
-        return defaultLogger;
+        return defaultLogger();
     } else {
         return Log(log4cxx::Logger::getLogger(loggername));
     }
@@ -245,7 +248,7 @@ void Log::pushContext(std::string const& name) {
     }
 
     // Construct new default logger name
-    std::string newName = defaultLogger._logger->getName();
+    std::string newName = defaultLogger()._logger->getName();
     if (newName == "root") {
         newName = name;
     } else {
@@ -253,7 +256,7 @@ void Log::pushContext(std::string const& name) {
         newName += name;
     }
     // Update defaultLogger
-    defaultLogger = Log(log4cxx::Logger::getLogger(newName));
+    defaultLogger() = Log(log4cxx::Logger::getLogger(newName));
 }
 
 /** Pops the last pushed name off the global hierarchical default logger
@@ -262,10 +265,10 @@ void Log::pushContext(std::string const& name) {
 void Log::popContext() {
     // switch to parent logger, this assumes that loggers are not
     // re-parented between calls to push and pop
-    log4cxx::LoggerPtr parent = defaultLogger._logger->getParent();
+    log4cxx::LoggerPtr parent = defaultLogger()._logger->getParent();
     // root logger does not have parent, stay at root instead
     if (parent) {
-        defaultLogger = Log(parent);
+        defaultLogger() = Log(parent);
     }
 }
 
