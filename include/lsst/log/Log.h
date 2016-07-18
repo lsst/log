@@ -484,13 +484,13 @@
   * @def LOGL_TRACE(logger, message...)
   * Log a trace-level message using a varargs/printf style interface.
   *
-  * @param logger   A Log object associated with a logger
+  * @param logger   Either a logger name or a Log object.
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOGL_TRACE(logger, message...) \
-    do { if (LOG4CXX_UNLIKELY(logger.isTraceEnabled())) { \
-        lsst::log::Log::log(logger, log4cxx::Level::getTrace(), \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::getLogger(logger).isTraceEnabled())) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getTrace(), \
             LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -498,13 +498,13 @@
   * @def LOGL_DEBUG(logger, message...)
   * Log a debug-level message using a varargs/printf style interface.
   *
-  * @param logger   A Log object associated with a logger
+  * @param logger   Either a logger name or a Log object.
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOGL_DEBUG(logger, message...) \
-    do { if (LOG4CXX_UNLIKELY(logger.isDebugEnabled())) { \
-        lsst::log::Log::log(logger, log4cxx::Level::getDebug(), \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::getLogger(logger).isDebugEnabled())) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getDebug(), \
             LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -512,13 +512,13 @@
   * @def LOGL_INFO(logger, message...)
   * Log a info-level message using a varargs/printf style interface.
   *
-  * @param logger   A Log object associated with a logger
+  * @param logger   Either a logger name or a Log object.
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOGL_INFO(logger, message...) \
-    do { if (logger.isInfoEnabled()) { \
-        lsst::log::Log::log(logger, log4cxx::Level::getInfo(), \
+    do { if (lsst::log::Log::getLogger(logger).isInfoEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getInfo(), \
             LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -526,13 +526,13 @@
   * @def LOGL_WARN(logger, message...)
   * Log a warn-level message using a varargs/printf style interface.
   *
-  * @param logger   A Log object associated with a logger
+  * @param logger   Either a logger name or a Log object.
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOGL_WARN(logger, message...) \
-    do { if (logger.isWarnEnabled()) { \
-        lsst::log::Log::log(logger, log4cxx::Level::getWarn(), \
+    do { if (lsst::log::Log::getLogger(logger).isWarnEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getWarn(), \
             LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -540,13 +540,13 @@
   * @def LOGL_ERROR(logger, message...)
   * Log a error-level message using a varargs/printf style interface.
   *
-  * @param logger   A Log object associated with a logger
+  * @param logger   Either a logger name or a Log object.
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOGL_ERROR(logger, message...) \
-    do { if (logger.isErrorEnabled()) { \
-        lsst::log::Log::log(logger, log4cxx::Level::getError(), \
+    do { if (lsst::log::Log::getLogger(logger).isErrorEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getError(), \
             LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -554,13 +554,13 @@
   * @def LOGL_FATAL(logger, message...)
   * Log a fatal-level message using a varargs/printf style interface.
   *
-  * @param logger   A Log object associated with a logger
+  * @param logger   Either a logger name or a Log object.
   * @param message  An sprintf-compatible format string followed by zero,
   *                    one, or more comma-separated arguments.
   */
 #define LOGL_FATAL(logger, message...) \
-    do { if (logger.isFatalEnabled()) { \
-        lsst::log::Log::log(logger, log4cxx::Level::getFatal(), \
+    do { if (lsst::log::Log::getLogger(logger).isFatalEnabled()) { \
+        lsst::log::Log::log(lsst::log::Log::getLogger(logger), log4cxx::Level::getFatal(), \
             LOG4CXX_LOCATION, message); } \
     } while (false)
 

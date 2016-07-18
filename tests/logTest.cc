@@ -444,18 +444,28 @@ BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
     LOG(logger, LOG_LVL_INFO, "This is INFO 2");
     LOGS(loggerName, LOG_LVL_INFO, "This is INFO 3");
     LOGS(logger, LOG_LVL_INFO, "This is INFO 4");
+    LOGL_TRACE(loggerName, "This is TRACE");
     LOGL_TRACE(logger, "This is TRACE");
+    LOGL_INFO(loggerName, "This is INFO");
     LOGL_INFO(logger, "This is INFO");
+    LOGL_DEBUG(loggerName, "This is DEBUG");
     LOGL_DEBUG(logger, "This is DEBUG");
+    LOGL_WARN(loggerName, "This is WARN");
     LOGL_WARN(logger, "This is WARN");
+    LOGL_ERROR(loggerName, "This is ERROR");
     LOGL_ERROR(logger, "This is ERROR");
+    LOGL_FATAL(loggerName, "This is FATAL %d %.4f %s", 65, 42.123, "logging");
     LOGL_FATAL(logger, "This is FATAL %d %.4f %s", 65, 42.123, "logging");
     check("INFO - This is INFO 1\n"
           "INFO - This is INFO 2\n"
           "INFO - This is INFO 3\n"
           "INFO - This is INFO 4\n"
           "INFO - This is INFO\n"
+          "INFO - This is INFO\n"
+          "WARN - This is WARN\n"
           "WARN - This is WARN\n"
           "ERROR - This is ERROR\n"
+          "ERROR - This is ERROR\n"
+          "FATAL - This is FATAL 65 42.1230 logging\n"
           "FATAL - This is FATAL 65 42.1230 logging\n");
 }
