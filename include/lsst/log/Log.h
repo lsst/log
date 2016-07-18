@@ -144,7 +144,7 @@
   *
   *     @code
   *     static int dummyMdcInit = LOG_MDC_INIT(some_init_func);
-  *     @code
+  *     @endcode
   *
   * @param func Any function object which takes no arguments and returns void.
   */
