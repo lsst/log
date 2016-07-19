@@ -356,22 +356,6 @@ void Log::log(log4cxx::LevelPtr level,     ///< message level
     logMsg(level, location, msg);
 }
 
-/** Method used by LOG_INFO and similar macros to process a log message
-  * with variable arguments along with associated metadata.
-  */
-void Log::log(Log logger,   ///< the logger
-              log4cxx::LevelPtr level,     ///< message level
-              log4cxx::spi::LocationInfo const& location,  ///< message origin location
-              char const* fmt,             ///< message format string
-              ...                          ///< message arguments
-             ) {
-    va_list args;
-    va_start(args, fmt);
-    char msg[MAX_LOG_MSG_LEN];
-    vsnprintf(msg, MAX_LOG_MSG_LEN, fmt, args);
-    logger.logMsg(level, location, msg);
-}
-
 /** Method used by LOGS_INFO and similar macros to process a log message..
   */
 void Log::logMsg(log4cxx::LevelPtr level,     ///< message level
@@ -397,16 +381,6 @@ void Log::logMsg(log4cxx::LevelPtr level,     ///< message level
 
     // forward everything to logger
     _logger->forcedLog(level, msg, location);
-}
-
-/** Method used by LOGS_INFO and similar macros to process a log message..
-  */
-void Log::logMsg(Log logger, ///< the logger
-                 log4cxx::LevelPtr level,     ///< message level
-                 log4cxx::spi::LocationInfo const& location,  ///< message origin location
-                 std::string const& msg       ///< message string
-                 ) {
-    logger.logMsg(level, location, msg);
 }
 
 unsigned lwpID() {
