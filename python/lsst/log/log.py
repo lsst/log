@@ -151,8 +151,8 @@ class LogHandler(logging.Handler):
             logging.Handler.handle(self, record)
 
     def emit(self, record):
-        Log.log(Log.getLogger(record.name), self.translateLevel(record.levelno), record.filename,
-                record.funcName, record.lineno, record.msg % record.args)
+        Log.getLogger(record.name).log(self.translateLevel(record.levelno), record.filename,
+                                       record.funcName, record.lineno, record.msg % record.args)
 
     def translateLevel(self, levelno):
         """
