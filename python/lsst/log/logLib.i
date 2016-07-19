@@ -56,7 +56,6 @@ import os
 %include "lsst/log/Log.h"
 
 %extend lsst::log::Log {
-    static lsst::log::Log getDefaultLogger() { return lsst::log::Log::defaultLogger(); };
     static void log(Log logger, int level, std::string const& filename,
                     std::string const& funcname, unsigned int lineno,
                     std::string const& msg) {
