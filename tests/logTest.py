@@ -93,8 +93,8 @@ class TestLog(unittest.TestCase):
         """
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
+            log.log(log.getDefaultLoggerName(), log.INFO, "This is INFO")
             log.trace("This is TRACE")
-            log.info("This is INFO")
             log.debug("This is DEBUG")
             log.warn("This is WARN")
             log.error("This is ERROR")
@@ -277,12 +277,14 @@ DEBUG - This is DEBUG
     def testPythonLogging(self):
         """Test logging through the Python logging interface."""
         with TestLog.StdoutCapture(self.outputFilename):
+            log.setLevel('', log.DEBUG)
             import logging
             lgr = logging.getLogger()
             lgr.setLevel(logging.INFO)
             lgr.addHandler(log.LogHandler())
             log.configure()
             lgr.info("This is INFO")
+            lgr.debug("This is DEBUG")
             logging.shutdown()
 
         self.check("""
@@ -328,6 +330,71 @@ log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
         lwp2 = log.lwpID()
 
         self.assertEqual(lwp1, lwp2)
+
+    def testLogger(self):
+        """
+        Test log object.
+        """
+        with TestLog.StdoutCapture(self.outputFilename):
+            log.configure()
+            logger = log.Log.getLogger("b")
+            self.assertEqual(logger.getName(), "b")
+            logger.trace("This is TRACE")
+            logger.info("This is INFO")
+            logger.debug("This is DEBUG")
+            logger.warn("This is WARN")
+            logger.error("This is ERROR")
+            logger.fatal("This is FATAL")
+            logger.info("Format %d %g %s", 3, 2.71828, "foo")
+        self.check("""
+ INFO b null - This is INFO
+ DEBUG b null - This is DEBUG
+ WARN b null - This is WARN
+ ERROR b null - This is ERROR
+ FATAL b null - This is FATAL
+ INFO b null - Format 3 2.71828 foo
+""")
+
+    def testLoggerLevel(self):
+        """
+        Test levels of Log objects
+        """
+        with TestLog.StdoutCapture(self.outputFilename):
+            self.configure("""
+log4j.rootLogger=TRACE, CA
+log4j.appender.CA=ConsoleAppender
+log4j.appender.CA.layout=PatternLayout
+log4j.appender.CA.layout.ConversionPattern=%-5p %c (%F)- %m%n
+""")
+            self.assertEqual(log.Log.getLevel(log.Log.getDefaultLogger()), log.TRACE)
+            logger = log.Log.getLogger("a.b")
+            self.assertEqual(logger.getName(), "a.b")
+            logger.trace("This is TRACE")
+            logger.setLevel(log.INFO)
+            self.assertEqual(logger.getLevel(), log.INFO)
+            self.assertEqual(log.Log.getLevel(logger), log.INFO)
+            logger.debug("This is DEBUG")
+            logger.info("This is INFO")
+            logger.fatal("Format %d %g %s", 3, 2.71828, "foo")
+
+            logger = log.Log.getLogger("a.b.c")
+            self.assertEqual(logger.getName(), "a.b.c")
+            logger.trace("This is TRACE")
+            logger.debug("This is DEBUG")
+            logger.warn("This is WARN")
+            logger.error("This is ERROR")
+            logger.fatal("This is FATAL")
+            logger.info("Format %d %g %s", 3, 2.71828, "foo")
+        self.check("""
+TRACE a.b (logTest.py)- This is TRACE
+INFO  a.b (logTest.py)- This is INFO
+FATAL a.b (logTest.py)- Format 3 2.71828 foo
+WARN  a.b.c (logTest.py)- This is WARN
+ERROR a.b.c (logTest.py)- This is ERROR
+FATAL a.b.c (logTest.py)- This is FATAL
+INFO  a.b.c (logTest.py)- Format 3 2.71828 foo
+""")
+
 
 ####################################################################################
 def main():

@@ -434,3 +434,60 @@ BOOST_AUTO_TEST_CASE(lwp_id) {
 
     BOOST_CHECK_EQUAL(lwp1, lwp2);
 }
+
+BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
+    configure(LAYOUT_SIMPLE);
+    std::string loggerName = "a";
+    lsst::log::Log logger = lsst::log::Log::getLogger(loggerName);
+    LOG_SET_LVL(loggerName, LOG_LVL_INFO);
+    LOG(loggerName, LOG_LVL_INFO, "This is INFO 1");
+    LOG(logger, LOG_LVL_INFO, "This is INFO 2");
+    LOGS(loggerName, LOG_LVL_INFO, "This is INFO 3");
+    LOGS(logger, LOG_LVL_INFO, "This is INFO 4");
+    LOGL_TRACE(loggerName, "This is TRACE");
+    LOGL_TRACE(logger, "This is TRACE");
+    LOGL_INFO(loggerName, "This is INFO");
+    LOGL_INFO(logger, "This is INFO");
+    LOGL_DEBUG(loggerName, "This is DEBUG");
+    LOGL_DEBUG(logger, "This is DEBUG");
+    LOGL_WARN(loggerName, "This is WARN");
+    LOGL_WARN(logger, "This is WARN");
+    LOGL_ERROR(loggerName, "This is ERROR");
+    LOGL_ERROR(logger, "This is ERROR");
+    LOGL_FATAL(loggerName, "This is FATAL %d %.4f %s", 65, 42.123, "logging");
+    LOGL_FATAL(logger, "This is FATAL %d %.4f %s", 65, 42.123, "logging");
+    LOGLS_TRACE(loggerName, "This is TRACE");
+    LOGLS_TRACE(logger, "This is TRACE");
+    LOGLS_INFO(loggerName, "This is INFO");
+    LOGLS_INFO(logger, "This is INFO");
+    LOGLS_DEBUG(loggerName, "This is DEBUG");
+    LOGLS_DEBUG(logger, "This is DEBUG");
+    LOGLS_WARN(loggerName, "This is WARN and the logger name is " << logger.getName());
+    LOGLS_WARN(logger, "This is WARN and the logger name is " << logger.getName());
+    LOGLS_ERROR(loggerName, "This is ERROR");
+    LOGLS_ERROR(logger, "This is ERROR");
+    LOGLS_FATAL(loggerName, "This is FATAL " << 43 << " logging");
+    LOGLS_FATAL(logger, "This is FATAL " << 43 << " logging");
+    LOGLS_INFO(logger, "Format " << 3 << " " << 2.71828 << " foo c++");
+    check("INFO - This is INFO 1\n"
+          "INFO - This is INFO 2\n"
+          "INFO - This is INFO 3\n"
+          "INFO - This is INFO 4\n"
+          "INFO - This is INFO\n"
+          "INFO - This is INFO\n"
+          "WARN - This is WARN\n"
+          "WARN - This is WARN\n"
+          "ERROR - This is ERROR\n"
+          "ERROR - This is ERROR\n"
+          "FATAL - This is FATAL 65 42.1230 logging\n"
+          "FATAL - This is FATAL 65 42.1230 logging\n"
+          "INFO - This is INFO\n"
+          "INFO - This is INFO\n"
+          "WARN - This is WARN and the logger name is a\n"
+          "WARN - This is WARN and the logger name is a\n"
+          "ERROR - This is ERROR\n"
+          "ERROR - This is ERROR\n"
+          "FATAL - This is FATAL 43 logging\n"
+          "FATAL - This is FATAL 43 logging\n"
+          "INFO - Format 3 2.71828 foo c++\n");
+}

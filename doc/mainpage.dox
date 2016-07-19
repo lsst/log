@@ -72,6 +72,12 @@ avoid filtering on Python side by setting logging level to DEBUG for root
 logger and instead configure log4cxx with proper logging level.
 
 
+Alternatively, get a logger through lsst.log.Log:
+
+    lgr = lsst.log.Log.getLogger("myLogger")
+    lgr.setLevel(lgr.DEBUG)
+    lgr.info("This is an info statement via %s", "lsst.log.Log interface.")
+
 \section exampleOutput Example output
 
     20140313 00:30:06,226 0x7f1f06bf6700 INFO  Here is some information about important stuff.
@@ -102,6 +108,12 @@ In C++, the following varargs/printf style logging macros are available:
 - `LOG_WARN(fmt...)` Log a message of level `LOG_LVL_WARN` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
 - `LOG_ERROR(fmt...)` Log a message of level `LOG_LVL_ERROR` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
 - `LOG_FATAL(fmt...)` Log a message of level `LOG_LVL_FATAL` with format string '''`fmt`''' and corresponding comma-separated arguments to the default logger.
+- `LOGL_TRACE(logger, fmt...)` Log a message of level `LOG_LVL_TRACE` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
+- `LOGL_DEBUG(logger, fmt...)` Log a message of level `LOG_LVL_DEBUG` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
+- `LOGL_INFO(logger, fmt...)` Log a message of level `LOG_LVL_INFO` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
+- `LOGL_WARN(logger, fmt...)` Log a message of level `LOG_LVL_WARN` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
+- `LOGL_ERROR(logger, fmt...)` Log a message of level `LOG_LVL_ERROR` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
+- `LOGL_FATAL(logger, fmt...)` Log a message of level `LOG_LVL_FATAL` with format string '''`fmt`''' and corresponding comma-separated arguments to a logger '''`logger`'''.
 
 Alternative set of macros allows one to use iostream-based formatting. In the macros below `expression` is any C++ expression which can appear on the right side of the stream insertion operator, e.g. `LOGS_DEBUG("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding  commas inside macro arguments applies to `expression` argument:
 - `LOGS(loggername, level, expression)` Log a message of level '''`level`''' to the logger named '''`loggername`'''.
@@ -111,6 +123,12 @@ Alternative set of macros allows one to use iostream-based formatting. In the ma
 - `LOGS_WARN(expression)` Log a message of level `LOG_LVL_WARN` to the default logger.
 - `LOGS_ERROR(expression)` Log a message of level `LOG_LVL_ERROR` to the default logger.
 - `LOGS_FATAL(expression)` Log a message of level `LOG_LVL_FATAL` to the default logger.
+- `LOGLS_TRACE(logger, expression)` Log a message of level `LOG_LVL_TRACE` to the logger '''`logger`'''.
+- `LOGLS_DEBUG(logger, expression)` Log a message of level `LOG_LVL_DEBUG` to the logger '''`logger`'''.
+- `LOGLS_INFO(logger, expression)` Log a message of level `LOG_LVL_INFO` to the logger '''`logger`'''.
+- `LOGLS_WARN(logger, expression)` Log a message of level `LOG_LVL_WARN` to the logger '''`logger`'''.
+- `LOGLS_ERROR(logger, expression)` Log a message of level `LOG_LVL_ERROR` to the logger '''`logger`'''.
+- `LOGLS_FATAL(logger, expression)` Log a message of level `LOG_LVL_FATAL` to the logger '''`logger`'''.
 
 In Python, the following logging functions are available in the `lsst.log` module. These functions take a variable number of arguments following a format string in the style of `printf()`. The use of `*args` is recommended over the use of the `%` operator so that formatting of log messages that do not meet the level threshold can be avoided.
 - `log(loggername, level, fmt, *args)` Log a message of level '''`level`''' with format string '''`fmt`''' and variable arguments '''`*args`''' to the logger named '''`loggername`'''.
