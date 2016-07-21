@@ -190,7 +190,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_TRACE() \
-    LOG4CXX_UNLIKELY(lsst::log::Log::getDefaultLogger().isTraceEnabled())
+    LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isTraceEnabled())
 
 /**
   * @def LOG_CHECK_DEBUG()
@@ -199,7 +199,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_DEBUG() \
-    LOG4CXX_UNLIKELY(lsst::log::Log::getDefaultLogger().isDebugEnabled())
+    LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isDebugEnabled())
 
 /**
   * @def LOG_CHECK_INFO()
@@ -208,7 +208,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_INFO() \
-        lsst::log::Log::getDefaultLogger().isInfoEnabled()
+        lsst::log::Log::defaultLogger.isInfoEnabled()
 
 /**
   * @def LOG_CHECK_WARN()
@@ -217,7 +217,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_WARN() \
-        lsst::log::Log::getDefaultLogger().isWarnEnabled()
+        lsst::log::Log::defaultLogger.isWarnEnabled()
 
 /**
   * @def LOG_CHECK_ERROR()
@@ -226,7 +226,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_ERROR() \
-        lsst::log::Log::getDefaultLogger().isErrorEnabled()
+        lsst::log::Log::defaultLogger.isErrorEnabled()
 
 /**
   * @def LOG_CHECK_FATAL()
@@ -235,7 +235,7 @@
   * @return Bool indicating whether or not logger is enabled.
   */
 #define LOG_CHECK_FATAL() \
-        lsst::log::Log::getDefaultLogger().isFatalEnabled()
+        lsst::log::Log::defaultLogger.isFatalEnabled()
 
 /**
   * @def LOG(logger, level, message...)
@@ -262,8 +262,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_TRACE(message...) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::getDefaultLogger().isTraceEnabled())) { \
-        lsst::log::Log::getDefaultLogger().log( \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isTraceEnabled())) { \
+        lsst::log::Log::defaultLogger.log( \
             log4cxx::Level::getTrace(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -276,8 +276,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_DEBUG(message...) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::getDefaultLogger().isDebugEnabled())) { \
-        lsst::log::Log::getDefaultLogger().log( \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isDebugEnabled())) { \
+        lsst::log::Log::defaultLogger.log( \
             log4cxx::Level::getDebug(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -290,8 +290,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_INFO(message...) \
-    do { if (lsst::log::Log::getDefaultLogger().isInfoEnabled()) { \
-        lsst::log::Log::getDefaultLogger().log( \
+    do { if (lsst::log::Log::defaultLogger.isInfoEnabled()) { \
+        lsst::log::Log::defaultLogger.log( \
             log4cxx::Level::getInfo(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -304,8 +304,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_WARN(message...) \
-    do { if (lsst::log::Log::getDefaultLogger().isWarnEnabled()) { \
-        lsst::log::Log::getDefaultLogger().log( \
+    do { if (lsst::log::Log::defaultLogger.isWarnEnabled()) { \
+        lsst::log::Log::defaultLogger.log( \
             log4cxx::Level::getWarn(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -318,8 +318,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_ERROR(message...) \
-    do { if (lsst::log::Log::getDefaultLogger().isErrorEnabled()) { \
-        lsst::log::Log::getDefaultLogger().log( \
+    do { if (lsst::log::Log::defaultLogger.isErrorEnabled()) { \
+        lsst::log::Log::defaultLogger.log( \
             log4cxx::Level::getError(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -332,8 +332,8 @@
   *                    one, or more comma-separated arguments.
   */
 #define LOG_FATAL(message...) \
-    do { if (lsst::log::Log::getDefaultLogger().isFatalEnabled()) { \
-        lsst::log::Log::getDefaultLogger().log( \
+    do { if (lsst::log::Log::defaultLogger.isFatalEnabled()) { \
+        lsst::log::Log::defaultLogger.log( \
             log4cxx::Level::getFatal(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
@@ -372,10 +372,10 @@
   * @param message Message to be logged.
   */
 #define LOGS_TRACE(message) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::getDefaultLogger().isTraceEnabled())) { \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isTraceEnabled())) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::getDefaultLogger().logMsg( \
+        lsst::log::Log::defaultLogger.logMsg( \
             log4cxx::Level::getTrace(), LOG4CXX_LOCATION, \
             stream_.str()); } \
     } while (false)
@@ -392,10 +392,10 @@
   * @param message Message to be logged.
   */
 #define LOGS_DEBUG(message) \
-    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::getDefaultLogger().isDebugEnabled())) { \
+    do { if (LOG4CXX_UNLIKELY(lsst::log::Log::defaultLogger.isDebugEnabled())) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::getDefaultLogger().logMsg( \
+        lsst::log::Log::defaultLogger.logMsg( \
             log4cxx::Level::getDebug(), LOG4CXX_LOCATION, \
             stream_.str()); } \
     } while (false)
@@ -412,10 +412,10 @@
   * @param message Message to be logged.
   */
 #define LOGS_INFO(message) \
-    do { if (lsst::log::Log::getDefaultLogger().isInfoEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isInfoEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::getDefaultLogger().logMsg( \
+        lsst::log::Log::defaultLogger.logMsg( \
             log4cxx::Level::getInfo(), LOG4CXX_LOCATION, \
             stream_.str()); } \
     } while (false)
@@ -432,10 +432,10 @@
   * @param message Message to be logged.
   */
 #define LOGS_WARN(message) \
-    do { if (lsst::log::Log::getDefaultLogger().isWarnEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isWarnEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::getDefaultLogger().logMsg( \
+        lsst::log::Log::defaultLogger.logMsg( \
             log4cxx::Level::getWarn(), LOG4CXX_LOCATION, \
             stream_.str()); } \
     } while (false)
@@ -452,10 +452,10 @@
   * @param message Message to be logged.
   */
 #define LOGS_ERROR(message) \
-    do { if (lsst::log::Log::getDefaultLogger().isErrorEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isErrorEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::getDefaultLogger().logMsg( \
+        lsst::log::Log::defaultLogger.logMsg( \
             log4cxx::Level::getError(), LOG4CXX_LOCATION, \
             stream_.str()); } \
     } while (false)
@@ -472,10 +472,10 @@
   * @param message Message to be logged.
   */
 #define LOGS_FATAL(message) \
-    do { if (lsst::log::Log::getDefaultLogger().isFatalEnabled()) { \
+    do { if (lsst::log::Log::defaultLogger.isFatalEnabled()) { \
         std::ostringstream stream_; \
         stream_ << message; \
-        lsst::log::Log::getDefaultLogger().logMsg( \
+        lsst::log::Log::defaultLogger.logMsg( \
             log4cxx::Level::getFatal(), LOG4CXX_LOCATION, \
             stream_.str()); } \
     } while (false)
@@ -710,7 +710,7 @@ namespace log {
   */
 class Log {
 public:
-    Log() : _logger(getDefaultLogger()._logger) { }
+    Log() : _logger(defaultLogger._logger) { }
 
     /**
      *  Check whether the logger is enabled for the DEBUG Level
@@ -741,7 +741,7 @@ public:
     void setLevel(int level);
     int getLevel(void);
     bool isEnabledFor(int level);
-    static Log & getDefaultLogger(void);
+    static Log defaultLogger;
     static void initLog(void);
     static void configure(void);
     static void configure(std::string const& filename);
