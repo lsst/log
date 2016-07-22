@@ -61,34 +61,65 @@ namespace {
 const char configEnv[] = "LSST_LOG_CONFIG";
 
 /*
- * Logging is configured at global initialization time (though everybody knows this is evil
- * thing to do). What we want to do:
+ * We try to avoid doing configuration at global initialization time (or at DSO loading
+ * time). What we want to do:
  * - Let user re-configure later with LOG_CONFIG(filename) - this means that we do not
- *   do anything fancy here like initializing from some other file
+ *   do anything fancy by default like initializing from some pre-determined file
  * - if LSST_LOG_CONFIG is set to existing file name then we want to configure from
  *   that file but only if user does not call LOG_CONFIG(filename)
  *   - this means that we should leave it to log4cxx to default-configure using that file
  *     name (meaning that we want to set LOG4CXX_CONFIGURATION)
- * - otherwise do basic configuration only
+ * - otherwise do basic configuration only but at a later time (before the first use of
+ *   any logging method)
+ *
+ * As a result initialization is done in two steps:
+ * - at globals init time we determine whether LSST_LOG_CONFIG envvar is set, if yes
+ *   then we set LOG4CXX_CONFIGURATION to the same value and let LOG4CXX to
+ *   configure itself later
+ * - otherwise we set `doBasicConfig` global flag used by the second init step
  */
-bool init() {
+bool globalInit() {
     if (const char* env = getenv(::configEnv)) {
         // check that file actually exists
         if (env[0] and access(env, R_OK) == 0) {
             // prepare for default initialization in log4cxx if
             // user does not do LOG_CONFIG(...)
             ::setenv("LOG4CXX_CONFIGURATION", env, 1);
-            return true;
+            return false;
         }
     }
-    // do basic configuration only
-    log4cxx::BasicConfigurator::configure();
-    lsst::log::Log::initLog();
 
     return true;
 }
 
-bool initialized = init();
+bool doBasicConfig = globalInit();
+
+/*
+ * This is the method for the second init step triggered by first call
+ * to `_defaultLogger()` method below via static variable initialization.
+ * If `doBasicConfig` flag is set then we call `BasicConfigurator` to
+ * initialize LOG4CXX. Note that `doBasicConfig` can be reset by one
+ * of the user-called configuration methods below.
+ */
+log4cxx::LoggerPtr log4cxxInit() {
+    if (doBasicConfig) {
+        // do basic configuration only once (if at all)
+        doBasicConfig = false;
+        log4cxx::BasicConfigurator::configure();
+    }
+    // returns root logger to be used as default logger
+    return log4cxx::Logger::getRootLogger();
+}
+
+// Utility method to guess file extension
+std::string getFileExtension(std::string const& filename) {
+    size_t dotpos = filename.find_last_of(".");
+    if (dotpos == std::string::npos) {
+      return std::string();
+    }
+    return filename.substr(dotpos);
+}
+
 
 // List of the MDC initialization functions
 std::vector<std::function<void()>> mdcInitFunctions;
@@ -112,22 +143,17 @@ namespace log {
 
 // Log class
 
-/** Returns the reference to the default logger used by LOG* macros.
-  */
-Log & Log::getDefaultLogger() {
-    static Log _default(log4cxx::Logger::getRootLogger());
+/**
+ *  Returns default LOG4CXX logger.
+ */
+log4cxx::LoggerPtr& Log::_defaultLogger() {
+    static log4cxx::LoggerPtr _default(::log4cxxInit());
     return _default;
 }
 
-/** Initializes logging module (e.g. default logger and logging context).
-  */
-void Log::initLog() {
-    // Default logger initially set to root logger
-    getDefaultLogger() = log4cxx::Logger::getRootLogger();
-}
-
-/** Configures log4cxx and initializes logging system by invoking
-  * initLog(). Uses either default configuration or log4cxx basic
+/** Explicitly configures log4cxx and initializes logging system.
+  *
+  * Uses either default configuration or log4cxx basic
   * configuration. Default configuration can be specified via
   * environment variable LSST_LOG_CONFIG, if it is set and specifies
   * existing file name then this file name is used for configuration.
@@ -137,6 +163,10 @@ void Log::initLog() {
   * pattern "%-4r [%t] %-5p %c %x - %m%n".
   */
 void Log::configure() {
+
+    // in case log4cxxInit() was not called yet tell it to ignore basic config
+    ::doBasicConfig = false;
+
     // TODO: does resetConfiguration() remove existing appenders?
     log4cxx::BasicConfigurator::resetConfiguration();
 
@@ -153,19 +183,14 @@ void Log::configure() {
     if (rootLogger->getAllAppenders().size() == 0) {
         log4cxx::BasicConfigurator::configure();
     }
-    initLog();
+
+    // reset default logger to the root logger
+    _defaultLogger() = rootLogger;
 }
 
-std::string getFileExtension(std::string const& filename) {
-    size_t dotpos = filename.find_last_of(".");
-    if (dotpos == std::string::npos) {
-      return "";
-    }
-    return filename.substr(dotpos, filename.size() - dotpos);
-}
-
-/** Configures log4cxx using FILENAME and initializes logging module by
-  * invoking initLog(). If FILENAME ends with ".xml", it is passed to
+/** Configures log4cxx from specified file.
+  *
+  * If file name ends with ".xml", it is passed to
   * log4cxx::xml::DOMConfigurator::configure(). Otherwise, it assumed to be
   * a log4j Java properties file and is passed to
   * log4cxx::PropertyConfigurator::configure(). See
@@ -174,6 +199,8 @@ std::string getFileExtension(std::string const& filename) {
   * @param filename  Path to configuration file.
   */
 void Log::configure(std::string const& filename) {
+    // in case log4cxxInit() was not called yet tell it to ignore basic config
+    ::doBasicConfig = false;
     // TODO: does resetConfiguration() remove existing appenders?
     log4cxx::BasicConfigurator::resetConfiguration();
     if (getFileExtension(filename).compare(".xml") == 0) {
@@ -181,22 +208,28 @@ void Log::configure(std::string const& filename) {
     } else {
         log4cxx::PropertyConfigurator::configure(filename);
     }
-    initLog();
+    // reset default logger to the root logger
+    _defaultLogger() = log4cxx::Logger::getRootLogger();
 }
 
 /** Configures log4cxx using a string containing the list of properties,
   * equivalent to configuring from a file containing the same content
   * but without creating temporary files.
   *
-  * @param properties  COnfiguration properties.
+  * @param properties  Configuration properties.
   */
 void Log::configure_prop(std::string const& properties) {
+    // in case log4cxxInit() was not called yet tell it to ignore basic config
+    ::doBasicConfig = false;
+
     std::vector<unsigned char> data(properties.begin(), properties.end());
     log4cxx::helpers::InputStreamPtr inStream(new log4cxx::helpers::ByteArrayInputStream(data));
     log4cxx::helpers::Properties prop;
     prop.load(inStream);
     log4cxx::PropertyConfigurator::configure(prop);
-    initLog();
+
+    // reset default logger to the root logger
+    _defaultLogger() = log4cxx::Logger::getRootLogger();
 }
 
 /** Get the current default logger name.
@@ -217,11 +250,13 @@ std::string Log::getName() const {
     return name;
 }
 
-/** Returns a pointer to the log4cxx logger object associated with
-  * LOGGERNAME.
-  * @return log4cxx::LoggerPtr corresponding to LOGGERNAME.
+/** Returns logger object for a given name.
+  *
+  * If name is empty then current logger is returned and not
+  * a root logger.
   *
   * @param loggername  Name of logger to return.
+  * @return Log instance corresponding to logger name.
   */
 Log Log::getLogger(std::string const& loggername) {
     if (loggername.empty()){
@@ -248,7 +283,7 @@ void Log::pushContext(std::string const& name) {
     }
 
     // Construct new default logger name
-    std::string newName = getDefaultLogger()._logger->getName();
+    std::string newName = _defaultLogger()->getName();
     if (newName == "root") {
         newName = name;
     } else {
@@ -256,7 +291,7 @@ void Log::pushContext(std::string const& name) {
         newName += name;
     }
     // Update defaultLogger
-    getDefaultLogger() = Log(log4cxx::Logger::getLogger(newName));
+    _defaultLogger() = log4cxx::Logger::getLogger(newName);
 }
 
 /** Pops the last pushed name off the global hierarchical default logger
@@ -265,10 +300,10 @@ void Log::pushContext(std::string const& name) {
 void Log::popContext() {
     // switch to parent logger, this assumes that loggers are not
     // re-parented between calls to push and pop
-    log4cxx::LoggerPtr parent = getDefaultLogger()._logger->getParent();
+    log4cxx::LoggerPtr parent = _defaultLogger()->getParent();
     // root logger does not have parent, stay at root instead
     if (parent) {
-        getDefaultLogger() = Log(parent);
+        _defaultLogger() = parent;
     }
 }
 
@@ -318,7 +353,7 @@ void Log::setLevel(int level) {
 /** Retrieve the logging threshold.
   * @return int Indicating the logging threshold.
   */
-int Log::getLevel() {
+int Log::getLevel() const {
     log4cxx::LevelPtr level = _logger->getLevel();
     int levelno = -1;
     if (level != NULL) {
@@ -333,7 +368,7 @@ int Log::getLevel() {
   *
   * @param level   Logging threshold to check.
   */
-bool Log::isEnabledFor(int level) {
+bool Log::isEnabledFor(int level) const {
     if (_logger->isEnabledFor(log4cxx::Level::toLevel(level))) {
         return true;
     } else {
