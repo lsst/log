@@ -11,6 +11,11 @@ Access to the classes from the log library
 %naturalvar;
 %include "std_string.i"
 
+// Allow Python2 to accept unicode strings
+%begin %{
+#define SWIG_PYTHON_2_UNICODE
+%}
+
 %{
 #include "lsst/log/Log.h"
 %}

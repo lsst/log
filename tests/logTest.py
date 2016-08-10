@@ -94,6 +94,7 @@ class TestLog(unittest.TestCase):
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
             log.log(log.getDefaultLoggerName(), log.INFO, "This is INFO")
+            log.info(u"This is unicode INFO")
             log.trace("This is TRACE")
             log.debug("This is DEBUG")
             log.warn("This is WARN")
@@ -102,6 +103,7 @@ class TestLog(unittest.TestCase):
             log.info("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
  INFO root null - This is INFO
+ INFO root null - This is unicode INFO
  DEBUG root null - This is DEBUG
  WARN root null - This is WARN
  ERROR root null - This is ERROR
@@ -210,7 +212,7 @@ INFO  component  testPattern (logTest.py:{0[6]}) logTest.py({0[6]}) - This is IN
 DEBUG component  testPattern (logTest.py:{0[7]}) logTest.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (logTest.py:{0[8]}) logTest.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (logTest.py:{0[9]}) logTest.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 174 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))
+""".format([x + 178 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))
 
 
     def testMDCPutPid(self):
@@ -241,7 +243,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
 
             with TestLog.StdoutCapture(self.outputFilename):
                 log.info(msg)
-                line = 243
+                line = 247
         finally:
             log.MDCRemove("PID")
 
