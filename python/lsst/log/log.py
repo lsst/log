@@ -35,62 +35,82 @@ FATAL = Log.FATAL
 
 # Export static functions from Log class to module namespace
 
+
 def configure(*args):
     Log.configure(*args)
+
 
 def configure_prop(properties):
     Log.configure_prop(properties)
 
+
 def getDefaultLoggerName():
     return Log.getDefaultLoggerName()
+
 
 def pushContext(name):
     Log.pushContext(name)
 
+
 def popContext():
     Log.popContext()
+
 
 def MDC(key, value):
     Log.MDC(key, str(value))
 
+
 def MDCRemove(key):
     Log.MDCRemove(key)
+
 
 def MDCRegisterInit(func):
     Log.MDCRegisterInit(func)
 
+
 def setLevel(loggername, level):
     Log.getLogger(loggername).setLevel(level)
+
 
 def getLevel(loggername):
     Log.getLogger(loggername).getLevel()
 
+
 def isEnabledFor(logger, level):
     Log.getLogger(logger).isEnabledFor(level)
+
 
 def log(loggername, level, fmt, *args, **kwargs):
     Log.getLogger(loggername)._log(level, fmt, *args)
 
+
 def trace(fmt, *args):
     Log.getDefaultLogger()._log(TRACE, fmt, *args)
+
 
 def debug(fmt, *args):
     Log.getDefaultLogger()._log(DEBUG, fmt, *args)
 
+
 def info(fmt, *args):
     Log.getDefaultLogger()._log(INFO, fmt, *args)
+
 
 def warn(fmt, *args):
     Log.getDefaultLogger()._log(WARN, fmt, *args)
 
+
 def error(fmt, *args):
     Log.getDefaultLogger()._log(ERROR, fmt, *args)
+
 
 def fatal(fmt, *args):
     Log.getDefaultLogger()._log(FATAL, fmt, *args)
 
+
 def lwpID():
     return Log.lwpID
+
 
 class LogContext(object):
     """Context manager for logging."""
@@ -128,6 +148,7 @@ class LogContext(object):
 
     def isEnabledFor(self, level):
         return Log.getDefaultLogger().isEnabledFor(level)
+
 
 class LogHandler(logging.Handler):
     """Handler for Python logging module that emits to LSST logging."""
