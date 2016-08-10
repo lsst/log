@@ -3,6 +3,7 @@
 import lsst.log as log
 import multiprocessing as mp
 
+
 def main():
     # Set component to "main" (from "root")
     with log.LogContext("main"):
@@ -15,6 +16,7 @@ def main():
         b()
         log.info("Leaving main")
 
+
 def a(visit):
     # Set subcomponent to "a" (sets component to "main.a")
     with log.LogContext("a"):
@@ -26,6 +28,7 @@ def a(visit):
         log.debug("Debug message in a")
         b()
         log.info("Leaving a")
+
 
 def b():
     # Set subcomponent to "b" (sets component to "main.a.b" or "main.b")

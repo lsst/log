@@ -11,6 +11,11 @@ Access to the classes from the log library
 %naturalvar;
 %include "std_string.i"
 
+// Allow Python2 to accept unicode strings
+%begin %{
+#define SWIG_PYTHON_2_UNICODE
+%}
+
 %{
 #include "lsst/log/Log.h"
 %}
@@ -18,7 +23,7 @@ Access to the classes from the log library
 %{
 // Wrapper for Python callable object to make sure that we have GIL
 // when we call Python. Note that we are leaking Python callable,
-// as C++ callables may be (and actually are in our particular case) 
+// as C++ callables may be (and actually are in our particular case)
 // outliving Python interpreter and attempt to delete Python object
 // will result in crash.
 class callable_wrapper {
