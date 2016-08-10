@@ -75,9 +75,10 @@ class TestLog(unittest.TestCase):
     def check(self, reference):
         """Compare the log file with the provided reference text."""
         with open(self.outputFilename, 'r') as f:
-            lines = [l.split(']')[-1] for l in f.readlines()]
-            reflines = [l + "\n" for l in reference.split("\n") if l != ""]
-            map(self.assertEqual, lines, reflines)
+            lines = [l.split(']')[-1].rstrip("\n") for l in f.readlines()]
+            reflines = [l for l in reference.split("\n") if l != ""]
+            self.maxDiff = None
+            self.assertListEqual(lines, reflines)
 
 
 ###############################################################################
