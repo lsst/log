@@ -398,6 +398,28 @@ FATAL a.b.c (logTest.py)- This is FATAL
 INFO  a.b.c (logTest.py)- Format 3 2.71828 foo
 """)
 
+    def testMsgWithPercentS(self):
+        """Test logging messages containing %s (DM-7509)
+        """
+        with TestLog.StdoutCapture(self.outputFilename):
+            log.configure()
+            logger = log.Log()
+            logger.info("INFO with %s")
+            logger.trace("TRACE with %s")
+            logger.debug("DEBUG with %s")
+            logger.warn("WARN with %s")
+            logger.error("ERROR with %s")
+            logger.fatal("FATAL with %s")
+            logger.logMsg(log.DEBUG, "foo", "bar", 5, "DEBUG with %s")
+        self.check("""
+ INFO root null - INFO with %s
+ DEBUG root null - DEBUG with %s
+ WARN root null - WARN with %s
+ ERROR root null - ERROR with %s
+ FATAL root null - FATAL with %s
+ DEBUG root null - DEBUG with %s
+""")
+
 
 ####################################################################################
 def main():

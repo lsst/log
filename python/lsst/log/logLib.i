@@ -61,12 +61,10 @@ import os
 %include "lsst/log/Log.h"
 
 %extend lsst::log::Log {
-    void log(int level, std::string const& filename,
-             std::string const& funcname, unsigned int lineno,
-             std::string const& msg) {
-        self->log(log4cxx::Level::toLevel(level),
-                  log4cxx::spi::LocationInfo(filename.c_str(), funcname.c_str(), lineno),
-                  msg.c_str());
+    void logMsg(int level, std::string const& filename,
+                std::string const& funcname, unsigned int lineno, std::string const& msg) {
+        self->logMsg(log4cxx::Level::toLevel(level),
+                     log4cxx::spi::LocationInfo(filename.c_str(), funcname.c_str(), lineno), msg.c_str());
     };
     unsigned lwpID() { return lsst::log::lwpID(); };
 
@@ -100,8 +98,10 @@ import os
         if self.isEnabledFor(level):
             frame = inspect.currentframe().f_back    # calling method
             frame = frame.f_back    # original log location
-            self.log(level, os.path.split(frame.f_code.co_filename)[1],
-                     inspect.stack()[2][3], frame.f_lineno, fmt % args)
+            filename=os.path.split(frame.f_code.co_filename)[1]
+            funcname=inspect.stack()[2][3]
+            msg=fmt % args if args else fmt
+            self.logMsg(level, filename, funcname, frame.f_lineno, msg)
     }
 }
 
