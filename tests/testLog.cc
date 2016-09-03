@@ -87,7 +87,7 @@ struct LogFixture {
     {
         // PATH_MAX should be more than enough to hold the temp dir and file name
         char cname[PATH_MAX];
-        strncpy(cname, P_tmpdir "/logTest-XXXXXXXXX", sizeof(cname));
+        strncpy(cname, P_tmpdir "/testLog-XXXXXXXXX", sizeof(cname));
         cname[sizeof(cname)-1] = '\0';  // Just in case
         fd = mkstemp(cname);
         if (fd == -1) {
@@ -247,16 +247,16 @@ BOOST_FIXTURE_TEST_CASE(context_stream, LogFixture) {
 BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
 
     std::string expected_msg =
-          "INFO  root pattern_stream test_method (tests/logTest.cc:%1%) tests/logTest.cc(%1%) - This is INFO - {}\n"
-          "DEBUG root pattern_stream test_method (tests/logTest.cc:%2%) tests/logTest.cc(%2%) - This is DEBUG - {}\n"
-          "INFO  root pattern_stream test_method (tests/logTest.cc:%3%) tests/logTest.cc(%3%) - This is INFO 2 - {{x,3}{y,foo}}\n"
-          "DEBUG root pattern_stream test_method (tests/logTest.cc:%4%) tests/logTest.cc(%4%) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern_stream test_method (tests/logTest.cc:%5%) tests/logTest.cc(%5%) - This is INFO 3 - {{x,3}{y,foo}}\n"
-          "DEBUG component pattern_stream test_method (tests/logTest.cc:%6%) tests/logTest.cc(%6%) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
-          "INFO  component pattern_stream test_method (tests/logTest.cc:%7%) tests/logTest.cc(%7%) - This is INFO 4 - {{y,foo}}\n"
-          "DEBUG component pattern_stream test_method (tests/logTest.cc:%8%) tests/logTest.cc(%8%) - This is DEBUG 4 - {{y,foo}}\n"
-          "INFO  root pattern_stream test_method (tests/logTest.cc:%9%) tests/logTest.cc(%9%) - This is INFO 5 - {{y,foo}}\n"
-          "DEBUG root pattern_stream test_method (tests/logTest.cc:%10%) tests/logTest.cc(%10%) - This is DEBUG 5 - {{y,foo}}\n";
+          "INFO  root pattern_stream test_method (tests/testLog.cc:%1%) tests/testLog.cc(%1%) - This is INFO - {}\n"
+          "DEBUG root pattern_stream test_method (tests/testLog.cc:%2%) tests/testLog.cc(%2%) - This is DEBUG - {}\n"
+          "INFO  root pattern_stream test_method (tests/testLog.cc:%3%) tests/testLog.cc(%3%) - This is INFO 2 - {{x,3}{y,foo}}\n"
+          "DEBUG root pattern_stream test_method (tests/testLog.cc:%4%) tests/testLog.cc(%4%) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern_stream test_method (tests/testLog.cc:%5%) tests/testLog.cc(%5%) - This is INFO 3 - {{x,3}{y,foo}}\n"
+          "DEBUG component pattern_stream test_method (tests/testLog.cc:%6%) tests/testLog.cc(%6%) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
+          "INFO  component pattern_stream test_method (tests/testLog.cc:%7%) tests/testLog.cc(%7%) - This is INFO 4 - {{y,foo}}\n"
+          "DEBUG component pattern_stream test_method (tests/testLog.cc:%8%) tests/testLog.cc(%8%) - This is DEBUG 4 - {{y,foo}}\n"
+          "INFO  root pattern_stream test_method (tests/testLog.cc:%9%) tests/testLog.cc(%9%) - This is INFO 5 - {{y,foo}}\n"
+          "DEBUG root pattern_stream test_method (tests/testLog.cc:%10%) tests/testLog.cc(%10%) - This is DEBUG 5 - {{y,foo}}\n";
     std::vector<std::string> args;
 
     configure(LAYOUT_PATTERN);
@@ -298,8 +298,8 @@ BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
 BOOST_FIXTURE_TEST_CASE(MDCPutPid, LogFixture) {
 
     std::string msg;
-    std::string expected_msg = "INFO  root LogFixture pid_log_helper (tests/logTest.cc:%1%) "
-                               "tests/logTest.cc(%1%) - %2% - "
+    std::string expected_msg = "INFO  root LogFixture pid_log_helper (tests/testLog.cc:%1%) "
+                               "tests/testLog.cc(%1%) - %2% - "
                                "{{" MDC_PID_KEY ",%3%}}\n";
     std::vector<std::string> args;
     pid_t pid = fork();
