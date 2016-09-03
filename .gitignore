@@ -16,8 +16,7 @@ config.log
 /lib/liblog.*
 /tests/.cache
 /tests/.tests
-/tests/cppTest
-/tests/logTest
+/tests/testLog
 version.py
 .coverage
 *.gcda

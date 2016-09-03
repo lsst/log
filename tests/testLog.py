@@ -204,17 +204,17 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c %C %M (%F:%L) %l - %m - %X%n
 
         # Use format to make line numbers easier to change.
         self.check("""
-INFO  root  testPattern (logTest.py:{0[0]}) logTest.py({0[0]}) - This is INFO - {{}}
-DEBUG root  testPattern (logTest.py:{0[1]}) logTest.py({0[1]}) - This is DEBUG - {{}}
-INFO  root  testPattern (logTest.py:{0[2]}) logTest.py({0[2]}) - This is INFO 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
-DEBUG root  testPattern (logTest.py:{0[3]}) logTest.py({0[3]}) - This is DEBUG 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
-INFO  component  testPattern (logTest.py:{0[4]}) logTest.py({0[4]}) - This is INFO 3 - {{{{x,3}}{{y,foo}}}}
-DEBUG component  testPattern (logTest.py:{0[5]}) logTest.py({0[5]}) - This is DEBUG 3 - {{{{x,3}}{{y,foo}}}}
-INFO  component  testPattern (logTest.py:{0[6]}) logTest.py({0[6]}) - This is INFO 4 - {{{{y,foo}}}}
-DEBUG component  testPattern (logTest.py:{0[7]}) logTest.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
-INFO  root  testPattern (logTest.py:{0[8]}) logTest.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
-DEBUG root  testPattern (logTest.py:{0[9]}) logTest.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 177 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))
+INFO  root  testPattern (testLog.py:{0[0]}) testLog.py({0[0]}) - This is INFO - {{}}
+DEBUG root  testPattern (testLog.py:{0[1]}) testLog.py({0[1]}) - This is DEBUG - {{}}
+INFO  root  testPattern (testLog.py:{0[2]}) testLog.py({0[2]}) - This is INFO 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
+DEBUG root  testPattern (testLog.py:{0[3]}) testLog.py({0[3]}) - This is DEBUG 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
+INFO  component  testPattern (testLog.py:{0[4]}) testLog.py({0[4]}) - This is INFO 3 - {{{{x,3}}{{y,foo}}}}
+DEBUG component  testPattern (testLog.py:{0[5]}) testLog.py({0[5]}) - This is DEBUG 3 - {{{{x,3}}{{y,foo}}}}
+INFO  component  testPattern (testLog.py:{0[6]}) testLog.py({0[6]}) - This is INFO 4 - {{{{y,foo}}}}
+DEBUG component  testPattern (testLog.py:{0[7]}) testLog.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
+INFO  root  testPattern (testLog.py:{0[8]}) testLog.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
+DEBUG root  testPattern (testLog.py:{0[9]}) testLog.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
+""".format([x + 178 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))
 
     def testMDCPutPid(self):
         """
@@ -244,13 +244,13 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
 
             with TestLog.StdoutCapture(self.outputFilename):
                 log.info(msg)
-                line = 245
+                line = 246
         finally:
             log.MDCRemove("PID")
 
         # Use format to make line numbers easier to change.
         self.check("""
-INFO  PID:{1} root  testMDCPutPid (logTest.py:{0}) logTest.py({0}) - {2}
+INFO  PID:{1} root  testMDCPutPid (testLog.py:{0}) testLog.py({0}) - {2}
 """.format(line, os.getpid(), msg))
 
         # don't pass other tests in child process
@@ -390,13 +390,13 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c (%F)- %m%n
             logger.fatal("This is FATAL")
             logger.info("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
-TRACE a.b (logTest.py)- This is TRACE
-INFO  a.b (logTest.py)- This is INFO
-FATAL a.b (logTest.py)- Format 3 2.71828 foo
-WARN  a.b.c (logTest.py)- This is WARN
-ERROR a.b.c (logTest.py)- This is ERROR
-FATAL a.b.c (logTest.py)- This is FATAL
-INFO  a.b.c (logTest.py)- Format 3 2.71828 foo
+TRACE a.b (testLog.py)- This is TRACE
+INFO  a.b (testLog.py)- This is INFO
+FATAL a.b (testLog.py)- Format 3 2.71828 foo
+WARN  a.b.c (testLog.py)- This is WARN
+ERROR a.b.c (testLog.py)- This is ERROR
+FATAL a.b.c (testLog.py)- This is FATAL
+INFO  a.b.c (testLog.py)- Format 3 2.71828 foo
 """)
 
     def testMsgWithPercentS(self):
