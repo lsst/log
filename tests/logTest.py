@@ -24,12 +24,13 @@
 This tests the logging system in a variety of ways.
 """
 
-import lsst.log as log
 import os
 import shutil
 import tempfile
 import threading
 import unittest
+
+import lsst.log as log
 
 
 class TestLog(unittest.TestCase):
