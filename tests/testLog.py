@@ -214,7 +214,7 @@ INFO  component  testPattern (testLog.py:{0[6]}) testLog.py({0[6]}) - This is IN
 DEBUG component  testPattern (testLog.py:{0[7]}) testLog.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (testLog.py:{0[8]}) testLog.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (testLog.py:{0[9]}) testLog.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 178 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))
+""".format([x + 178 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa line too long
 
     def testMDCPutPid(self):
         """
