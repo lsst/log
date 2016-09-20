@@ -759,6 +759,8 @@ public:
     std::string getName() const;
     void setLevel(int level);
     int getLevel() const;
+    /// Return the level string, such as INFO, WARN, etc
+    std::string getLevelStr() const { return _logger->getLevel()->toString(); }
     bool isEnabledFor(int level) const;
 
     /// Return default logger instance, same as default constructor.
