@@ -1,10 +1,6 @@
 /**
 \mainpage lsst::log;  the LSST Logging Framework
 
-\warning This package still under development. Development on LSST Science Pipelines should continue to use
-`lsst::pex::logging` until `lsst::log` has been approved for general use. See
-<a href="https://jira.lsstcorp.org/browse/RFC-29">RFC-29</a> for further discussion.
-
 \section Features Features
 
 - Simple, consistent interface across both C++ and Python (via swig).
