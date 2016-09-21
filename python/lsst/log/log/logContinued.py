@@ -23,15 +23,70 @@
 #
 
 import logging
+import inspect
+import os
 
-from .logLib import Log
+from lsst.utils import continueClass
 
-TRACE = Log.TRACE
-DEBUG = Log.DEBUG
-INFO = Log.INFO
-WARN = Log.WARN
-ERROR = Log.ERROR
-FATAL = Log.FATAL
+from .log import Log
+
+TRACE = 5000
+DEBUG = 10000
+INFO = 20000
+WARN = 30000
+ERROR = 40000
+FATAL = 50000
+
+@continueClass
+class Log:
+    def trace(self, fmt, *args):
+        self._log(Log.TRACE, False, fmt, *args)
+
+    def debug(self, fmt, *args):
+        self._log(Log.DEBUG, False, fmt, *args)
+
+    def info(self, fmt, *args):
+        self._log(Log.INFO, False, fmt, *args)
+
+    def warn(self, fmt, *args):
+        self._log(Log.WARN, False, fmt, *args)
+
+    def error(self, fmt, *args):
+        self._log(Log.ERROR, False, fmt, *args)
+
+    def fatal(self, fmt, *args):
+        self._log(Log.FATAL, False, fmt, *args)
+
+    def tracef(self, fmt, *args, **kwargs):
+        self._log(Log.TRACE, True, fmt, *args, **kwargs)
+
+    def debugf(self, fmt, *args, **kwargs):
+        self._log(Log.DEBUG, True, fmt, *args, **kwargs)
+
+    def infof(self, fmt, *args, **kwargs):
+        self._log(Log.INFO, True, fmt, *args, **kwargs)
+
+    def warnf(self, fmt, *args, **kwargs):
+        self._log(Log.WARN, True, fmt, *args, **kwargs)
+
+    def errorf(self, fmt, *args, **kwargs):
+        self._log(Log.ERROR, True, fmt, *args, **kwargs)
+
+    def fatalf(self, fmt, *args, **kwargs):
+        self._log(Log.FATAL, True, fmt, *args, **kwargs)
+
+    def _log(self, level, use_format, fmt, *args, **kwargs):
+        if self.isEnabledFor(level):
+            frame = inspect.currentframe().f_back    # calling method
+            frame = frame.f_back    # original log location
+            filename = os.path.split(frame.f_code.co_filename)[1]
+            funcname = inspect.stack()[2][3]
+            if use_format:
+                msg = fmt.format(*args, **kwargs) if args or kwargs else fmt
+            else:
+                msg = fmt % args if args else fmt
+            self.logMsg(level, filename, funcname, frame.f_lineno, msg)
+
 
 # Export static functions from Log class to module namespace
 
@@ -211,3 +266,4 @@ class LogHandler(logging.Handler):
         to standard log4cxx levels.
         """
         return levelno*1000
+
