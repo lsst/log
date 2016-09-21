@@ -23,8 +23,10 @@
 #
 
 import logging
+import inspect
+import os
 
-from .logLib import Log
+from ._log import Log
 
 TRACE = Log.TRACE
 DEBUG = Log.DEBUG
@@ -32,6 +34,47 @@ INFO = Log.INFO
 WARN = Log.WARN
 ERROR = Log.ERROR
 FATAL = Log.FATAL
+
+def Log_trace(self, fmt, *args):
+    self._log(Log.TRACE, fmt, *args)
+Log.trace = Log_trace
+del Log_trace
+
+def Log_debug(self, fmt, *args):
+    self._log(Log.DEBUG, fmt, *args)
+Log.debug = Log_debug
+del Log_debug
+
+def Log_info(self, fmt, *args):
+    self._log(Log.INFO, fmt, *args)
+Log.info = Log_info
+del Log_info
+
+def Log_warn(self, fmt, *args):
+    self._log(Log.WARN, fmt, *args)
+Log.warn = Log_warn
+del Log_warn
+
+def Log_error(self, fmt, *args):
+    self._log(Log.ERROR, fmt, *args)
+Log.error = Log_error
+del Log_error
+
+def Log_fatal(self, fmt, *args):
+    self._log(Log.FATAL, fmt, *args)
+Log.fatal = Log_fatal
+del Log_fatal
+
+def Log__log(self, level, fmt, *args):
+    if self.isEnabledFor(level):
+        frame = inspect.currentframe().f_back    # calling method
+        frame = frame.f_back    # original log location
+        filename=os.path.split(frame.f_code.co_filename)[1]
+        funcname=inspect.stack()[2][3]
+        msg=fmt % args if args else fmt
+        self.logMsg(level, filename, funcname, frame.f_lineno, msg)
+Log._log = Log__log
+del Log__log
 
 # Export static functions from Log class to module namespace
 

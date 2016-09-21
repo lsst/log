@@ -6,8 +6,6 @@ config.log
 *.so
 *.cfgc
 *.pyc
-*_wrap.cc
-*Lib.py
 /doc/html
 /doc/xml
 /doc/*.tag
