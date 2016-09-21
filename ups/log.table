@@ -1,7 +1,8 @@
 setupRequired(boost)
 setupRequired(log4cxx)
 setupRequired(base)
-#setupRequired(pex_exceptions)
+setupRequired(pybind11)
+setupRequired(python)
 setupRequired(sconsUtils)
 
 envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
