@@ -73,6 +73,7 @@ PYBIND11_PLUGIN(_log) {
     cls.def("getName", &Log::getName);
     cls.def("setLevel", &Log::setLevel);
     cls.def("getLevel", &Log::getLevel);
+    cls.def("getLevelStr", &Log::getLevelStr);
     cls.def("isEnabledFor", &Log::isEnabledFor);
     cls.def("logMsg", [](Log & log, int level, std::string const& filename,
                 std::string const& funcname, unsigned int lineno, std::string const& msg) {
