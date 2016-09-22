@@ -362,6 +362,18 @@ int Log::getLevel() const {
     return levelno;
 }
 
+/** Return the level string, such as INFO, WARN, etc
+  * @return String containing the logger level
+  */
+std::string Log::getLevelStr() const {
+    log4cxx::LevelPtr level = _logger->getLevel();
+    std::string levelstr = "";
+    if (level != NULL) {
+        levelstr = level->toString();
+    }
+    return levelstr;
+}
+
 /** Return whether the logging threshold of the logger is less than or equal
   * to LEVEL.
   * @return Bool indicating whether or not logger is enabled.
