@@ -798,7 +798,12 @@ private:
      */
     static log4cxx::LoggerPtr& _defaultLogger();
 
-    Log(log4cxx::LoggerPtr const& logger) : _logger(logger) { }
+    /**
+     *  Construct a Log using a LOG4CXX logger.
+     *
+     *  The default constructor is called to ensure the default logger is initialized and LOG4CXX is configured.
+     */
+    Log(log4cxx::LoggerPtr const& logger) : Log() { _logger = logger; }
 
     log4cxx::LoggerPtr _logger;
 };
