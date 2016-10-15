@@ -778,15 +778,9 @@ public:
     static void MDCRemove(std::string const& key);
     static int MDCRegisterInit(std::function<void()> function);
 
-    static void log(Log logger, log4cxx::LevelPtr level,
-                    log4cxx::spi::LocationInfo const& location,
-                    char const* fmt, ...);
     void log(log4cxx::LevelPtr level,
              log4cxx::spi::LocationInfo const& location,
              char const* fmt, ...);
-    static void logMsg(Log logger, log4cxx::LevelPtr level,
-                       log4cxx::spi::LocationInfo const& location,
-                       std::string const& msg);
     void logMsg(log4cxx::LevelPtr level,
                 log4cxx::spi::LocationInfo const& location,
                 std::string const& msg);
