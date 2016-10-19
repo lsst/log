@@ -6,7 +6,7 @@
 - Simple, consistent interface across both C++ and Python (via swig).
 - Multiple logging levels (trace, debug, info, warn, error, fatal).
 - Multiple output channels (e.g. console, files, remote server).
-- Format logging in C++ using either  varargs/printf or `boost::format` style interfaces.
+- Format logging in C++ using either  varargs/printf or `iostream` style interfaces.
 - Optionally retrieve logging object in C++ for high performance applications.
 - Optionally include and format metadata including date, time, level, logger name, thread, function, source file, line number.
 - Optionally add arbitrary thread-scoped metadata (e.g. key/value pairs) to logging context programmatically.
@@ -142,10 +142,12 @@ The underlying log4cxx system can be initialized explicitly from either the C++ 
 In C++, the following macros can be used:
 - `LOG_CONFIG(filename)` Initialize log4cxx using the XML or Java properties configuration file '''`filename`''' (see below).
 - `LOG_CONFIG()` Initialize log4cxx with default configuration file if found, otherwise using basic configuration (see below).
+- `LOG_CONFIG_PROP(string)` Initialize log4cxx using the Java properties syntax in a string.
 
 In Python, the following function is available in the `lsst.log` module:
 - `configure(filename)` Initialize log4cxx using the XML or Java properties configuration file '''`filename`''' (see below).
 - `configure()` Initialize log4cxx with default configuration file if found, otherwise using basic configuration (see below).
+- `configure_prop(string)` Initialize log4cxx using the Java properties syntax in a string.
 
 If none of the above methods is called by user code then logging is default-initialized and configured according to the rules described below.
 
@@ -153,13 +155,21 @@ If none of the above methods is called by user code then logging is default-init
 
 The logging system is configured either using a standard log4cxx XML config file, a standard log4j Java properties, or using the default configuration. While log4cxx allows for programmatic configuration, as of this writing, only the adjustment of logging level threshold (see below) is exposed via the lsst.log API. All other configuration (e.g. outputs and formatting) are controlled via a configuration file.
 
-In the absence of an explicit call to one of the configuration macros, lsst.log tries first to configure itself from a default configuration file. The name of this default confgiuration file is determined from a value of `LSST_LOG_CONFIG` environment variable. If this variable is set and points to an existing readable file then that file is used for configuration. It can be in one of the formats supported by `LOG_CONFIG(filename)`. If `LSST_LOG_CONFIG` is not set or its value does not refer to readable file then log4cxx is configured using log4cxx's `BasicConfigurator`, which is hardwired to add to the root logger a `ConsoleAppender`. In this case, the output will be formatted using a `PatternLayout` set to the pattern "%-4r [%t] %-5p %c %x - %m%n".
+In the absence of an explicit call to one of the configuration macros (or Python methods), lsst.log tries first to configure itself from a default configuration file. The name of this default confgiuration file is determined from a value of `LSST_LOG_CONFIG` environment variable. If this variable is set and points to an existing readable file then that file is used for configuration as if `LOG_CONFIG(filename)` was called, if errors happen during file parsing then LOG4CXX prints error messages but continues to run in un-configured state. If `LSST_LOG_CONFIG` is not set or its value does not refer to readable file then log4cxx is configured using pre-defined configuration:
+- single `ConsoleAppender` is added to the root logger,
+- the output of the appender is sent to standard output,
+- the output is formatted using a `PatternLayout` set to the pattern `"%c %p: %m%n"`,
+- logging level is set to `INFO`, suppressing `DEBUG` and `TRACE` messages by default.
 
 The same configuration algorithm applies to the C++ macro `LOG_CONFIG()` and the Python `lsst.log` module function `configure()`, which do not take a file path argument (which makes calls to this method/macro optional).
 
+`LOG_CONFIG(filename)` takes name of the file which contains LOG4CXX configuration. If file name ends with `.xml` extension then it is assumed to be a standard log4cxx XML configuration, otherwise it should contain standard log4j Java properties as explained below. If parsing of the file fails then LOG4CXX will print error messages to standard error but will continue to run (likely in un-configured state).
+
+`LOG_CONFIG_PROP(string)` takes a string which is a representation of log4j Java properties (including new lines), this is a useful short-cut for cases when configuration has to be included in the application itself.
+
+All configuration macro and their Python wrappers reset existing logging configuration before applying new one, there is no way to configure logging incrementally using these constructs.
+
 Below is an example of an XML file that configures three appenders and two loggers: the root logger and the named logger "debugs". Each of the appenders contains a layout that defines which metadata to display and how to format log messages.
-
-
 
     <?xml version="1.0" encoding="UTF-8" ?>
      <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
@@ -208,17 +218,17 @@ Below is an example of an XML file that configures three appenders and two logge
 
 The root logger is setup to append to both the console and the file `var/log/qserv-master.log` with a threshold of "INFO". The named logger "debugs", meanwhile, is set to exclusively append to the file `var/log/debugs.log` with a threshold of "DEBUG". In this way, "debugs" may capture and isolate verbose debugging messages without polluting the main log. This behavior is triggered by setting the `additivity` attribute of the `category` tag to `"false"`. If `additivity` were set to `"true"` (the default value), all messages sent to "debugs" that met its threshold of "DEBUG" would also be sent to the console and `var/log/qserv-master.log`, the targets of the appenders associated with the root logger.
 
-Note that as an alternative to XML, a configuration file containing log4j Java properties may be used. Here's a trivial example of a log4j properties file that corresponds to the `BasicConfigurator` previously mentioned:
+Note that as an alternative to XML, a configuration file containing log4j Java properties may be used. Here's a trivial example of a log4j properties file that corresponds to default configuration described above:
 
-    # Set root logger level to DEBUG and its only appender to A1.
-    log4j.rootLogger=DEBUG, A1
+    # Set root logger level to INFO and its only appender to A1.
+    log4j.rootLogger=INFO, A1
 
     # A1 is set to be a ConsoleAppender.
     log4j.appender.A1=org.apache.log4j.ConsoleAppender
 
     # A1 uses PatternLayout.
     log4j.appender.A1.layout=org.apache.log4j.PatternLayout
-    log4j.appender.A1.layout.ConversionPattern=%-4r [%t] %-5p %c %x - %m%n
+    log4j.appender.A1.layout.ConversionPattern=%c %p: %m%n
 
 
 Values in the configuration file can include Unix environment variables using the "`${ENVVAR}`" notation. In addition, "`${user.home}`" and "`${user.name}`" may be useful substitutions.  Note that "`~`" substitution does ''not'' work.
