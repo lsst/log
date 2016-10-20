@@ -76,6 +76,7 @@ class TestLog(unittest.TestCase):
     def check(self, reference):
         """Compare the log file with the provided reference text."""
         with open(self.outputFilename, 'r') as f:
+            # strip everything up to first ] to remove timestamp and thread ID
             lines = [l.split(']')[-1].rstrip("\n") for l in f.readlines()]
             reflines = [l for l in reference.split("\n") if l != ""]
             self.maxDiff = None
@@ -90,8 +91,9 @@ class TestLog(unittest.TestCase):
 
     def testBasic(self):
         """
-        Test basic log output.  Since the default threshold is INFO, the
-        TRACE message is not emitted.
+        Test basic log output with default configuration.
+        Since the default threshold is INFO, the DEBUG or TRACE
+        message is not emitted.
         """
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
@@ -102,21 +104,21 @@ class TestLog(unittest.TestCase):
             log.warn("This is WARN")
             log.error("This is ERROR")
             log.fatal("This is FATAL")
-            log.info("Format %d %g %s", 3, 2.71828, "foo")
+            log.warn("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
- INFO root null - This is INFO
- INFO root null - This is unicode INFO
- DEBUG root null - This is DEBUG
- WARN root null - This is WARN
- ERROR root null - This is ERROR
- FATAL root null - This is FATAL
- INFO root null - Format 3 2.71828 foo
+root INFO: This is INFO
+root INFO: This is unicode INFO
+root WARN: This is WARN
+root ERROR: This is ERROR
+root FATAL: This is FATAL
+root WARN: Format 3 2.71828 foo
 """)
 
     def testContext(self):
         """Test the log context/component stack."""
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
+            log.setLevel('', log.DEBUG)
             log.trace("This is TRACE")
             log.info("This is INFO")
             log.debug("This is DEBUG")
@@ -147,19 +149,19 @@ class TestLog(unittest.TestCase):
                 log.debug("This is DEBUG 5")
 
         self.check("""
- INFO root null - This is INFO
- DEBUG root null - This is DEBUG
- INFO component null - This is INFO
- DEBUG component null - This is DEBUG
- INFO root null - This is INFO 2
- DEBUG root null - This is DEBUG 2
- INFO comp null - This is INFO 3
- DEBUG comp null - This is DEBUG 3
- INFO comp null - This is INFO 3a
- TRACE comp.subcomp null - This is TRACE 4
- INFO comp.subcomp null - This is INFO 4
- DEBUG comp.subcomp null - This is DEBUG 4
- INFO comp null - This is INFO 5
+root INFO: This is INFO
+root DEBUG: This is DEBUG
+component INFO: This is INFO
+component DEBUG: This is DEBUG
+root INFO: This is INFO 2
+root DEBUG: This is DEBUG 2
+comp INFO: This is INFO 3
+comp DEBUG: This is DEBUG 3
+comp INFO: This is INFO 3a
+comp.subcomp TRACE: This is TRACE 4
+comp.subcomp INFO: This is INFO 4
+comp.subcomp DEBUG: This is DEBUG 4
+comp INFO: This is INFO 5
 """)
 
     def testPattern(self):
@@ -214,7 +216,7 @@ INFO  component  testPattern (testLog.py:{0[6]}) testLog.py({0[6]}) - This is IN
 DEBUG component  testPattern (testLog.py:{0[7]}) testLog.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (testLog.py:{0[8]}) testLog.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (testLog.py:{0[9]}) testLog.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 178 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa line too long
+""".format([x + 180 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa line too long
 
     def testMDCPutPid(self):
         """
@@ -244,7 +246,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
 
             with TestLog.StdoutCapture(self.outputFilename):
                 log.info(msg)
-                line = 246
+                line = 248
         finally:
             log.MDCRemove("PID")
 
@@ -280,7 +282,6 @@ DEBUG - This is DEBUG
     def testPythonLogging(self):
         """Test logging through the Python logging interface."""
         with TestLog.StdoutCapture(self.outputFilename):
-            log.setLevel('', log.DEBUG)
             import logging
             lgr = logging.getLogger()
             lgr.setLevel(logging.INFO)
@@ -291,7 +292,7 @@ DEBUG - This is DEBUG
             logging.shutdown()
 
         self.check("""
- INFO root null - This is INFO
+root INFO: This is INFO
 """)
 
     def testMdcInit(self):
@@ -349,14 +350,13 @@ log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
             logger.warn("This is WARN")
             logger.error("This is ERROR")
             logger.fatal("This is FATAL")
-            logger.info("Format %d %g %s", 3, 2.71828, "foo")
+            logger.warn("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
- INFO b null - This is INFO
- DEBUG b null - This is DEBUG
- WARN b null - This is WARN
- ERROR b null - This is ERROR
- FATAL b null - This is FATAL
- INFO b null - Format 3 2.71828 foo
+b INFO: This is INFO
+b WARN: This is WARN
+b ERROR: This is ERROR
+b FATAL: This is FATAL
+b WARN: Format 3 2.71828 foo
 """)
 
     def testLoggerLevel(self):
@@ -413,12 +413,11 @@ INFO  a.b.c (testLog.py)- Format 3 2.71828 foo
             logger.fatal("FATAL with %s")
             logger.logMsg(log.DEBUG, "foo", "bar", 5, "DEBUG with %s")
         self.check("""
- INFO root null - INFO with %s
- DEBUG root null - DEBUG with %s
- WARN root null - WARN with %s
- ERROR root null - ERROR with %s
- FATAL root null - FATAL with %s
- DEBUG root null - DEBUG with %s
+root INFO: INFO with %s
+root WARN: WARN with %s
+root ERROR: ERROR with %s
+root FATAL: FATAL with %s
+root DEBUG: DEBUG with %s
 """)
 
 

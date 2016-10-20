@@ -789,8 +789,10 @@ private:
 
     /**
      *  Returns default LOG4CXX logger.
+     *
+     *  @param newDefault if non-zero then default is set to this value first.
      */
-    static log4cxx::LoggerPtr& _defaultLogger();
+    static log4cxx::LoggerPtr const& _defaultLogger(log4cxx::LoggerPtr const& newDefault=log4cxx::LoggerPtr());
 
     /**
      *  Construct a Log using a LOG4CXX logger.
