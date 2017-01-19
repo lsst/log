@@ -81,31 +81,59 @@ def isEnabledFor(logger, level):
 
 
 def log(loggername, level, fmt, *args, **kwargs):
-    Log.getLogger(loggername)._log(level, fmt, *args)
+    Log.getLogger(loggername)._log(level, False, fmt, *args)
 
 
 def trace(fmt, *args):
-    Log.getDefaultLogger()._log(TRACE, fmt, *args)
+    Log.getDefaultLogger()._log(TRACE, False, fmt, *args)
 
 
 def debug(fmt, *args):
-    Log.getDefaultLogger()._log(DEBUG, fmt, *args)
+    Log.getDefaultLogger()._log(DEBUG, False, fmt, *args)
 
 
 def info(fmt, *args):
-    Log.getDefaultLogger()._log(INFO, fmt, *args)
+    Log.getDefaultLogger()._log(INFO, False, fmt, *args)
 
 
 def warn(fmt, *args):
-    Log.getDefaultLogger()._log(WARN, fmt, *args)
+    Log.getDefaultLogger()._log(WARN, False, fmt, *args)
 
 
 def error(fmt, *args):
-    Log.getDefaultLogger()._log(ERROR, fmt, *args)
+    Log.getDefaultLogger()._log(ERROR, False, fmt, *args)
 
 
 def fatal(fmt, *args):
-    Log.getDefaultLogger()._log(FATAL, fmt, *args)
+    Log.getDefaultLogger()._log(FATAL, False, fmt, *args)
+
+
+def logf(loggername, level, fmt, *args, **kwargs):
+    Log.getLogger(loggername)._log(level, True, fmt, *args, **kwargs)
+
+
+def tracef(fmt, *args, **kwargs):
+    Log.getDefaultLogger()._log(TRACE, True, fmt, *args, **kwargs)
+
+
+def debugf(fmt, *args, **kwargs):
+    Log.getDefaultLogger()._log(DEBUG, True, fmt, *args, **kwargs)
+
+
+def infof(fmt, *args, **kwargs):
+    Log.getDefaultLogger()._log(INFO, True, fmt, *args, **kwargs)
+
+
+def warnf(fmt, *args, **kwargs):
+    Log.getDefaultLogger()._log(WARN, True, fmt, *args, **kwargs)
+
+
+def errorf(fmt, *args, **kwargs):
+    Log.getDefaultLogger()._log(ERROR, True, fmt, *args, **kwargs)
+
+
+def fatalf(fmt, *args, **kwargs):
+    Log.getDefaultLogger()._log(FATAL, True, fmt, *args, **kwargs)
 
 
 def lwpID():
