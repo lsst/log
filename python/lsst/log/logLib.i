@@ -116,12 +116,12 @@ import os
         if self.isEnabledFor(level):
             frame = inspect.currentframe().f_back    # calling method
             frame = frame.f_back    # original log location
-            filename=os.path.split(frame.f_code.co_filename)[1]
-            funcname=inspect.stack()[2][3]
+            filename = os.path.split(frame.f_code.co_filename)[1]
+            funcname = inspect.stack()[2][3]
             if use_format:
-              msg=fmt.format(*args, **kwargs) if args or kwargs else fmt
+                msg = fmt.format(*args, **kwargs) if args or kwargs else fmt
             else:
-              msg=fmt % args if args else fmt
+                msg = fmt % args if args else fmt
             self.logMsg(level, filename, funcname, frame.f_lineno, msg)
     }
 }
