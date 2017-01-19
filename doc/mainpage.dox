@@ -126,7 +126,7 @@ Alternative set of macros allows one to use iostream-based formatting. In the ma
 - `LOGLS_ERROR(logger, expression)` Log a message of level `LOG_LVL_ERROR` to the logger '''`logger`'''.
 - `LOGLS_FATAL(logger, expression)` Log a message of level `LOG_LVL_FATAL` to the logger '''`logger`'''.
 
-In Python, the following logging functions are available in the `lsst.log` module. These functions take a variable number of arguments following a format string in the style of `printf()`. The use of `*args` is recommended over the use of the `%` operator so that formatting of log messages that do not meet the level threshold can be avoided.
+In Python, the following logging functions are available in the `lsst.log` module. These functions take a variable number of arguments following a format string in the style of `printf()`. The use of `*args` is recommended over the use of calling the `%` operator directly, to avoid unnecessarily formatting log messages that do not meet the level threshold.
 - `log(loggername, level, fmt, *args)` Log a message of level '''`level`''' with format string '''`fmt`''' and variable arguments '''`*args`''' to the logger named '''`loggername`'''.
 - `trace(fmt, *args)` Log a message of level `TRACE` with format string '''`fmt`''' and corresponding arguments '''`*args`''' to the default logger.
 - `debug(fmt, *args)` Log a message of level `DEBUG` with format string '''`fmt`''' and corresponding arguments '''`*args`''' to the default logger.
@@ -135,7 +135,7 @@ In Python, the following logging functions are available in the `lsst.log` modul
 - `error(fmt, *args)` Log a message of level `ERROR` with format string '''`fmt`''' and corresponding arguments '''`*args`''' to the default logger.
 - `fatal(fmt, *args)` Log a message of level `FATAL` with format string '''`fmt`''' and corresponding arguments '''`*args`''' to the default logger.
 
-Additionally, Python has variants of the above functions, with a trailing `f` in the name, supporting the Python string `format()` syntax. The use of `*args` and `**kwargs` is recommended over the use of the `format()` method directly so that formatting of log messages that do not meet the level threshold can be avoided.
+Additionally, Python has variants of the above functions, with a trailing `f` in the name, supporting the Python string `format()` syntax. The use of `*args` and `**kwargs` is recommended over the use of calling the `format()` method on the string directly, to avoid unnecessarily formatting log messages that do not meet the level threshold.
 - `logf(loggername, level, fmt, *args, **kwargs)` Log a message of level '''`level`''' with format string '''`fmt`''' and variable arguments '''`*args`''' and '''`**kwargs`''' to the logger named '''`loggername`''' using format method syntax.
 - `tracef(fmt, *args, **kwargs)` Log a message of level `TRACE` with format string '''`fmt`''' and corresponding arguments '''`*args`''' and '''`**kwargs`''' to the default logger using format method syntax.
 - `debugf(fmt, *args, **kwargs)` Log a message of level `DEBUG` with format string '''`fmt`''' and corresponding arguments '''`*args`''' and '''`**kwargs`''' to the default logger using format method syntax.
