@@ -114,6 +114,35 @@ root FATAL: This is FATAL
 root WARN: Format 3 2.71828 foo
 """)
 
+    def testBasicFormat(self):
+        """
+        Test basic log output with default configuration but using
+        the f variants.
+        Since the default threshold is INFO, the DEBUG or TRACE
+        message is not emitted.
+        """
+        with TestLog.StdoutCapture(self.outputFilename):
+            log.configure()
+            log.logf(log.getDefaultLoggerName(), log.INFO,
+                     "This is {{INFO}} Item 1: {item[1]}",
+                     item=["a", "b", "c"])
+            log.infof(u"This is {unicode} INFO")
+            log.tracef("This is TRACE")
+            log.debugf("This is DEBUG")
+            log.warnf("This is WARN {city}", city="Tucson")
+            log.errorf("This is ERROR {1}->{0}", 2, 1)
+            log.fatalf("This is FATAL {1} out of {0} times for {place}",
+                       4, 3, place="LSST")
+            log.warnf("Format {} {} {}", 3, 2.71828, "foo")
+        self.check("""
+root INFO: This is {INFO} Item 1: b
+root INFO: This is {unicode} INFO
+root WARN: This is WARN Tucson
+root ERROR: This is ERROR 1->2
+root FATAL: This is FATAL 3 out of 4 times for LSST
+root WARN: Format 3 2.71828 foo
+""")
+
     def testContext(self):
         """Test the log context/component stack."""
         with TestLog.StdoutCapture(self.outputFilename):
@@ -135,7 +164,7 @@ root WARN: Format 3 2.71828 foo
                 log.debug("This is DEBUG 3")
                 ctx.setLevel(log.INFO)
                 self.assertEqual(ctx.getLevel(), log.INFO)
-                self.assert_(ctx.isEnabledFor(log.INFO))
+                self.assertTrue(ctx.isEnabledFor(log.INFO))
                 log.trace("This is TRACE 3a")
                 log.info("This is INFO 3a")
                 log.debug("This is DEBUG 3a")
@@ -216,7 +245,7 @@ INFO  component  testPattern (testLog.py:{0[6]}) testLog.py({0[6]}) - This is IN
 DEBUG component  testPattern (testLog.py:{0[7]}) testLog.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (testLog.py:{0[8]}) testLog.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (testLog.py:{0[9]}) testLog.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 180 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa line too long
+""".format([x + 209 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa E501 line too long
 
     def testMDCPutPid(self):
         """
@@ -231,22 +260,24 @@ log4j.rootLogger=DEBUG, CA
 log4j.appender.CA=ConsoleAppender
 log4j.appender.CA.layout=PatternLayout
 log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %l - %m%n
-""")
+""")  # noqa E501 line too long
             self.assertGreaterEqual(pid, 0, "Failed to fork")
 
             msg = "This is INFO"
             if pid == 0:
                 self.tempDir = tempfile.mkdtemp()
-                self.outputFilename = os.path.join(self.tempDir, "log-child.out")
+                self.outputFilename = os.path.join(self.tempDir,
+                                                   "log-child.out")
                 msg += " in child process"
             elif pid > 0:
                 child_pid, child_status = os.wait()
-                self.assertEqual(child_status, 0, "Child returns incorrect code")
+                self.assertEqual(child_status, 0,
+                                 "Child returns incorrect code")
                 msg += " in parent process"
 
             with TestLog.StdoutCapture(self.outputFilename):
                 log.info(msg)
-                line = 248
+                line = 279
         finally:
             log.MDCRemove("PID")
 
@@ -370,7 +401,8 @@ log4j.appender.CA=ConsoleAppender
 log4j.appender.CA.layout=PatternLayout
 log4j.appender.CA.layout.ConversionPattern=%-5p %c (%F)- %m%n
 """)
-            self.assertEqual(log.Log.getLevel(log.Log.getDefaultLogger()), log.TRACE)
+            self.assertEqual(log.Log.getLevel(log.Log.getDefaultLogger()),
+                             log.TRACE)
             logger = log.Log.getLogger("a.b")
             self.assertEqual(logger.getName(), "a.b")
             logger.trace("This is TRACE")
@@ -421,9 +453,5 @@ root DEBUG: DEBUG with %s
 """)
 
 
-####################################################################################
-def main():
-    unittest.main()
-
 if __name__ == "__main__":
-    main()
+    unittest.main()
