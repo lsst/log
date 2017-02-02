@@ -35,46 +35,70 @@ WARN = Log.WARN
 ERROR = Log.ERROR
 FATAL = Log.FATAL
 
-def Log_trace(self, fmt, *args):
-    self._log(Log.TRACE, fmt, *args)
-Log.trace = Log_trace
-del Log_trace
 
-def Log_debug(self, fmt, *args):
-    self._log(Log.DEBUG, fmt, *args)
-Log.debug = Log_debug
-del Log_debug
+def addLogMethods():
+    def trace(self, fmt, *args):
+        self._log(Log.TRACE, False, fmt, *args)
+    Log.trace = trace
 
-def Log_info(self, fmt, *args):
-    self._log(Log.INFO, fmt, *args)
-Log.info = Log_info
-del Log_info
+    def debug(self, fmt, *args):
+        self._log(Log.DEBUG, False, fmt, *args)
+    Log.debug = debug
 
-def Log_warn(self, fmt, *args):
-    self._log(Log.WARN, fmt, *args)
-Log.warn = Log_warn
-del Log_warn
+    def info(self, fmt, *args):
+        self._log(Log.INFO, False, fmt, *args)
+    Log.info = info
 
-def Log_error(self, fmt, *args):
-    self._log(Log.ERROR, fmt, *args)
-Log.error = Log_error
-del Log_error
+    def warn(self, fmt, *args):
+        self._log(Log.WARN, False, fmt, *args)
+    Log.warn = warn
 
-def Log_fatal(self, fmt, *args):
-    self._log(Log.FATAL, fmt, *args)
-Log.fatal = Log_fatal
-del Log_fatal
+    def error(self, fmt, *args):
+        self._log(Log.ERROR, False, fmt, *args)
+    Log.error = error
 
-def Log__log(self, level, fmt, *args):
-    if self.isEnabledFor(level):
-        frame = inspect.currentframe().f_back    # calling method
-        frame = frame.f_back    # original log location
-        filename=os.path.split(frame.f_code.co_filename)[1]
-        funcname=inspect.stack()[2][3]
-        msg=fmt % args if args else fmt
-        self.logMsg(level, filename, funcname, frame.f_lineno, msg)
-Log._log = Log__log
-del Log__log
+    def fatal(self, fmt, *args):
+        self._log(Log.FATAL, False, fmt, *args)
+    Log.fatal = fatal
+
+    def tracef(self, fmt, *args, **kwargs):
+        self._log(Log.TRACE, True, fmt, *args, **kwargs)
+    Log.tracef = tracef
+
+    def debugf(self, fmt, *args, **kwargs):
+        self._log(Log.DEBUG, True, fmt, *args, **kwargs)
+    Log.debugf = debugf
+
+    def infof(self, fmt, *args, **kwargs):
+        self._log(Log.INFO, True, fmt, *args, **kwargs)
+    Log.infof = infof
+
+    def warnf(self, fmt, *args, **kwargs):
+        self._log(Log.WARN, True, fmt, *args, **kwargs)
+    Log.warnf = warnf
+
+    def errorf(self, fmt, *args, **kwargs):
+        self._log(Log.ERROR, True, fmt, *args, **kwargs)
+    Log.errorf = errorf
+
+    def fatalf(self, fmt, *args, **kwargs):
+        self._log(Log.FATAL, True, fmt, *args, **kwargs)
+    Log.fatalf = fatalf
+
+    def _log(self, level, use_format, fmt, *args, **kwargs):
+        if self.isEnabledFor(level):
+            frame = inspect.currentframe().f_back    # calling method
+            frame = frame.f_back    # original log location
+            filename = os.path.split(frame.f_code.co_filename)[1]
+            funcname = inspect.stack()[2][3]
+            if use_format:
+                msg = fmt.format(*args, **kwargs) if args or kwargs else fmt
+            else:
+                msg = fmt % args if args else fmt
+            self.logMsg(level, filename, funcname, frame.f_lineno, msg)
+    Log._log = _log
+
+addLogMethods()
 
 # Export static functions from Log class to module namespace
 
