@@ -1,6 +1,8 @@
 /**
 \mainpage lsst::log;  the LSST Logging Framework
 
+\note See also the <a href="https://developer.lsst.io/coding/logging.html#logging">Developer Guide</a> for guidance on how to use the logging framework in practice.
+
 \section Features Features
 
 - Simple, consistent interface across both C++ and Python (via swig).
