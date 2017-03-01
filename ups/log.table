@@ -4,6 +4,7 @@ setupRequired(base)
 setupRequired(pybind11)
 setupRequired(python)
 setupRequired(sconsUtils)
+setupRequired(utils)
 
 envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
