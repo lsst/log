@@ -28,7 +28,7 @@ import os
 
 from lsst.utils import continueClass
 
-from ._log import Log
+from .log import Log
 
 TRACE = 5000
 DEBUG = 10000
@@ -266,3 +266,4 @@ class LogHandler(logging.Handler):
         to standard log4cxx levels.
         """
         return levelno*1000
+

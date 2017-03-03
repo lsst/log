@@ -26,30 +26,32 @@
 
 namespace py = pybind11;
 
-using namespace lsst::log;
+namespace lsst {
+namespace log {
 
 // Wrapper for Python callable object to make sure that we have GIL
 // when we call Python. Note that we are leaking Python callable,
 // as C++ callables may be (and actually are in our particular case)
 // outliving Python interpreter and attempt to delete Python object
 // will result in crash.
+//
+// See DM-9708
 class callable_wrapper {
 public:
-    callable_wrapper(PyObject* callable) : _callable(callable) {
-        Py_XINCREF(_callable);
-    }
+    callable_wrapper(PyObject* callable) : _callable(callable) { Py_XINCREF(_callable); }
     void operator()() {
         // make sure we own GIL before doing Python call
         auto state = PyGILState_Ensure();
         PyObject_CallObject(_callable, nullptr);
         PyGILState_Release(state);
     }
+
 private:
     PyObject* _callable;
 };
 
-PYBIND11_PLUGIN(_log) {
-    py::module mod("_log", "Python wrapper for log library");
+PYBIND11_PLUGIN(log) {
+    py::module mod("log");
 
     py::class_<Log> cls(mod, "Log");
 
@@ -74,28 +76,31 @@ PYBIND11_PLUGIN(_log) {
     cls.def("setLevel", &Log::setLevel);
     cls.def("getLevel", &Log::getLevel);
     cls.def("isEnabledFor", &Log::isEnabledFor);
-    cls.def("logMsg", [](Log & log, int level, std::string const& filename,
-                std::string const& funcname, unsigned int lineno, std::string const& msg) {
+    cls.def("logMsg", [](Log& log, int level, std::string const& filename, std::string const& funcname,
+                         unsigned int lineno, std::string const& msg) {
         log.logMsg(log4cxx::Level::toLevel(level),
-                     log4cxx::spi::LocationInfo(filename.c_str(), funcname.c_str(), lineno), msg.c_str());
+                   log4cxx::spi::LocationInfo(filename.c_str(), funcname.c_str(), lineno), msg.c_str());
     });
-    cls.def("lwpID", [](Log const & log) -> unsigned { return lsst::log::lwpID(); });
+    cls.def("lwpID", [](Log const& log) -> unsigned { return lsst::log::lwpID(); });
 
     cls.def_static("getDefaultLogger", Log::getDefaultLogger);
     cls.def_static("getDefaultLoggerName", Log::getDefaultLoggerName);
-    cls.def_static("configure", (void (*)()) Log::configure);
-    cls.def_static("configure", (void (*)(std::string const&)) Log::configure);
+    cls.def_static("configure", (void (*)())Log::configure);
+    cls.def_static("configure", (void (*)(std::string const&))Log::configure);
     cls.def_static("configure_prop", Log::configure_prop);
-    cls.def_static("getLogger", (Log (*)(Log const&)) Log::getLogger);
-    cls.def_static("getLogger", (Log (*)(std::string const&)) Log::getLogger);
+    cls.def_static("getLogger", (Log(*)(Log const&))Log::getLogger);
+    cls.def_static("getLogger", (Log(*)(std::string const&))Log::getLogger);
     cls.def_static("pushContext", Log::pushContext);
     cls.def_static("popContext", Log::popContext);
     cls.def_static("MDC", Log::MDC);
     cls.def_static("MDCRemove", Log::MDCRemove);
     cls.def_static("MDCRegisterInit", [](py::function func) {
-            auto handle = func.release(); // will leak as described in callable_wrapper
-            Log::MDCRegisterInit(std::function<void()>(callable_wrapper(handle.ptr())));
+        auto handle = func.release();  // will leak as described in callable_wrapper
+        Log::MDCRegisterInit(std::function<void()>(callable_wrapper(handle.ptr())));
     });
 
     return mod.ptr();
 }
+
+}  // log
+}  // lsst
