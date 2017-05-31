@@ -80,7 +80,7 @@ class Log:
             frame = inspect.currentframe().f_back    # calling method
             frame = frame.f_back    # original log location
             filename = os.path.split(frame.f_code.co_filename)[1]
-            funcname = inspect.stack()[2][3]
+            funcname = frame.f_code.co_name
             if use_format:
                 msg = fmt.format(*args, **kwargs) if args or kwargs else fmt
             else:
