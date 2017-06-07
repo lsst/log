@@ -303,12 +303,17 @@ void Log::popContext() {
 /** Places a KEY/VALUE pair in the Mapped Diagnostic Context (MDC) for the
   * current thread. The VALUE may then be included in log messages by using
   * the following the `X` conversion character within a pattern layout as
-  * `%X{KEY}`.
+  * `%X{KEY}`. Note that unlike `log4cxx::MDC::put()` this method overwrites
+  * any previously existing mapping.
   *
   * @param key    Unique key.
   * @param value  String value.
   */
 void Log::MDC(std::string const& key, std::string const& value) {
+    // put() does not remove existing mapping, to make it less confusing
+    // for clients which expect that MDC() always overwrites existing mapping
+    // we explicitly remove it first if it exists.
+    log4cxx::MDC::remove(key);
     log4cxx::MDC::put(key, value);
 }
 
