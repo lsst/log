@@ -360,6 +360,38 @@ log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
 
         log.MDCRemove("MDC_INIT")
 
+    def testMdcUpdate(self):
+        """Test for overwriting MDC.
+        """
+
+        expected_msg = \
+            "INFO  - Message one {}\n" \
+            "INFO  - Message two {{LABEL,123456}}\n" \
+            "INFO  - Message three {{LABEL,654321}}\n" \
+            "INFO  - Message four {}\n"
+
+        with TestLog.StdoutCapture(self.outputFilename):
+
+            self.configure("""
+log4j.rootLogger=DEBUG, CA
+log4j.appender.CA=ConsoleAppender
+log4j.appender.CA.layout=PatternLayout
+log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
+""")
+
+            log.info("Message one")
+
+            log.MDC("LABEL", "123456")
+            log.info("Message two")
+
+            log.MDC("LABEL", "654321")
+            log.info("Message three")
+
+            log.MDCRemove("LABEL")
+            log.info("Message four")
+
+        self.check(expected_msg)
+
     def testLwpID(self):
         """Test log.lwpID() method."""
         lwp1 = log.lwpID()
