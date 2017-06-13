@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 
 # LSST Data Management System
-# Copyright 2014 LSST Corporation.
+# Copyright 2014-2017 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -23,6 +22,7 @@
 """
 This tests the logging system in a variety of ways.
 """
+
 
 import os
 import shutil
@@ -235,16 +235,16 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c %C %M (%F:%L) %l - %m - %X%n
 
         # Use format to make line numbers easier to change.
         self.check("""
-INFO  root  testPattern (testLog.py:{0[0]}) testLog.py({0[0]}) - This is INFO - {{}}
-DEBUG root  testPattern (testLog.py:{0[1]}) testLog.py({0[1]}) - This is DEBUG - {{}}
-INFO  root  testPattern (testLog.py:{0[2]}) testLog.py({0[2]}) - This is INFO 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
-DEBUG root  testPattern (testLog.py:{0[3]}) testLog.py({0[3]}) - This is DEBUG 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
-INFO  component  testPattern (testLog.py:{0[4]}) testLog.py({0[4]}) - This is INFO 3 - {{{{x,3}}{{y,foo}}}}
-DEBUG component  testPattern (testLog.py:{0[5]}) testLog.py({0[5]}) - This is DEBUG 3 - {{{{x,3}}{{y,foo}}}}
-INFO  component  testPattern (testLog.py:{0[6]}) testLog.py({0[6]}) - This is INFO 4 - {{{{y,foo}}}}
-DEBUG component  testPattern (testLog.py:{0[7]}) testLog.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
-INFO  root  testPattern (testLog.py:{0[8]}) testLog.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
-DEBUG root  testPattern (testLog.py:{0[9]}) testLog.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
+INFO  root  testPattern (test_log.py:{0[0]}) test_log.py({0[0]}) - This is INFO - {{}}
+DEBUG root  testPattern (test_log.py:{0[1]}) test_log.py({0[1]}) - This is DEBUG - {{}}
+INFO  root  testPattern (test_log.py:{0[2]}) test_log.py({0[2]}) - This is INFO 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
+DEBUG root  testPattern (test_log.py:{0[3]}) test_log.py({0[3]}) - This is DEBUG 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
+INFO  component  testPattern (test_log.py:{0[4]}) test_log.py({0[4]}) - This is INFO 3 - {{{{x,3}}{{y,foo}}}}
+DEBUG component  testPattern (test_log.py:{0[5]}) test_log.py({0[5]}) - This is DEBUG 3 - {{{{x,3}}{{y,foo}}}}
+INFO  component  testPattern (test_log.py:{0[6]}) test_log.py({0[6]}) - This is INFO 4 - {{{{y,foo}}}}
+DEBUG component  testPattern (test_log.py:{0[7]}) test_log.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
+INFO  root  testPattern (test_log.py:{0[8]}) test_log.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
+DEBUG root  testPattern (test_log.py:{0[9]}) test_log.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
 """.format([x + 209 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa E501 line too long
 
     def testMDCPutPid(self):
@@ -283,7 +283,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
 
         # Use format to make line numbers easier to change.
         self.check("""
-INFO  PID:{1} root  testMDCPutPid (testLog.py:{0}) testLog.py({0}) - {2}
+INFO  PID:{1} root  testMDCPutPid (test_log.py:{0}) test_log.py({0}) - {2}
 """.format(line, os.getpid(), msg))
 
         # don't pass other tests in child process
@@ -360,6 +360,38 @@ log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
 
         log.MDCRemove("MDC_INIT")
 
+    def testMdcUpdate(self):
+        """Test for overwriting MDC.
+        """
+
+        expected_msg = \
+            "INFO  - Message one {}\n" \
+            "INFO  - Message two {{LABEL,123456}}\n" \
+            "INFO  - Message three {{LABEL,654321}}\n" \
+            "INFO  - Message four {}\n"
+
+        with TestLog.StdoutCapture(self.outputFilename):
+
+            self.configure("""
+log4j.rootLogger=DEBUG, CA
+log4j.appender.CA=ConsoleAppender
+log4j.appender.CA.layout=PatternLayout
+log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
+""")
+
+            log.info("Message one")
+
+            log.MDC("LABEL", "123456")
+            log.info("Message two")
+
+            log.MDC("LABEL", "654321")
+            log.info("Message three")
+
+            log.MDCRemove("LABEL")
+            log.info("Message four")
+
+        self.check(expected_msg)
+
     def testLwpID(self):
         """Test log.lwpID() method."""
         lwp1 = log.lwpID()
@@ -422,13 +454,13 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c (%F)- %m%n
             logger.fatal("This is FATAL")
             logger.info("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
-TRACE a.b (testLog.py)- This is TRACE
-INFO  a.b (testLog.py)- This is INFO
-FATAL a.b (testLog.py)- Format 3 2.71828 foo
-WARN  a.b.c (testLog.py)- This is WARN
-ERROR a.b.c (testLog.py)- This is ERROR
-FATAL a.b.c (testLog.py)- This is FATAL
-INFO  a.b.c (testLog.py)- Format 3 2.71828 foo
+TRACE a.b (test_log.py)- This is TRACE
+INFO  a.b (test_log.py)- This is INFO
+FATAL a.b (test_log.py)- Format 3 2.71828 foo
+WARN  a.b.c (test_log.py)- This is WARN
+ERROR a.b.c (test_log.py)- This is ERROR
+FATAL a.b.c (test_log.py)- This is FATAL
+INFO  a.b.c (test_log.py)- Format 3 2.71828 foo
 """)
 
     def testMsgWithPercentS(self):
