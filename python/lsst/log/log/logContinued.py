@@ -37,7 +37,8 @@ WARN = 30000
 ERROR = 40000
 FATAL = 50000
 
-@continueClass
+
+@continueClass  # noqa F811 redefinition
 class Log:
     def trace(self, fmt, *args):
         self._log(Log.TRACE, False, fmt, *args)
@@ -266,4 +267,3 @@ class LogHandler(logging.Handler):
         to standard log4cxx levels.
         """
         return levelno*1000
-
