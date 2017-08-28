@@ -37,6 +37,7 @@ def b():
         log.debug("Testing; logged only when called by a")
         log.info("Leaving b")
 
+
 if __name__ == "__main__":
     log.configure("examples/log4cxx.properties")
     main()

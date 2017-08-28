@@ -1,3 +1,4 @@
+.cache
 _build.*
 .sconsign.dblite
 config.log
