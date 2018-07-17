@@ -50,9 +50,7 @@ private:
     PyObject* _callable;
 };
 
-PYBIND11_PLUGIN(log) {
-    py::module mod("log");
-
+PYBIND11_MODULE(log, mod) {
     py::class_<Log> cls(mod, "Log");
 
     /* Constructors */
@@ -98,8 +96,6 @@ PYBIND11_PLUGIN(log) {
         auto handle = func.release();  // will leak as described in callable_wrapper
         Log::MDCRegisterInit(std::function<void()>(callable_wrapper(handle.ptr())));
     });
-
-    return mod.ptr();
 }
 
 }  // log
