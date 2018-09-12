@@ -22,7 +22,13 @@
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 
-__all__ = ["traceSetAt", "temporaryLogLevel", "LogRedirect"]
+__all__ = [
+    "traceSetAt",
+    "temporaryLogLevel",
+    "LogRedirect",
+    "enable_notebook_logging",
+    "disable_notebook_logging",
+]
 
 from contextlib import contextmanager
 import os
@@ -125,3 +131,21 @@ class LogRedirect:
         os.dup2(self._filehandle, self._fd)
         os.close(self._filehandle)
         self._thread.join()
+
+
+_redirect = None
+
+
+def enable_notebook_logging(dest=sys.stderr):
+    """Enable notebook output for log4cxx messages."""
+    global _redirect
+    if _redirect is None:
+        _redirect = LogRedirect(dest=dest)
+
+
+def disable_notebook_logging():
+    """Stop notebook output for log4cxx messages."""
+    global _redirect
+    if _redirect is not None:
+        _redirect.finish()
+        _redirect = None

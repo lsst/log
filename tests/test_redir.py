@@ -1,4 +1,3 @@
-
 # LSST Data Management System
 # Copyright 2018 LSST Corporation.
 #
@@ -31,11 +30,10 @@ import tempfile
 import unittest
 
 import lsst.log as log
-import lsst.log.utils as logUtils
+import lsst.log.utils as log_utils
 
 
 class TestRedir(unittest.TestCase):
-
     class StdoutCapture(object):
         """
         Context manager to redirect stdout to a file.
@@ -69,14 +67,14 @@ class TestRedir(unittest.TestCase):
 
     def check(self, reference):
         """Compare the log file with the provided reference text."""
-        with open(self.outputFilename, 'r') as f:
+        with open(self.outputFilename, "r") as f:
             # strip everything up to first ] to remove timestamp and thread ID
-            lines = [l.split(']')[-1].rstrip("\n") for l in f.readlines()]
+            lines = [ln.split("]")[-1].rstrip("\n") for ln in f.readlines()]
             reflines = [rl for rl in reference.split("\n") if rl != ""]
             self.maxDiff = None
             self.assertListEqual(lines, reflines)
 
-###############################################################################
+    ##########################################################################
 
     def testRedir(self):
         """
@@ -85,25 +83,30 @@ class TestRedir(unittest.TestCase):
         with TestRedir.StdoutCapture(self.outputFilename):
             log.configure()
             dest = io.StringIO()
-            lr = logUtils.LogRedirect(1, dest)
-            log.log(log.getDefaultLoggerName(), log.INFO, "This is INFO")
+            log_utils.enable_notebook_logging(dest)
+            log.log(log.getDefaultLogger().getName(), log.INFO, "This is INFO")
             log.info(u"This is unicode INFO")
             log.trace("This is TRACE")
             log.debug("This is DEBUG")
             log.warn("This is WARN")
             log.error("This is ERROR")
             log.fatal("This is FATAL")
-            lr.finish()
+            log_utils.disable_notebook_logging()
             log.warn("Format %d %g %s", 3, 2.71828, "foo")
-        self.assertEqual(dest.getvalue(), """root INFO: This is INFO
+        self.assertEqual(
+            dest.getvalue(),
+            """root INFO: This is INFO
 root INFO: This is unicode INFO
 root WARN: This is WARN
 root ERROR: This is ERROR
 root FATAL: This is FATAL
-""")
-        self.check("""
+""",
+        )
+        self.check(
+            """
 root WARN: Format 3 2.71828 foo
-""")
+"""
+        )
 
 
 if __name__ == "__main__":
