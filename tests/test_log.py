@@ -77,13 +77,10 @@ class TestLog(unittest.TestCase):
         """Compare the log file with the provided reference text."""
         with open(self.outputFilename, 'r') as f:
             # strip everything up to first ] to remove timestamp and thread ID
-            lines = [l.split(']')[-1].rstrip("\n") for l in f.readlines()]
-            reflines = [l for l in reference.split("\n") if l != ""]
+            lines = [line.split(']')[-1].rstrip("\n") for line in f.readlines()]
+            reflines = [line for line in reference.split("\n") if line != ""]
             self.maxDiff = None
             self.assertListEqual(lines, reflines)
-
-
-###############################################################################
 
     def testDefaultLogger(self):
         """Check the default root logger name."""
@@ -245,7 +242,7 @@ INFO  component  testPattern (test_log.py:{0[6]}) test_log.py({0[6]}) - This is 
 DEBUG component  testPattern (test_log.py:{0[7]}) test_log.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (test_log.py:{0[8]}) test_log.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (test_log.py:{0[9]}) test_log.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 209 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa E501 line too long
+""".format([x + 206 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa E501 line too long
 
     def testMDCPutPid(self):
         """
@@ -277,7 +274,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
 
             with TestLog.StdoutCapture(self.outputFilename):
                 log.info(msg)
-                line = 279
+                line = 276
         finally:
             log.MDCRemove("PID")
 
