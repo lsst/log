@@ -95,7 +95,9 @@ class TestLog(unittest.TestCase):
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
             log.log(log.getDefaultLoggerName(), log.INFO, "This is INFO")
+            log.log(log.getDefaultLoggerName(), log.VERBOSE, "This is VERBOSE")
             log.info(u"This is unicode INFO")
+            log.verbose(u"This is unicode VERBOSE")
             log.trace("This is TRACE")
             log.debug("This is DEBUG")
             log.warn("This is WARN")
@@ -104,7 +106,9 @@ class TestLog(unittest.TestCase):
             log.warn("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
 root INFO: This is INFO
+root VERBOSE: This is VERBOSE
 root INFO: This is unicode INFO
+root VERBOSE: This is unicode VERBOSE
 root WARN: This is WARN
 root ERROR: This is ERROR
 root FATAL: This is FATAL
@@ -124,6 +128,7 @@ root WARN: Format 3 2.71828 foo
                      "This is {{INFO}} Item 1: {item[1]}",
                      item=["a", "b", "c"])
             log.infof(u"This is {unicode} INFO")
+            log.verbosef(u"This is {unicode} VERBOSE")
             log.tracef("This is TRACE")
             log.debugf("This is DEBUG")
             log.warnf("This is WARN {city}", city="Tucson")
@@ -134,6 +139,7 @@ root WARN: Format 3 2.71828 foo
         self.check("""
 root INFO: This is {INFO} Item 1: b
 root INFO: This is {unicode} INFO
+root VERBOSE: This is {unicode} VERBOSE
 root WARN: This is WARN Tucson
 root ERROR: This is ERROR 1->2
 root FATAL: This is FATAL 3 out of 4 times for LSST
@@ -147,47 +153,68 @@ root WARN: Format 3 2.71828 foo
             log.setLevel('', log.DEBUG)
             log.trace("This is TRACE")
             log.info("This is INFO")
+            log.verbose("This is VERBOSE")
             log.debug("This is DEBUG")
             with log.LogContext("component"):
                 log.trace("This is TRACE")
                 log.info("This is INFO")
+                log.verbose("This is VERBOSE")
                 log.debug("This is DEBUG")
             log.trace("This is TRACE 2")
             log.info("This is INFO 2")
+            log.verbose("This is VERBOSE 2")
             log.debug("This is DEBUG 2")
             with log.LogContext("comp") as ctx:
                 log.trace("This is TRACE 3")
                 log.info("This is INFO 3")
+                log.verbose("This is VERBOSE 3")
                 log.debug("This is DEBUG 3")
                 ctx.setLevel(log.INFO)
                 self.assertEqual(ctx.getLevel(), log.INFO)
                 self.assertTrue(ctx.isEnabledFor(log.INFO))
                 log.trace("This is TRACE 3a")
                 log.info("This is INFO 3a")
+                log.verbose("This is VERBOSE 3a")
                 log.debug("This is DEBUG 3a")
                 with log.LogContext("subcomp", log.TRACE) as ctx2:
                     self.assertEqual(ctx2.getLevel(), log.TRACE)
                     log.trace("This is TRACE 4")
                     log.info("This is INFO 4")
+                    log.verbose("This is VERBOSE 4")
                     log.debug("This is DEBUG 4")
                 log.trace("This is TRACE 5")
                 log.info("This is INFO 5")
+                log.verbose("This is VERBOSE 5")
                 log.debug("This is DEBUG 5")
+                ctx.setLevel(log.VERBOSE)
+                self.assertEqual(ctx.getLevel(), log.VERBOSE)
+                self.assertTrue(ctx.isEnabledFor(log.VERBOSE))
+                log.trace("This is TRACE 6")
+                log.info("This is INFO 6")
+                log.verbose("This is VERBOSE 6")
+                log.debug("This is DEBUG 6")
 
         self.check("""
 root INFO: This is INFO
+root VERBOSE: This is VERBOSE
 root DEBUG: This is DEBUG
 component INFO: This is INFO
+component VERBOSE: This is VERBOSE
 component DEBUG: This is DEBUG
 root INFO: This is INFO 2
+root VERBOSE: This is VERBOSE 2
 root DEBUG: This is DEBUG 2
 comp INFO: This is INFO 3
+comp VERBOSE: This is VERBOSE 3
 comp DEBUG: This is DEBUG 3
 comp INFO: This is INFO 3a
 comp.subcomp TRACE: This is TRACE 4
 comp.subcomp INFO: This is INFO 4
+comp.subcomp VERBOSE: This is VERBOSE 4
 comp.subcomp DEBUG: This is DEBUG 4
 comp INFO: This is INFO 5
+comp INFO: This is INFO 6
+comp VERBOSE: This is VERBOSE 6
 """)
 
     def testPattern(self):
@@ -299,11 +326,13 @@ log4j.appender.FA.layout=SimpleLayout
         with log.LogContext("component"):
             log.trace("This is TRACE")
             log.info("This is INFO")
+            log.verbose("This is VERBOSE")
             log.debug("This is DEBUG")
         log.MDCRemove("x")
 
         self.check("""
 INFO - This is INFO
+VERBOSE - This is VERBOSE
 DEBUG - This is DEBUG
 """)
 
@@ -316,11 +345,19 @@ DEBUG - This is DEBUG
             lgr.addHandler(log.LogHandler())
             log.configure()
             lgr.info("This is INFO")
+            lgr.log(15, "This is VERBOSE")
             lgr.debug("This is DEBUG")
+            lgr.setLevel(logging.DEBUG)
+            lgr.info("This is INFO 2")
+            lgr.log(15, "This is VERBOSE 2")
+            lgr.debug("This is DEBUG 2")
             logging.shutdown()
 
         self.check("""
 root INFO: This is INFO
+root INFO: This is INFO 2
+root VERBOSE: This is VERBOSE 2
+root DEBUG: This is DEBUG 2
 """)
 
     def testMdcInit(self):
@@ -406,6 +443,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
             self.assertEqual(logger.getName(), "b")
             logger.trace("This is TRACE")
             logger.info("This is INFO")
+            logger.verbose("This is VERBOSE")
             logger.debug("This is DEBUG")
             logger.warn("This is WARN")
             logger.error("This is ERROR")
@@ -413,6 +451,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
             logger.warn("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
 b INFO: This is INFO
+b VERBOSE: This is VERBOSE
 b WARN: This is WARN
 b ERROR: This is ERROR
 b FATAL: This is FATAL
@@ -439,6 +478,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c (%F)- %m%n
             self.assertEqual(logger.getLevel(), log.INFO)
             self.assertEqual(log.Log.getLevel(logger), log.INFO)
             logger.debug("This is DEBUG")
+            logger.verbose("This is VERBOSE")
             logger.info("This is INFO")
             logger.fatal("Format %d %g %s", 3, 2.71828, "foo")
 
@@ -446,6 +486,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c (%F)- %m%n
             self.assertEqual(logger.getName(), "a.b.c")
             logger.trace("This is TRACE")
             logger.debug("This is DEBUG")
+            logger.verbose("This is VERBOSE")
             logger.warn("This is WARN")
             logger.error("This is ERROR")
             logger.fatal("This is FATAL")
@@ -467,6 +508,7 @@ INFO  a.b.c (test_log.py)- Format 3 2.71828 foo
             log.configure()
             logger = log.Log()
             logger.info("INFO with %s")
+            logger.verbose("VERBOSE with %s")
             logger.trace("TRACE with %s")
             logger.debug("DEBUG with %s")
             logger.warn("WARN with %s")
@@ -475,6 +517,7 @@ INFO  a.b.c (test_log.py)- Format 3 2.71828 foo
             logger.logMsg(log.DEBUG, "foo", "bar", 5, "DEBUG with %s")
         self.check("""
 root INFO: INFO with %s
+root VERBOSE: VERBOSE with %s
 root WARN: WARN with %s
 root ERROR: ERROR with %s
 root FATAL: FATAL with %s

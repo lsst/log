@@ -68,6 +68,12 @@
     LOGS_INFO(message); \
     lineno_helper(__LINE__, args);
 
+/* Compute line numbers in expected info log messages
+ */
+#define LOGS_VERBOSE_LINENO(message, args) \
+    LOGS_VERBOSE(message); \
+    lineno_helper(__LINE__, args);
+
 #define MDC_PID_KEY "PID"
 
 struct LogFixture {
@@ -174,12 +180,14 @@ BOOST_FIXTURE_TEST_CASE(basic_stream, LogFixture) {
     configure(LAYOUT_SIMPLE);
     LOGS_TRACE("This is TRACE");
     LOGS_INFO("This is INFO");
+    LOGS_VERBOSE("This is VERBOSE");
     LOGS_DEBUG("This is DEBUG");
     LOGS_WARN("This is WARN");
     LOGS_ERROR("This is ERROR");
     LOGS_FATAL("This is FATAL");
     LOGS_INFO("Format " << 3 << " " << 2.71828 << " foo c++");
     check("INFO - This is INFO\n"
+          "VERBOSE - This is VERBOSE\n"
           "DEBUG - This is DEBUG\n"
           "WARN - This is WARN\n"
           "ERROR - This is ERROR\n"
@@ -193,26 +201,31 @@ BOOST_FIXTURE_TEST_CASE(context_stream, LogFixture) {
 
     LOGS_TRACE("This is TRACE");
     LOGS_INFO("This is INFO");
+    LOGS_VERBOSE("This is VERBOSE");
     LOGS_DEBUG("This is DEBUG");
     {
         LOG_CTX context("componentX");
         LOGS_TRACE("This is TRACE 1");
         LOGS_INFO("This is INFO 1");
+        LOGS_VERBOSE("This is VERBOSE 1");
         LOGS_DEBUG("This is DEBUG 1");
     }
     LOGS_TRACE("This is TRACE 2");
     LOGS_INFO("This is INFO 2");
+    LOGS_VERBOSE("This is VERBOSE 2");
     LOGS_DEBUG("This is DEBUG 2");
     {
         LOG_CTX context("compY");
         LOGS_TRACE("This is TRACE 3");
         LOGS_INFO("This is INFO 3");
+        LOGS_VERBOSE("This is VERBOSE 3");
         LOGS_DEBUG("This is DEBUG 3");
         LOG_SET_LVL(LOG_DEFAULT_NAME(), LOG_LVL_INFO);
         BOOST_CHECK_EQUAL(LOG_GET_LVL(LOG_DEFAULT_NAME()),
                           LOG_LVL_INFO);
         LOGS_TRACE("This is TRACE 3a");
         LOGS_INFO("This is INFO 3a");
+        LOGS_INFO("This is VERBOSE 3a");
         LOGS_DEBUG("This is DEBUG 3a");
         {
             LOG_CTX context("subcompZ");
@@ -221,26 +234,42 @@ BOOST_FIXTURE_TEST_CASE(context_stream, LogFixture) {
                               LOG_LVL_TRACE);
             LOGS_TRACE("This is TRACE 4");
             LOGS_INFO("This is INFO 4");
+            LOGS_VERBOSE("This is VERBOSE 4");
             LOGS_DEBUG("This is DEBUG 4");
         }
         LOGS_TRACE("This is TRACE 5");
         LOGS_INFO("This is INFO 5");
+        LOGS_VERBOSE("This is VERBOSE 5");
         LOGS_DEBUG("This is DEBUG 5");
+        LOG_SET_LVL(LOG_DEFAULT_NAME(), LOG_LVL_VERBOSE);
+        BOOST_CHECK_EQUAL(LOG_GET_LVL(LOG_DEFAULT_NAME()),
+                          LOG_LVL_VERBOSE);
+        LOGS_TRACE("This is TRACE 6");
+        LOGS_INFO("This is INFO 6");
+        LOGS_VERBOSE("This is VERBOSE 6");
+        LOGS_DEBUG("This is DEBUG 6");
     }
 
     check("INFO  root - This is INFO\n"
+          "VERBOSE root - This is VERBOSE\n"
           "DEBUG root - This is DEBUG\n"
           "INFO  componentX - This is INFO 1\n"
+          "VERBOSE  componentX - This is VERBOSE 1\n"
           "DEBUG componentX - This is DEBUG 1\n"
           "INFO  root - This is INFO 2\n"
+          "VERBOSE  root - This is VERBOSE 2\n"
           "DEBUG root - This is DEBUG 2\n"
           "INFO  compY - This is INFO 3\n"
+          "VERBOSE  compY - This is VERBOSE 3\n"
           "DEBUG compY - This is DEBUG 3\n"
           "INFO  compY - This is INFO 3a\n"
           "TRACE compY.subcompZ - This is TRACE 4\n"
           "INFO  compY.subcompZ - This is INFO 4\n"
+          "VERBOSE  compY.subcompZ - This is VERBOSE 4\n"
           "DEBUG compY.subcompZ - This is DEBUG 4\n"
-          "INFO  compY - This is INFO 5\n");
+          "INFO  compY - This is INFO 5\n"
+          "INFO  compY - This is INFO 6\n"
+          "VERBOSE  compY - This is VERBOSE 6\n");
 }
 
 
@@ -248,14 +277,19 @@ BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
 
     std::string expected_msg =
           "INFO  root pattern_stream test_method (tests/testLog.cc:%1%) tests/testLog.cc(%1%) - This is INFO - {}\n"
+          "VERBOSE  root pattern_stream test_method (tests/testLog.cc:%1%) tests/testLog.cc(%1%) - This is VERBOSE - {}\n"
           "DEBUG root pattern_stream test_method (tests/testLog.cc:%2%) tests/testLog.cc(%2%) - This is DEBUG - {}\n"
           "INFO  root pattern_stream test_method (tests/testLog.cc:%3%) tests/testLog.cc(%3%) - This is INFO 2 - {{x,3}{y,foo}}\n"
+          "VERBOSE  root pattern_stream test_method (tests/testLog.cc:%3%) tests/testLog.cc(%3%) - This is VERBOSE 2 - {{x,3}{y,foo}}\n"
           "DEBUG root pattern_stream test_method (tests/testLog.cc:%4%) tests/testLog.cc(%4%) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
           "INFO  component pattern_stream test_method (tests/testLog.cc:%5%) tests/testLog.cc(%5%) - This is INFO 3 - {{x,3}{y,foo}}\n"
+          "VERBOSE  component pattern_stream test_method (tests/testLog.cc:%5%) tests/testLog.cc(%5%) - This is VERBOSE 3 - {{x,3}{y,foo}}\n"
           "DEBUG component pattern_stream test_method (tests/testLog.cc:%6%) tests/testLog.cc(%6%) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
           "INFO  component pattern_stream test_method (tests/testLog.cc:%7%) tests/testLog.cc(%7%) - This is INFO 4 - {{y,foo}}\n"
+          "VERBOSE  component pattern_stream test_method (tests/testLog.cc:%7%) tests/testLog.cc(%7%) - This is VERBOSE 4 - {{y,foo}}\n"
           "DEBUG component pattern_stream test_method (tests/testLog.cc:%8%) tests/testLog.cc(%8%) - This is DEBUG 4 - {{y,foo}}\n"
           "INFO  root pattern_stream test_method (tests/testLog.cc:%9%) tests/testLog.cc(%9%) - This is INFO 5 - {{y,foo}}\n"
+          "VERBOSE  root pattern_stream test_method (tests/testLog.cc:%9%) tests/testLog.cc(%9%) - This is VERBOSE 5 - {{y,foo}}\n"
           "DEBUG root pattern_stream test_method (tests/testLog.cc:%10%) tests/testLog.cc(%10%) - This is DEBUG 5 - {{y,foo}}\n";
     std::vector<std::string> args;
 
@@ -263,6 +297,7 @@ BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
 
     LOGS_TRACE("This is TRACE");
     LOGS_INFO_LINENO("This is INFO", args);
+    LOGS_VERBOSE_LINENO("This is VERBOSE", args);
     LOGS_DEBUG_LINENO("This is DEBUG", args);
 
     LOG_MDC("x", "3");
@@ -270,6 +305,7 @@ BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
 
     LOGS_TRACE("This is TRACE 2");
     LOGS_INFO_LINENO("This is INFO 2", args);
+    LOGS_VERBOSE_LINENO("This is VERBOSE 2", args);
     LOGS_DEBUG_LINENO("This is DEBUG 2", args);
     LOG_MDC_REMOVE("z");
 
@@ -277,14 +313,17 @@ BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
         LOG_CTX context("component");
         LOGS_TRACE("This is TRACE 3");
         LOGS_INFO_LINENO("This is INFO 3", args);
+        LOGS_VERBOSE_LINENO("This is VERBOSE 3", args);
         LOGS_DEBUG_LINENO("This is DEBUG 3", args);
         LOG_MDC_REMOVE("x");
         LOGS_TRACE("This is TRACE 4");
         LOGS_INFO_LINENO("This is INFO 4", args);
+        LOGS_VERBOSE_LINENO("This is VERBOSE 4", args);
         LOGS_DEBUG_LINENO("This is DEBUG 4", args);
     }
     LOGS_TRACE("This is TRACE 5");
     LOGS_INFO_LINENO("This is INFO 5", args);
+    LOGS_VERBOSE_LINENO("This is VERBOSE 5", args);
     LOGS_DEBUG_LINENO("This is DEBUG 5", args);
 
     LOG_MDC_REMOVE("y");
@@ -444,10 +483,16 @@ BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
     LOG(logger, LOG_LVL_INFO, "This is INFO 2");
     LOGS(loggerName, LOG_LVL_INFO, "This is INFO 3");
     LOGS(logger, LOG_LVL_INFO, "This is INFO 4");
+    LOG(loggerName, LOG_LVL_VERBOSE, "This is VERBOSE 1");
+    LOG(logger, LOG_LVL_VERBOSE, "This is VERBOSE 2");
+    LOGS(loggerName, LOG_LVL_VERBOSE, "This is VERBOSE 3");
+    LOGS(logger, LOG_LVL_VERBOSE, "This is VERBOSE 4");
     LOGL_TRACE(loggerName, "This is TRACE");
     LOGL_TRACE(logger, "This is TRACE");
     LOGL_INFO(loggerName, "This is INFO");
     LOGL_INFO(logger, "This is INFO");
+    LOGL_VERBOSE(loggerName, "This is VERBOSE");
+    LOGL_VERBOSE(logger, "This is VERBOSE");
     LOGL_DEBUG(loggerName, "This is DEBUG");
     LOGL_DEBUG(logger, "This is DEBUG");
     LOGL_WARN(loggerName, "This is WARN");
@@ -460,6 +505,8 @@ BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
     LOGLS_TRACE(logger, "This is TRACE");
     LOGLS_INFO(loggerName, "This is INFO");
     LOGLS_INFO(logger, "This is INFO");
+    LOGLS_VERBOSE(loggerName, "This is VERBOSE");
+    LOGLS_VERBOSE(logger, "This is VERBOSE");
     LOGLS_DEBUG(loggerName, "This is DEBUG");
     LOGLS_DEBUG(logger, "This is DEBUG");
     LOGLS_WARN(loggerName, "This is WARN and the logger name is " << logger.getName());
@@ -473,8 +520,14 @@ BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
           "INFO - This is INFO 2\n"
           "INFO - This is INFO 3\n"
           "INFO - This is INFO 4\n"
+          "VERBOSE - This is VERBOSE 1\n"
+          "VERBOSE - This is VERBOSE 2\n"
+          "VERBOSE - This is VERBOSE 3\n"
+          "VERBOSE - This is VERBOSE 4\n"
           "INFO - This is INFO\n"
           "INFO - This is INFO\n"
+          "VERBOSE - This is VERBOSE\n"
+          "VERBOSE - This is VERBOSE\n"
           "WARN - This is WARN\n"
           "WARN - This is WARN\n"
           "ERROR - This is ERROR\n"
@@ -483,6 +536,8 @@ BOOST_FIXTURE_TEST_CASE(logger, LogFixture) {
           "FATAL - This is FATAL 65 42.1230 logging\n"
           "INFO - This is INFO\n"
           "INFO - This is INFO\n"
+          "VERBOSE - This is VERBOSE\n"
+          "VERBOSE - This is VERBOSE\n"
           "WARN - This is WARN and the logger name is a\n"
           "WARN - This is WARN and the logger name is a\n"
           "ERROR - This is ERROR\n"
