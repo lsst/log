@@ -211,6 +211,15 @@
         lsst::log::Log::getDefaultLogger().isInfoEnabled()
 
 /**
+  * @def LOG_CHECK_VERBOSE()
+  * Return whether the logging threshold of the default logger is less
+  * than or equal to VERBOSE.
+  * @return Bool indicating whether or not logger is enabled.
+  */
+#define LOG_CHECK_VERBOSE() \
+        lsst::log::Log::getDefaultLogger().isVerboseEnabled()
+
+/**
   * @def LOG_CHECK_WARN()
   * Return whether the logging threshold of the default logger is less
   * than or equal to WARN.
@@ -296,6 +305,21 @@
         lsst::log::Log log; \
         if (log.isInfoEnabled()) { \
             log.log(log4cxx::Level::getInfo(), LOG4CXX_LOCATION, message); } \
+    } while (false)
+
+/**
+  * @def LOG_VERBOSE(message...)
+  * Log a info-level message to the default logger using a varargs/printf
+  * style interface.
+  *
+  * @param message  An sprintf-compatible format string followed by zero,
+  *                    one, or more comma-separated arguments.
+  */
+#define LOG_VERBOSE(message...) \
+    do { \
+        lsst::log::Log log; \
+        if (log.isVerboseEnabled()) { \
+            log.log(log4cxx::Level::getVerbose(), LOG4CXX_LOCATION, message); } \
     } while (false)
 
 /**
@@ -430,6 +454,25 @@
     } while (false)
 
 /**
+  * @def LOGS_VERBOSE(message)
+  * Log verbose-level message to the default logger using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGS_VERBOSE("coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param message Message to be logged.
+  */
+#define LOGS_VERBOSE(message) \
+    do { \
+        lsst::log::Log log; \
+        if (log.isVerboseEnabled()) { \
+            LOG_MESSAGE_VIA_STREAM_(log, log4cxx::Level::getVerbose(), message); \
+        } \
+    } while (false)
+
+/**
   * @def LOGS_WARN(message)
   * Log a warning-level message to the default logger using an iostream-based interface.
   *
@@ -531,6 +574,22 @@
         lsst::log::Log log(lsst::log::Log::getLogger(logger)); \
         if (log.isInfoEnabled()) { \
             log.log(log4cxx::Level::getInfo(), LOG4CXX_LOCATION, message); \
+        } \
+    } while (false)
+
+/**
+  * @def LOGL_VERBOSE(logger, message...)
+  * Log a verbose-level message using a varargs/printf style interface.
+  *
+  * @param logger   Either a logger name or a Log object.
+  * @param message  An sprintf-compatible format string followed by zero,
+  *                    one, or more comma-separated arguments.
+  */
+#define LOGL_VERBOSE(logger, message...) \
+    do { \
+        lsst::log::Log log(lsst::log::Log::getLogger(logger)); \
+        if (log.isVerboseEnabled()) { \
+            log.log(log4cxx::Level::getVerbose(), LOG4CXX_LOCATION, message); \
         } \
     } while (false)
 
@@ -643,6 +702,26 @@
     } while (false)
 
 /**
+  * @def LOGLS_VERBOSE(logger, message)
+  * Log a verbose-level message using an iostream-based interface.
+  *
+  * Message is any expression which can appear on the right side of the
+  * stream insertion operator, e.g.
+  * `LOGLS_VERBOSE(logger, "coordinates: x=" << x << " y=" << y);`. Usual caveat regarding
+  * commas inside macro arguments applies to message argument.
+  *
+  * @param logger  Either a logger name or a Log object.
+  * @param message Message to be logged.
+  */
+#define LOGLS_VERBOSE(logger, message) \
+    do { \
+        lsst::log::Log log(lsst::log::Log::getLogger(logger)); \
+        if (log.isVerboseEnabled()) { \
+            LOG_MESSAGE_VIA_STREAM_(log, log4cxx::Level::getVerbose(), message); \
+        } \
+    } while (false)
+
+/**
   * @def LOGLS_WARN(logger, message)
   * Log a warn-level message using an iostream-based interface.
   *
@@ -705,6 +784,7 @@
 #define LOG_LVL_TRACE static_cast<int>(log4cxx::Level::TRACE_INT)
 #define LOG_LVL_DEBUG static_cast<int>(log4cxx::Level::DEBUG_INT)
 #define LOG_LVL_INFO static_cast<int>(log4cxx::Level::INFO_INT)
+#define LOG_LVL_VERBOSE static_cast<int>(log4cxx::Level::VERBOSE_INT)
 #define LOG_LVL_WARN static_cast<int>(log4cxx::Level::WARN_INT)
 #define LOG_LVL_ERROR static_cast<int>(log4cxx::Level::ERROR_INT)
 #define LOG_LVL_FATAL static_cast<int>(log4cxx::Level::FATAL_INT)
@@ -747,6 +827,10 @@ public:
      *  Check whether the logger is enabled for the INFO Level
      */
     bool isInfoEnabled() const { return _logger->isInfoEnabled(); }
+    /**
+     *  Check whether the logger is enabled for the VERBOSE Level
+     */
+    bool isVerboseEnabled() const { return _logger->isVerboseEnabled(); }
     /**
      *  Check whether the logger is enabled for the TRACE Level
      */

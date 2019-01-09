@@ -59,6 +59,7 @@ PYBIND11_MODULE(log, mod) {
     /* Members */
     cls.attr("TRACE") = py::int_(5000);
     cls.attr("DEBUG") = py::int_(10000);
+    cls.attr("VERBOSE") = py::int_(15000);
     cls.attr("INFO") = py::int_(20000);
     cls.attr("WARN") = py::int_(30000);
     cls.attr("ERROR") = py::int_(40000);
@@ -68,6 +69,7 @@ PYBIND11_MODULE(log, mod) {
     cls.def("isErrorEnabled", &Log::isErrorEnabled);
     cls.def("isFatalEnabled", &Log::isFatalEnabled);
     cls.def("isInfoEnabled", &Log::isInfoEnabled);
+    cls.def("isVerboseEnabled", &Log::isVerboseEnabled);
     cls.def("isTraceEnabled", &Log::isTraceEnabled);
     cls.def("isWarnEnabled", &Log::isWarnEnabled);
     cls.def("getName", &Log::getName);

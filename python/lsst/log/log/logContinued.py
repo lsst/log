@@ -32,6 +32,7 @@ from .log import Log
 
 TRACE = 5000
 DEBUG = 10000
+VERBOSE = 15000
 INFO = 20000
 WARN = 30000
 ERROR = 40000
@@ -45,6 +46,9 @@ class Log:
 
     def debug(self, fmt, *args):
         self._log(Log.DEBUG, False, fmt, *args)
+
+    def verbose(self, fmt, *args):
+        self._log(Log.VERBOSE, False, fmt, *args)
 
     def info(self, fmt, *args):
         self._log(Log.INFO, False, fmt, *args)
@@ -63,6 +67,9 @@ class Log:
 
     def debugf(self, fmt, *args, **kwargs):
         self._log(Log.DEBUG, True, fmt, *args, **kwargs)
+
+    def verbosef(self, fmt, *args, **kwargs):
+        self._log(Log.VERBOSE, True, fmt, *args, **kwargs)
 
     def infof(self, fmt, *args, **kwargs):
         self._log(Log.INFO, True, fmt, *args, **kwargs)
@@ -148,6 +155,10 @@ def debug(fmt, *args):
     Log.getDefaultLogger()._log(DEBUG, False, fmt, *args)
 
 
+def verbose(fmt, *args):
+    Log.getDefaultLogger()._log(VERBOSE, False, fmt, *args)
+
+
 def info(fmt, *args):
     Log.getDefaultLogger()._log(INFO, False, fmt, *args)
 
@@ -174,6 +185,10 @@ def tracef(fmt, *args, **kwargs):
 
 def debugf(fmt, *args, **kwargs):
     Log.getDefaultLogger()._log(DEBUG, True, fmt, *args, **kwargs)
+
+
+def verbosef(fmt, *args, **kwargs):
+    Log.getDefaultLogger()._log(VERBOSE, True, fmt, *args, **kwargs)
 
 
 def infof(fmt, *args, **kwargs):
