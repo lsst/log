@@ -317,10 +317,17 @@ DEBUG - This is DEBUG
             log.configure()
             lgr.info("This is INFO")
             lgr.debug("This is DEBUG")
+            lgr.warn("This is %s", "WARNING")
+            # message can be arbitrary Python object
+            lgr.info(((1, 2), (3, 4)))
+            lgr.info({1: 2})
             logging.shutdown()
 
         self.check("""
 root INFO: This is INFO
+root WARN: This is WARNING
+root INFO: ((1, 2), (3, 4))
+root INFO: {1: 2}
 """)
 
     def testMdcInit(self):

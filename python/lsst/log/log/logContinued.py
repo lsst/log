@@ -237,29 +237,22 @@ class LogContext(object):
 class LogHandler(logging.Handler):
     """Handler for Python logging module that emits to LSST logging."""
 
-    def __init__(self, name=None, level=None):
-        self.context = LogContext(name=name, level=level)
-        self.context.open()
-        logging.Handler.__init__(self)
-
-    def __del__(self):
-        self.close()
-
-    def close(self):
-        if self.context is not None:
-            self.context.close()
-            self.context = None
-        logging.Handler.close(self)
+    def __init__(self, level=logging.NOTSET):
+        logging.Handler.__init__(self, level=level)
+        self.formatter = logging.Formatter(fmt="%(message)s")
 
     def handle(self, record):
-        if self.context.isEnabledFor(self.translateLevel(record.levelno)):
+        logger = Log.getLogger(record.name)
+        if logger.isEnabledFor(self.translateLevel(record.levelno)):
             logging.Handler.handle(self, record)
 
     def emit(self, record):
-        Log.getLogger(record.name).logMsg(self.translateLevel(record.levelno),
-                                          record.filename, record.funcName,
-                                          record.lineno,
-                                          record.msg % record.args)
+        logger = Log.getLogger(record.name)
+        # Use standard formatting class to format message part of the record
+        message = self.formatter.format(record)
+        logger.logMsg(self.translateLevel(record.levelno),
+                      record.filename, record.funcName,
+                      record.lineno, message)
 
     def translateLevel(self, levelno):
         """
