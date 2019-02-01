@@ -317,7 +317,7 @@ DEBUG - This is DEBUG
             log.configure()
             lgr.info("This is INFO")
             lgr.debug("This is DEBUG")
-            lgr.warn("This is %s", "WARNING")
+            lgr.warning("This is %s", "WARNING")
             # message can be arbitrary Python object
             lgr.info(((1, 2), (3, 4)))
             lgr.info({1: 2})
