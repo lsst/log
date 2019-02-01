@@ -284,7 +284,7 @@ INFO  PID:{1} root  testMDCPutPid (test_log.py:{0}) test_log.py({0}) - {2}
 """.format(line, os.getpid(), msg))
 
         # don't pass other tests in child process
-        if pid is 0:
+        if pid == 0:
             os._exit(0)
 
     def testFileAppender(self):
@@ -317,7 +317,7 @@ DEBUG - This is DEBUG
             log.configure()
             lgr.info("This is INFO")
             lgr.debug("This is DEBUG")
-            lgr.warn("This is %s", "WARNING")
+            lgr.warning("This is %s", "WARNING")
             # message can be arbitrary Python object
             lgr.info(((1, 2), (3, 4)))
             lgr.info({1: 2})
