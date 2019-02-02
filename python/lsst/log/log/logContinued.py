@@ -40,6 +40,34 @@ FATAL = 50000
 
 @continueClass  # noqa F811 redefinition
 class Log:
+    UsePythonLogging = False
+    """Forward Python `lsst.log` messages to Python `logging` package."""
+
+    @classmethod
+    def usePythonLogging(cls):
+        """Forward log messages to Python `logging`
+
+        Notes
+        -----
+        This is useful for unit testing when you want to ensure
+        that log messages are captured by the testing environment
+        as distinct from standard output.
+
+        This state only affects messages sent to the `lsst.log`
+        package from Python.
+        """
+        cls.UsePythonLogging = True
+
+    @classmethod
+    def doNotUsePythonLogging(cls):
+        """Forward log messages to LSST logging system.
+
+        Notes
+        -----
+        This is the default state.
+        """
+        cls.UsePythonLogging = False
+
     def trace(self, fmt, *args):
         self._log(Log.TRACE, False, fmt, *args)
 
@@ -86,7 +114,14 @@ class Log:
                 msg = fmt.format(*args, **kwargs) if args or kwargs else fmt
             else:
                 msg = fmt % args if args else fmt
-            self.logMsg(level, filename, funcname, frame.f_lineno, msg)
+            if self.UsePythonLogging:
+                pylog = logging.getLogger(self.getName())
+                # Python logging level is 1000 times smaller than log4cxx level
+                record = logging.LogRecord(self.getName(), int(level/1000), filename,
+                                           frame.f_lineno, msg, None, False, func=funcname)
+                pylog.handle(record)
+            else:
+                self.logMsg(level, filename, funcname, frame.f_lineno, msg)
 
 
 # Export static functions from Log class to module namespace
@@ -196,6 +231,14 @@ def lwpID():
     return Log.lwpID
 
 
+def usePythonLogging():
+    Log.usePythonLogging()
+
+
+def doNotUsePythonLogging():
+    Log.doNotUsePythonLogging()
+
+
 class LogContext(object):
     """Context manager for logging."""
 
@@ -250,6 +293,8 @@ class LogHandler(logging.Handler):
         logger = Log.getLogger(record.name)
         # Use standard formatting class to format message part of the record
         message = self.formatter.format(record)
+        if Log.UsePythonLogging:
+            raise RuntimeError("Log loop detected: lsst.log is forwarded to Python logging")
         logger.logMsg(self.translateLevel(record.levelno),
                       record.filename, record.funcName,
                       record.lineno, message)

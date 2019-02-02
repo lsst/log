@@ -489,5 +489,28 @@ root DEBUG: DEBUG with %s
 """)
 
 
+class TestPythonLogForwarding(unittest.TestCase):
+
+    def setUp(self):
+        log.usePythonLogging()
+
+    def tearDown(self):
+        log.doNotUsePythonLogging()
+
+    def testForwardToPython(self):
+        with self.assertLogs(level="WARNING"):
+            log.warn("This is a warning meant for python logging")
+
+    def testLogLoop(self):
+        # Test for log loop
+        import logging
+        lgr = logging.getLogger()
+        lgr.setLevel(logging.INFO)
+        lgr.addHandler(log.LogHandler())
+        with self.assertRaises(RuntimeError):
+            lgr.info("This will fail")
+        logging.shutdown()
+
+
 if __name__ == "__main__":
     unittest.main()
