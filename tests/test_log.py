@@ -311,17 +311,22 @@ DEBUG - This is DEBUG
     def testPythonLogging(self):
         """Test logging through the Python logging interface."""
         with TestLog.StdoutCapture(self.outputFilename):
-            import logging
             lgr = logging.getLogger()
             lgr.setLevel(logging.INFO)
-            lgr.addHandler(log.LogHandler())
             log.configure()
-            lgr.info("This is INFO")
-            lgr.debug("This is DEBUG")
-            lgr.warning("This is %s", "WARNING")
-            # message can be arbitrary Python object
-            lgr.info(((1, 2), (3, 4)))
-            lgr.info({1: 2})
+            with self.assertLogs(level="INFO") as cm:
+                # Force the lsst.log handler to be applied as well as the
+                # unittest log handler
+                lgr.addHandler(log.LogHandler())
+                lgr.info("This is INFO")
+                lgr.debug("This is DEBUG")
+                lgr.warning("This is %s", "WARNING")
+                # message can be arbitrary Python object
+                lgr.info(((1, 2), (3, 4)))
+                lgr.info({1: 2})
+
+            # Confirm that Python logging also worked
+            self.assertEqual(len(cm.output), 4, f"Got output: {cm.output}")
             logging.shutdown()
 
         self.check("""
