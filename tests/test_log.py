@@ -29,7 +29,7 @@ import shutil
 import tempfile
 import threading
 import unittest
-
+import logging
 import lsst.log as log
 
 
@@ -63,7 +63,8 @@ class TestLog(unittest.TestCase):
         self.stdout = None
 
     def tearDown(self):
-        """Remove the temporary directory."""
+        """Remove the temporary directory and clean up Python forwarding."""
+        log.doNotUsePythonLogging()
         shutil.rmtree(self.tempDir)
 
     def configure(self, configuration):
@@ -242,7 +243,7 @@ INFO  component  testPattern (test_log.py:{0[6]}) test_log.py({0[6]}) - This is 
 DEBUG component  testPattern (test_log.py:{0[7]}) test_log.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (test_log.py:{0[8]}) test_log.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (test_log.py:{0[9]}) test_log.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 206 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa E501 line too long
+""".format([x + 207 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa E501 line too long
 
     def testMDCPutPid(self):
         """
@@ -274,7 +275,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
 
             with TestLog.StdoutCapture(self.outputFilename):
                 log.info(msg)
-                line = 276
+                line = 277
         finally:
             log.MDCRemove("PID")
 
@@ -488,27 +489,112 @@ root FATAL: FATAL with %s
 root DEBUG: DEBUG with %s
 """)
 
+    def testForwardToPython(self):
+        """Test that `lsst.log` log messages can be forwarded to `logging`."""
+        log.configure()
 
-class TestPythonLogForwarding(unittest.TestCase):
+        # Without forwarding we only get python logger messages captured
+        with self.assertLogs(level="WARNING") as cm:
+            log.warn("lsst.log warning message that will not be forwarded to Python")
+            logging.warning("Python logging message that will be captured")
+        self.assertEqual(len(cm.output), 1)
 
-    def setUp(self):
         log.usePythonLogging()
 
-    def tearDown(self):
-        log.doNotUsePythonLogging()
+        # With forwarding we get 2 logging messages captured
+        with self.assertLogs(level="WARNING") as cm:
+            log.warn("This is a warning from lsst log meant for python logging")
+            logging.warning("Python warning log message to be captured")
+        self.assertEqual(len(cm.output), 2)
 
-    def testForwardToPython(self):
-        with self.assertLogs(level="WARNING"):
-            log.warn("This is a warning meant for python logging")
+        loggername = "newlogger"
+        log2 = log.Log.getLogger(loggername)
+        with self.assertLogs(level="INFO", logger=loggername):
+            log2.info("Info message to non-root lsst logger")
+
+        # Check that debug and info are working properly
+        # This test should return a single log message
+        with self.assertLogs(level="INFO", logger=loggername) as cm:
+            log2.info("Second INFO message to non-root lsst logger")
+            log.debug("Debug message to root lsst logger")
+
+        self.assertEqual(len(cm.output), 1, f"Got output: {cm.output}")
+
+        logging.shutdown()
 
     def testLogLoop(self):
-        # Test for log loop
-        import logging
-        lgr = logging.getLogger()
+        """Test that Python log forwarding works even if Python logging has
+        been forwarded to lsst.log"""
+
+        log.configure()
+
+        # Note that assertLogs causes a specialists Python logging handler
+        # to be added.
+
+        # Set up some Python loggers
+        loggername = "testLogLoop"
+        lgr = logging.getLogger(loggername)
         lgr.setLevel(logging.INFO)
-        lgr.addHandler(log.LogHandler())
-        with self.assertRaises(RuntimeError):
-            lgr.info("This will fail")
+        rootlgr = logging.getLogger()
+        rootlgr.setLevel(logging.INFO)
+
+        # Declare that we are using the Python logger and that this will
+        # not cause a log loop if we also are forwarding Python logging to
+        # lsst.log
+        log.usePythonLogging()
+
+        # Ensure that we can log both in lsst.log and Python
+        rootlgr.addHandler(log.LogHandler())
+
+        # All three of these messages go through LogHandler
+        # The first two because they have the handler added explicitly, the
+        # the final one because the lsst.log logger is forwarded to the
+        # ROOT Python logger which has the LogHandler registered.
+
+        with open(self.outputFilename, "w") as fd:
+            # Adding a StreamHandler will cause the LogHandler to no-op
+            streamHandler = logging.StreamHandler(stream=fd)
+            rootlgr.addHandler(streamHandler)
+
+            # Do not use assertLogs since that messes with handlers
+            lgr.info("INFO message: Python child logger, lsst.log.LogHandler + PythonLogging")
+            rootlgr.info("INFO message: Python root logger, lsst.log.logHandler + PythonLogging")
+
+            # This will use a ROOT python logger which has a LogHandler attached
+            log.info("INFO message: lsst.log root logger, PythonLogging")
+
+            rootlgr.removeHandler(streamHandler)
+
+        self.check("""
+INFO message: Python child logger, lsst.log.LogHandler + PythonLogging
+INFO message: Python root logger, lsst.log.logHandler + PythonLogging
+INFO message: lsst.log root logger, PythonLogging""")
+
+        with open(self.outputFilename, "w") as fd:
+            # Adding a StreamHandler will cause the LogHandler to no-op
+            streamHandler = logging.StreamHandler(stream=fd)
+            rootlgr.addHandler(streamHandler)
+
+            # Do not use assertLogs since that messes with handlers
+            lgr.info("INFO message: Python child logger, lsst.log.LogHandler + PythonLogging")
+            rootlgr.info("INFO message: Python root logger, lsst.log.logHandler + PythonLogging")
+
+            # This will use a ROOT python logger which has a LogHandler attached
+            log.info("INFO message: lsst.log root logger, PythonLogging")
+
+            rootlgr.removeHandler(streamHandler)
+
+        self.check("""
+INFO message: Python child logger, lsst.log.LogHandler + PythonLogging
+INFO message: Python root logger, lsst.log.logHandler + PythonLogging
+INFO message: lsst.log root logger, PythonLogging""")
+
+        with self.assertLogs(level="INFO") as cm:
+            rootlgr.info("Python log message forward to lsst.log")
+            log.info("lsst.log message forwarded to Python")
+
+        self.assertEqual(len(cm.output), 2, f"Got output: {cm.output}")
+
         logging.shutdown()
 
 

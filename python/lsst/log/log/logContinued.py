@@ -278,10 +278,24 @@ class LogContext(object):
 
 
 class LogHandler(logging.Handler):
-    """Handler for Python logging module that emits to LSST logging."""
+    """Handler for Python logging module that emits to LSST logging.
+
+    Notes
+    -----
+    If this handler is enabled and `lsst.log` has been configured to use
+    Python `logging`, the handler will do nothing itself if any other
+    handler has been registered with the Python logger.  If it does not
+    think that anything else is handling the message it will attempt to
+    send the message via a default `~logging.StreamHandler`.  The safest
+    approach is to configure the logger with an additional handler
+    (possibly the ROOT logger) if `lsst.log` is to be configured to use
+    Python logging.
+    """
 
     def __init__(self, level=logging.NOTSET):
         logging.Handler.__init__(self, level=level)
+        # Format as a simple message because lsst.log will format the
+        # message a second time.
         self.formatter = logging.Formatter(fmt="%(message)s")
 
     def handle(self, record):
@@ -290,11 +304,37 @@ class LogHandler(logging.Handler):
             logging.Handler.handle(self, record)
 
     def emit(self, record):
+        if Log.UsePythonLogging:
+            # Do not forward this message to lsst.log since this may cause
+            # a logging loop.
+
+            # Work out whether any other handler is going to be invoked
+            # for this logger.
+            pylgr = logging.getLogger(record.name)
+
+            # If another handler is registered that is not LogHandler
+            # we ignore this request
+            if any(not isinstance(h, self.__class__) for h in pylgr.handlers):
+                return
+
+            # If the parent has handlers and propagation is enabled
+            # we punt as well (and if a LogHandler is involved then we will
+            # ask the same question when we get to it).
+            if pylgr.parent and pylgr.parent.hasHandlers() and pylgr.propagate:
+                return
+
+            # Force this message to appear somewhere.
+            # If something else should happen then the caller should add a
+            # second Handler.
+            stream = logging.StreamHandler()
+            stream.setFormatter(logging.Formatter(fmt="%(name)s %(levelname)s: %(message)s"))
+            stream.handle(record)
+            return
+
         logger = Log.getLogger(record.name)
         # Use standard formatting class to format message part of the record
         message = self.formatter.format(record)
-        if Log.UsePythonLogging:
-            raise RuntimeError("Log loop detected: lsst.log is forwarded to Python logging")
+
         logger.logMsg(self.translateLevel(record.levelno),
                       record.filename, record.funcName,
                       record.lineno, message)
