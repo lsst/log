@@ -602,6 +602,27 @@ INFO message: lsst.log root logger, PythonLogging""")
 
         logging.shutdown()
 
+    def testForwardToPythonContextManager(self):
+        """Test that `lsst.log` log messages can be forwarded to `logging`
+        using context manager"""
+        log.configure()
+
+        # Without forwarding we only get python logger messages captured
+        with self.assertLogs(level="WARNING") as cm:
+            log.warn("lsst.log: not forwarded")
+            logging.warning("Python logging: captured")
+        self.assertEqual(len(cm.output), 1)
+
+        # Temporarily turn on forwarding
+        with log.UsePythonLogging():
+            with self.assertLogs(level="WARNING") as cm:
+                log.warn("lsst.log: forwarded")
+                logging.warning("Python logging: also captured")
+            self.assertEqual(len(cm.output), 2)
+
+        # Verify that forwarding is disabled
+        self.assertFalse(log.Log.UsePythonLogging)
+
 
 if __name__ == "__main__":
     unittest.main()

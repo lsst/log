@@ -277,6 +277,19 @@ class LogContext(object):
         return Log.getDefaultLogger().isEnabledFor(level)
 
 
+class UsePythonLogging:
+    """Context manager to enable Python log forwarding temporarily."""
+
+    def __init__(self):
+        self.current = Log.UsePythonLogging
+
+    def __enter__(self):
+        Log.usePythonLogging()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        Log.UsePythonLogging = self.current
+
+
 class LogHandler(logging.Handler):
     """Handler for Python logging module that emits to LSST logging.
 
