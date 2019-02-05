@@ -347,7 +347,7 @@ class LogHandler(logging.Handler):
             # If something else should happen then the caller should add a
             # second Handler.
             stream = logging.StreamHandler()
-            stream.setFormatter(logging.Formatter(fmt="%(name)s %(levelname)s: %(message)s"))
+            stream.setFormatter(logging.Formatter(fmt="%(name)s %(levelname)s (fallback): %(message)s"))
             stream.handle(record)
             return
 
