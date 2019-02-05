@@ -21,3 +21,5 @@ version.py
 .coverage
 *.gcda
 *.gcno
+.pytest_cache
+pytest_session.txt

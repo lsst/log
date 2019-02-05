@@ -40,6 +40,34 @@ FATAL = 50000
 
 @continueClass  # noqa F811 redefinition
 class Log:
+    UsePythonLogging = False
+    """Forward Python `lsst.log` messages to Python `logging` package."""
+
+    @classmethod
+    def usePythonLogging(cls):
+        """Forward log messages to Python `logging`
+
+        Notes
+        -----
+        This is useful for unit testing when you want to ensure
+        that log messages are captured by the testing environment
+        as distinct from standard output.
+
+        This state only affects messages sent to the `lsst.log`
+        package from Python.
+        """
+        cls.UsePythonLogging = True
+
+    @classmethod
+    def doNotUsePythonLogging(cls):
+        """Forward log messages to LSST logging system.
+
+        Notes
+        -----
+        This is the default state.
+        """
+        cls.UsePythonLogging = False
+
     def trace(self, fmt, *args):
         self._log(Log.TRACE, False, fmt, *args)
 
@@ -51,6 +79,9 @@ class Log:
 
     def warn(self, fmt, *args):
         self._log(Log.WARN, False, fmt, *args)
+
+    def warning(self, fmt, *args):
+        self.warn(fmt, *args)
 
     def error(self, fmt, *args):
         self._log(Log.ERROR, False, fmt, *args)
@@ -86,7 +117,14 @@ class Log:
                 msg = fmt.format(*args, **kwargs) if args or kwargs else fmt
             else:
                 msg = fmt % args if args else fmt
-            self.logMsg(level, filename, funcname, frame.f_lineno, msg)
+            if self.UsePythonLogging:
+                pylog = logging.getLogger(self.getName())
+                # Python logging level is 1000 times smaller than log4cxx level
+                record = logging.LogRecord(self.getName(), int(level/1000), filename,
+                                           frame.f_lineno, msg, None, False, func=funcname)
+                pylog.handle(record)
+            else:
+                self.logMsg(level, filename, funcname, frame.f_lineno, msg)
 
 
 # Export static functions from Log class to module namespace
@@ -156,6 +194,10 @@ def warn(fmt, *args):
     Log.getDefaultLogger()._log(WARN, False, fmt, *args)
 
 
+def warning(fmt, *args):
+    warn(fmt, *args)
+
+
 def error(fmt, *args):
     Log.getDefaultLogger()._log(ERROR, False, fmt, *args)
 
@@ -196,6 +238,14 @@ def lwpID():
     return Log.lwpID
 
 
+def usePythonLogging():
+    Log.usePythonLogging()
+
+
+def doNotUsePythonLogging():
+    Log.doNotUsePythonLogging()
+
+
 class LogContext(object):
     """Context manager for logging."""
 
@@ -234,11 +284,38 @@ class LogContext(object):
         return Log.getDefaultLogger().isEnabledFor(level)
 
 
+class UsePythonLogging:
+    """Context manager to enable Python log forwarding temporarily."""
+
+    def __init__(self):
+        self.current = Log.UsePythonLogging
+
+    def __enter__(self):
+        Log.usePythonLogging()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        Log.UsePythonLogging = self.current
+
+
 class LogHandler(logging.Handler):
-    """Handler for Python logging module that emits to LSST logging."""
+    """Handler for Python logging module that emits to LSST logging.
+
+    Notes
+    -----
+    If this handler is enabled and `lsst.log` has been configured to use
+    Python `logging`, the handler will do nothing itself if any other
+    handler has been registered with the Python logger.  If it does not
+    think that anything else is handling the message it will attempt to
+    send the message via a default `~logging.StreamHandler`.  The safest
+    approach is to configure the logger with an additional handler
+    (possibly the ROOT logger) if `lsst.log` is to be configured to use
+    Python logging.
+    """
 
     def __init__(self, level=logging.NOTSET):
         logging.Handler.__init__(self, level=level)
+        # Format as a simple message because lsst.log will format the
+        # message a second time.
         self.formatter = logging.Formatter(fmt="%(message)s")
 
     def handle(self, record):
@@ -247,9 +324,37 @@ class LogHandler(logging.Handler):
             logging.Handler.handle(self, record)
 
     def emit(self, record):
+        if Log.UsePythonLogging:
+            # Do not forward this message to lsst.log since this may cause
+            # a logging loop.
+
+            # Work out whether any other handler is going to be invoked
+            # for this logger.
+            pylgr = logging.getLogger(record.name)
+
+            # If another handler is registered that is not LogHandler
+            # we ignore this request
+            if any(not isinstance(h, self.__class__) for h in pylgr.handlers):
+                return
+
+            # If the parent has handlers and propagation is enabled
+            # we punt as well (and if a LogHandler is involved then we will
+            # ask the same question when we get to it).
+            if pylgr.parent and pylgr.parent.hasHandlers() and pylgr.propagate:
+                return
+
+            # Force this message to appear somewhere.
+            # If something else should happen then the caller should add a
+            # second Handler.
+            stream = logging.StreamHandler()
+            stream.setFormatter(logging.Formatter(fmt="%(name)s %(levelname)s (fallback): %(message)s"))
+            stream.handle(record)
+            return
+
         logger = Log.getLogger(record.name)
         # Use standard formatting class to format message part of the record
         message = self.formatter.format(record)
+
         logger.logMsg(self.translateLevel(record.levelno),
                       record.filename, record.funcName,
                       record.lineno, message)
