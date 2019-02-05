@@ -80,6 +80,9 @@ class Log:
     def warn(self, fmt, *args):
         self._log(Log.WARN, False, fmt, *args)
 
+    def warning(self, fmt, *args):
+        self.warn(fmt, *args)
+
     def error(self, fmt, *args):
         self._log(Log.ERROR, False, fmt, *args)
 
@@ -189,6 +192,10 @@ def info(fmt, *args):
 
 def warn(fmt, *args):
     Log.getDefaultLogger()._log(WARN, False, fmt, *args)
+
+
+def warning(fmt, *args):
+    warn(fmt, *args)
 
 
 def error(fmt, *args):

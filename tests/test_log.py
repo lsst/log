@@ -102,7 +102,7 @@ class TestLog(unittest.TestCase):
             log.warn("This is WARN")
             log.error("This is ERROR")
             log.fatal("This is FATAL")
-            log.warn("Format %d %g %s", 3, 2.71828, "foo")
+            log.warning("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
 root INFO: This is INFO
 root INFO: This is unicode INFO
@@ -609,7 +609,7 @@ INFO message: lsst.log root logger, PythonLogging""")
 
         # Without forwarding we only get python logger messages captured
         with self.assertLogs(level="WARNING") as cm:
-            log.warn("lsst.log: not forwarded")
+            log.warning("lsst.log: not forwarded")
             logging.warning("Python logging: captured")
         self.assertEqual(len(cm.output), 1)
 
