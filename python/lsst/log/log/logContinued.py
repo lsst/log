@@ -119,9 +119,8 @@ class Log:
                 msg = fmt % args if args else fmt
             if self.UsePythonLogging:
                 pylog = logging.getLogger(self.getName())
-                # Python logging level is 1000 times smaller than log4cxx level
-                record = logging.LogRecord(self.getName(), int(level/1000), filename,
-                                           frame.f_lineno, msg, None, False, func=funcname)
+                record = logging.LogRecord(self.getName(), LevelTranslator.lsstLog2logging(level),
+                                           filename, frame.f_lineno, msg, None, False, func=funcname)
                 pylog.handle(record)
             else:
                 self.logMsg(level, filename, funcname, frame.f_lineno, msg)
@@ -297,6 +296,26 @@ class UsePythonLogging:
         Log.UsePythonLogging = self.current
 
 
+class LevelTranslator:
+    """Helper class to translate levels between lsst.log and Python logging.
+    """
+    @staticmethod
+    def lsstLog2logging(level):
+        """Translates from lsst.log/log4cxx levels to logging module levels.
+        """
+        # Python logging levels are same as lsst.log divided by 1000,
+        # logging does not have TRACE level by default but it is OK to use
+        # that numeric level and we may even add TRACE later.
+        return level//1000
+
+    @staticmethod
+    def logging2lsstLog(level):
+        """Translates from standard python logging module levels
+        to standard lsst.log/log4cxx levels.
+        """
+        return level*1000
+
+
 class LogHandler(logging.Handler):
     """Handler for Python logging module that emits to LSST logging.
 
@@ -320,7 +339,7 @@ class LogHandler(logging.Handler):
 
     def handle(self, record):
         logger = Log.getLogger(record.name)
-        if logger.isEnabledFor(self.translateLevel(record.levelno)):
+        if logger.isEnabledFor(LevelTranslator.logging2lsstLog(record.levelno)):
             logging.Handler.handle(self, record)
 
     def emit(self, record):
@@ -355,13 +374,6 @@ class LogHandler(logging.Handler):
         # Use standard formatting class to format message part of the record
         message = self.formatter.format(record)
 
-        logger.logMsg(self.translateLevel(record.levelno),
+        logger.logMsg(LevelTranslator.logging2lsstLog(record.levelno),
                       record.filename, record.funcName,
                       record.lineno, message)
-
-    def translateLevel(self, levelno):
-        """
-        Translates from standard python logging module levels
-        to standard log4cxx levels.
-        """
-        return levelno*1000

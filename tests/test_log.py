@@ -623,6 +623,21 @@ INFO message: lsst.log root logger, PythonLogging""")
         # Verify that forwarding is disabled
         self.assertFalse(log.Log.UsePythonLogging)
 
+    def testLevelTranslator(self):
+        """Test LevelTranslator class
+        """
+        # correspondence between levels, logging has no TRACE but we accept
+        # small integer in its place
+        levelMap = ((log.TRACE, 5),
+                    (log.DEBUG, logging.DEBUG),
+                    (log.INFO, logging.INFO),
+                    (log.WARN, logging.WARNING),
+                    (log.ERROR, logging.ERROR),
+                    (log.FATAL, logging.FATAL))
+        for logLevel, loggingLevel in levelMap:
+            self.assertEqual(log.LevelTranslator.lsstLog2logging(logLevel), loggingLevel)
+            self.assertEqual(log.LevelTranslator.logging2lsstLog(loggingLevel), logLevel)
+
 
 if __name__ == "__main__":
     unittest.main()
