@@ -297,11 +297,23 @@ class UsePythonLogging:
 
 
 class LevelTranslator:
-    """Helper class to translate levels between lsst.log and Python logging.
+    """Helper class to translate levels between ``lsst.log`` and Python
+    `logging`.
     """
     @staticmethod
     def lsstLog2logging(level):
-        """Translates from lsst.log/log4cxx levels to logging module levels.
+        """Translates from lsst.log/log4cxx levels to `logging` module levels.
+
+        Parameters
+        ----------
+        level : `int`
+            Logging level number used by `lsst.log`, typically one of the
+            constants defined in this module (`DEBUG`, `INFO`, etc.)
+
+        Returns
+        -------
+        level : `int`
+            Correspoding logging level number for Python `logging` module.
         """
         # Python logging levels are same as lsst.log divided by 1000,
         # logging does not have TRACE level by default but it is OK to use
@@ -310,8 +322,20 @@ class LevelTranslator:
 
     @staticmethod
     def logging2lsstLog(level):
-        """Translates from standard python logging module levels
-        to standard lsst.log/log4cxx levels.
+        """Translates from standard python `logging` module levels to
+        lsst.log/log4cxx levels.
+
+        Parameters
+        ----------
+        level : `int`
+            Logging level number used by Python `logging`, typically one of
+            the constants defined by `logging` module (`logging.DEBUG`,
+            `logging.INFO`, etc.)
+
+        Returns
+        -------
+        level : `int`
+            Correspoding logging level number for `lsst.log` module.
         """
         return level*1000
 
