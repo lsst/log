@@ -9,5 +9,4 @@ log documentation preview
 .. toctree::
    :maxdepth: 1
 
-   log/index
    lsst.log/index
