@@ -83,32 +83,6 @@
 #define LOG_GET(logger) lsst::log::Log::getLogger(logger)
 
 /**
-  * @def LOG_PUSHCTX(name)
-  * Pushes name onto the global hierarchical default logger name.
-  * Note that we only allow simple non-dotted names to be used for
-  * context names, multi-level context name (e.g. "componen1.component2")
-  * will result in exception. Empty context names are disallowed as
-  * well, exception will be raised for empty name.
-  *
-  * @note Call to this macro is not thread-safe, moreover context is
-  * global and applies to all threads (which means you want to avoid
-  * using this in multi-threaded applications).
-  *
-  * @param name  String to push onto logging context.
-  * @throw std::invalid_argument raised for empty name or when name contains dot.
-  */
-#define LOG_PUSHCTX(name) lsst::log::Log::pushContext(name)
-
-/**
-  * @def LOG_POPCTX()
-  * Pops the last pushed name off the global hierarchical default logger
-  * name.
-  *
-  * @note Call to this macro is not thread-safe.
-  */
-#define LOG_POPCTX() lsst::log::Log::popContext()
-
-/**
   * @def LOG_MDC(key, value)
   * Places a KEY/VALUE pair in the Mapped Diagnostic Context (MDC) for the
   * current thread. The VALUE may then be included in log messages by using
@@ -710,7 +684,6 @@
 #define LOG_LVL_FATAL static_cast<int>(log4cxx::Level::FATAL_INT)
 
 #define LOG_LOGGER lsst::log::Log
-#define LOG_CTX lsst::log::LogContext
 
 namespace lsst {
 namespace log {
@@ -772,8 +745,6 @@ public:
     static Log getLogger(Log const& logger) { return logger; }
     static Log getLogger(std::string const& loggername);
 
-    static void pushContext(std::string const& name);
-    static void popContext();
     static void MDC(std::string const& key, std::string const& value);
     static void MDCRemove(std::string const& key);
     static int MDCRegisterInit(std::function<void()> function);
@@ -803,30 +774,6 @@ private:
 
     log4cxx::LoggerPtr _logger;
 };
-
-/** This class handles the default logger name of a logging context.
-  */
-class LogContext {
-public:
-    /** Create a logging context associated with a default logger name
-      * constructed by pushing \p name onto the pre-existing hierarchical default
-      * logger name. See comment to \c LOG_PUSHCTX about allowed names.
-      *
-      * @param name  String to push onto logging context.
-      */
-    explicit LogContext(std::string const& name) {
-        Log::pushContext(name);
-    }
-    ~LogContext() {
-        Log::popContext();
-    }
-
-private:
-    // cannot copy instances
-    LogContext(const LogContext&);
-    LogContext& operator=(const LogContext&);
-};
-
 
 /**
  * Function which returns LWP ID on platforms which support it.

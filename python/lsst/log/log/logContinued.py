@@ -141,14 +141,6 @@ def getDefaultLoggerName():
     return Log.getDefaultLoggerName()
 
 
-def pushContext(name):
-    Log.pushContext(name)
-
-
-def popContext():
-    Log.popContext()
-
-
 def MDC(key, value):
     Log.MDC(key, str(value))
 
@@ -243,44 +235,6 @@ def usePythonLogging():
 
 def doNotUsePythonLogging():
     Log.doNotUsePythonLogging()
-
-
-class LogContext(object):
-    """Context manager for logging."""
-
-    def __init__(self, name=None, level=None):
-        self.name = name
-        self.level = level
-
-    def __enter__(self):
-        self.open()
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def __del__(self):
-        self.close()
-
-    def open(self):
-        if self.name is not None:
-            Log.pushContext(self.name)
-        if self.level is not None:
-            Log.getDefaultLogger().setLevel(self.level)
-
-    def close(self):
-        if self.name is not None:
-            Log.popContext()
-            self.name = None
-
-    def setLevel(self, level):
-        Log.getDefaultLogger().setLevel(level)
-
-    def getLevel(self):
-        return Log.getDefaultLogger().getLevel()
-
-    def isEnabledFor(self, level):
-        return Log.getDefaultLogger().isEnabledFor(level)
 
 
 class UsePythonLogging:

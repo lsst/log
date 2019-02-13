@@ -259,47 +259,6 @@ Log Log::getLogger(std::string const& loggername) {
     }
 }
 
-/** Pushes NAME onto the global hierarchical default logger name.
-  *
-  * @param name  String to push onto logging context.
-  */
-void Log::pushContext(std::string const& name) {
-    // can't handle empty names
-    if (name.empty()) {
-        throw std::invalid_argument("lsst::log::Log::pushContext(): "
-                "empty context name is not allowed");
-    }
-    // we do not allow multi-level context (logger1.logger2)
-    if (name.find('.') != std::string::npos) {
-        throw std::invalid_argument("lsst::log::Log::pushContext(): "
-                "multi-level contexts are not allowed: " + name);
-    }
-
-    // Construct new default logger name
-    std::string newName = _defaultLogger()->getName();
-    if (newName == "root") {
-        newName = name;
-    } else {
-        newName += ".";
-        newName += name;
-    }
-    // Update defaultLogger
-    _defaultLogger(log4cxx::Logger::getLogger(newName));
-}
-
-/** Pops the last pushed name off the global hierarchical default logger
-  * name.
-  */
-void Log::popContext() {
-    // switch to parent logger, this assumes that loggers are not
-    // re-parented between calls to push and pop
-    log4cxx::LoggerPtr parent = _defaultLogger()->getParent();
-    // root logger does not have parent, stay at root instead
-    if (parent) {
-        _defaultLogger(parent);
-    }
-}
-
 /** Places a KEY/VALUE pair in the Mapped Diagnostic Context (MDC) for the
   * current thread. The VALUE may then be included in log messages by using
   * the following the `X` conversion character within a pattern layout as
