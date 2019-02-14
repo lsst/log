@@ -141,6 +141,10 @@ def getDefaultLogger():
     return Log.getDefaultLogger()
 
 
+def getLogger(loggername):
+    return Log.getLogger(loggername)
+
+
 def MDC(key, value):
     Log.MDC(key, str(value))
 

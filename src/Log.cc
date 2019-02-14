@@ -335,6 +335,36 @@ bool Log::isEnabledFor(int level) const {
     }
 }
 
+/**
+  * Return a logger which is a descendant to this logger.
+  *
+  * If for example name of this logger is "main.task" and suffix is
+  * "subtask1.algorithm" then this method will return logger with the name
+  * "main.task.subtask1.algorithm". If this logger is root logger then
+  * suffix name is used for returned logger name. If suffix is empty
+  * then this instance is returned.
+  *
+  * @param suffix Suffix for tha name of returned logger, can include dot
+  *               (but not at leading position) and can be empty.
+  * @return Log instance.
+ */
+Log Log::getChild(std::string const& suffix) const {
+    // strip leading dots and spaces from suffix
+    auto pos = suffix.find_first_not_of(" .");
+    if (pos == std::string::npos) {
+        // empty, just return myself
+        return *this;
+    }
+    std::string name = getName();
+    if (name.empty()) {
+        name = suffix.substr(pos);
+    } else {
+        name += '.';
+        name += suffix.substr(pos);
+    }
+    return getLogger(name);
+}
+
 /** Method used by LOG_INFO and similar macros to process a log message
   * with variable arguments along with associated metadata.
   */

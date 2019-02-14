@@ -586,6 +586,21 @@ INFO message: lsst.log root logger, PythonLogging""")
             self.assertEqual(log.LevelTranslator.lsstLog2logging(logLevel), loggingLevel)
             self.assertEqual(log.LevelTranslator.logging2lsstLog(loggingLevel), logLevel)
 
+    def testChildLogger(self):
+        """Check the getChild logger method."""
+        logger = log.getDefaultLogger()
+        self.assertEqual(logger.getName(), "")
+        logger1 = logger.getChild("child1")
+        self.assertEqual(logger1.getName(), "child1")
+        logger2 = logger1.getChild("child2")
+        self.assertEqual(logger2.getName(), "child1.child2")
+        logger2a = logger1.getChild(".child2")
+        self.assertEqual(logger2a.getName(), "child1.child2")
+        logger3 = logger2.getChild(" .. child3")
+        self.assertEqual(logger3.getName(), "child1.child2.child3")
+        logger3a = logger1.getChild("child2.child3")
+        self.assertEqual(logger3a.getName(), "child1.child2.child3")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -75,6 +75,16 @@
 #define LOG_GET(logger) lsst::log::Log::getLogger(logger)
 
 /**
+  * @def LOG_GET_CHILD(logger)
+  * Returns a Log object associated with descendant of a logger.
+  * @return Log object corresponding to logger's descendant.
+  *
+  * @param logger  Either a logger name or a Log object.
+  * @param suffix  Suffix of a descendant.
+  */
+#define LOG_GET_CHILD(logger, suffix) lsst::log::Log::getLogger(logger).getChild(suffix)
+
+/**
   * @def LOG_MDC(key, value)
   * Places a KEY/VALUE pair in the Mapped Diagnostic Context (MDC) for the
   * current thread. The VALUE may then be included in log messages by using
@@ -722,6 +732,8 @@ public:
     void setLevel(int level);
     int getLevel() const;
     bool isEnabledFor(int level) const;
+
+    Log getChild(std::string const& suffix) const;
 
     /// Return default logger instance, same as default constructor.
     static Log getDefaultLogger() { return Log(); }

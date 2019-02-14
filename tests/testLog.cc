@@ -187,6 +187,19 @@ BOOST_FIXTURE_TEST_CASE(basic_stream, LogFixture) {
           "INFO - Format 3 2.71828 foo c++\n");
 }
 
+BOOST_AUTO_TEST_CASE(child_logger) {
+    auto log1 = LOG_GET_CHILD("", "child1");
+    BOOST_TEST(log1.getName() == "child1");
+    auto log2 = LOG_GET_CHILD(log1, "child2");
+    BOOST_TEST(log2.getName() == "child1.child2");
+    auto log2a = LOG_GET_CHILD(log1, ".child2");
+    BOOST_TEST(log2a.getName() == "child1.child2");
+    auto log3 = LOG_GET_CHILD(log2, " .. child3");
+    BOOST_TEST(log3.getName() == "child1.child2.child3");
+    auto log3a = LOG_GET_CHILD(log1, "child2.child3");
+    BOOST_TEST(log3a.getName() == "child1.child2.child3");
+}
+
 BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
 
     std::string expected_msg =
