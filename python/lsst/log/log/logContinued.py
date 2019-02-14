@@ -125,6 +125,12 @@ class Log:
             else:
                 self.logMsg(level, filename, funcname, frame.f_lineno, msg)
 
+    def __reduce__(self):
+        """Implement pickle support.
+        """
+        args = (self.getName(), )
+        # method has to be module-level, not class method
+        return (getLogger, args)
 
 # Export static functions from Log class to module namespace
 
