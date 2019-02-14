@@ -234,13 +234,6 @@ void Log::configure_prop(std::string const& properties) {
     log4cxx::PropertyConfigurator::configure(prop);
 }
 
-/** Get the current default logger name.
-  * @return String containing the default logger name.
-  */
-std::string Log::getDefaultLoggerName() {
-    return getDefaultLogger().getName();
-}
-
 /** Get the logger name associated with the Log object.
   * @return String containing the logger name.
   */

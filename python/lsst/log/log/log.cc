@@ -82,7 +82,6 @@ PYBIND11_MODULE(log, mod) {
     cls.def("lwpID", [](Log const& log) -> unsigned { return lsst::log::lwpID(); });
 
     cls.def_static("getDefaultLogger", Log::getDefaultLogger);
-    cls.def_static("getDefaultLoggerName", Log::getDefaultLoggerName);
     cls.def_static("configure", (void (*)())Log::configure);
     cls.def_static("configure", (void (*)(std::string const&))Log::configure);
     cls.def_static("configure_prop", Log::configure_prop);

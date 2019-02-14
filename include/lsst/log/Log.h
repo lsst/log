@@ -66,13 +66,6 @@
 #define LOG_CONFIG_PROP(string) lsst::log::Log::configure_prop(string)
 
 /**
-  * @def LOG_DEFAULT_NAME()
-  * Get the current default logger name. Returns empty string for root logger.
-  * @return String containing the default logger name.
-  */
-#define LOG_DEFAULT_NAME() lsst::log::Log::getDefaultLoggerName()
-
-/**
   * @def LOG_GET(logger)
   * Returns a Log object associated with logger.
   * @return Log object corresponding to logger.
@@ -732,7 +725,6 @@ public:
 
     /// Return default logger instance, same as default constructor.
     static Log getDefaultLogger() { return Log(); }
-    static std::string getDefaultLoggerName();
 
     static void configure();
     static void configure(std::string const& filename);

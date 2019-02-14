@@ -85,7 +85,7 @@ class TestLog(unittest.TestCase):
 
     def testDefaultLogger(self):
         """Check the default root logger name."""
-        self.assertEqual(log.getDefaultLoggerName(), "")
+        self.assertEqual(log.getDefaultLogger().getName(), "")
 
     def testBasic(self):
         """
@@ -95,7 +95,7 @@ class TestLog(unittest.TestCase):
         """
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
-            log.log(log.getDefaultLoggerName(), log.INFO, "This is INFO")
+            log.log(log.getDefaultLogger(), log.INFO, "This is INFO")
             log.info(u"This is unicode INFO")
             log.trace("This is TRACE")
             log.debug("This is DEBUG")
@@ -121,7 +121,7 @@ root WARN: Format 3 2.71828 foo
         """
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
-            log.logf(log.getDefaultLoggerName(), log.INFO,
+            log.logf(log.getDefaultLogger(), log.INFO,
                      "This is {{INFO}} Item 1: {item[1]}",
                      item=["a", "b", "c"])
             log.infof(u"This is {unicode} INFO")

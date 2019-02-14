@@ -137,8 +137,8 @@ def configure_prop(properties):
     Log.configure_prop(properties)
 
 
-def getDefaultLoggerName():
-    return Log.getDefaultLoggerName()
+def getDefaultLogger():
+    return Log.getDefaultLogger()
 
 
 def MDC(key, value):
