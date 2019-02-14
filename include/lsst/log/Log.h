@@ -38,7 +38,6 @@
 #include <sstream>
 #include <stdarg.h>
 #include <string>
-#include <vector>
 
 // Third-party headers
 #include <log4cxx/logger.h>
@@ -697,10 +696,7 @@ class Log {
 public:
 
     /***
-     *  Default constructor creates an instance of "current" logger.
-     *
-     *  Initially current logger is the same as root logger, but
-     *  current can be changed via pushContext()/popContext().
+     *  Default constructor creates an instance of root logger.
      */
     Log() : _logger(_defaultLogger()) { }
 
@@ -735,7 +731,7 @@ public:
     bool isEnabledFor(int level) const;
 
     /// Return default logger instance, same as default constructor.
-    static Log getDefaultLogger() { return Log(_defaultLogger()); }
+    static Log getDefaultLogger() { return Log(); }
     static std::string getDefaultLoggerName();
 
     static void configure();
@@ -759,16 +755,18 @@ public:
 private:
 
     /**
-     *  Returns default LOG4CXX logger.
+     *  Returns default LOG4CXX logger, which is the same as root logger.
      *
-     *  @param newDefault if non-zero then default is set to this value first.
+     *  This method is needed to ensure proper LOG4CXX initialization before
+     *  any code uses any logger instance.
      */
-    static log4cxx::LoggerPtr const& _defaultLogger(log4cxx::LoggerPtr const& newDefault=log4cxx::LoggerPtr());
+    static log4cxx::LoggerPtr const& _defaultLogger();
 
     /**
      *  Construct a Log using a LOG4CXX logger.
      *
-     *  The default constructor is called to ensure the default logger is initialized and LOG4CXX is configured.
+     *  The default constructor is called to ensure the default logger is
+     *  initialized and LOG4CXX is configured.
      */
     Log(log4cxx::LoggerPtr const& logger) : Log() { _logger = logger; }
 

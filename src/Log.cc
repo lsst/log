@@ -92,7 +92,6 @@ void configFromFile(std::string const& filename) {
  *  `log4cxx::BasicConfigurator::resetConfiguration()` first.
  */
 void defaultConfig() {
-
     // if LSST_LOG_CONFIG is set then use that file
     if (const char* env = getenv(::configEnv)) {
         if (env[0] and access(env, R_OK) == 0) {
@@ -110,13 +109,22 @@ void defaultConfig() {
     root->setLevel(log4cxx::Level::getInfo());
 }
 
+// Protects concurrent configuration
+std::mutex configMutex;
+
+// global initialization flag (protected by configMutex)
+bool initialized = false;
+
 /*
  * This method is called exactly once to initialize LOG4CXX configuration.
- * If LOG4CXX is already initialized then `skipInit` should be set to true.
+ * If `initialized` is set to true then default configuration is skipped.
  */
-log4cxx::LoggerPtr log4cxxInit(bool skipInit) {
+log4cxx::LoggerPtr log4cxxInit() {
 
-    if (! skipInit) {
+    std::lock_guard<std::mutex> lock(configMutex);
+    if (!initialized) {
+        initialized = true;
+        // do default configuration if no one done any configuration yet
         ::defaultConfig();
     }
 
@@ -137,7 +145,7 @@ struct PthreadKey {
     pthread_key_t key;
 } pthreadKey;
 
-}
+} // namespace
 
 
 namespace lsst {
@@ -149,15 +157,11 @@ namespace log {
 /**
  *  Returns default LOG4CXX logger.
  */
-log4cxx::LoggerPtr const& Log::_defaultLogger(log4cxx::LoggerPtr const& newDefault) {
-    bool isNull = newDefault == log4cxx::LoggerPtr();
+log4cxx::LoggerPtr const& Log::_defaultLogger() {
 
-    // initialize on the first call (skip initialization if someone else did that)
-    static log4cxx::LoggerPtr _default(::log4cxxInit(!isNull));
+    // initialize on the first call (skips initialization if someone else did that)
+    static log4cxx::LoggerPtr _default(::log4cxxInit());
 
-    if (!isNull) {
-        _default = newDefault;
-    }
     return _default;
 }
 
@@ -171,6 +175,10 @@ log4cxx::LoggerPtr const& Log::_defaultLogger(log4cxx::LoggerPtr const& newDefau
   * pattern "%c %p: %m%n".
   */
 void Log::configure() {
+    std::lock_guard<std::mutex> lock(::configMutex);
+
+    // Make sure other threads know that default configuration is not needed
+    ::initialized = true;
 
     // This removes all defined appenders, resets level to DEBUG,
     // existing loggers are not deleted, only reset.
@@ -178,9 +186,6 @@ void Log::configure() {
 
     // Do default configuration (only if not configured already?)
     ::defaultConfig();
-
-    // reset default logger to the root logger
-    _defaultLogger(log4cxx::Logger::getRootLogger());
 }
 
 /** Configures log4cxx from specified file.
@@ -194,14 +199,16 @@ void Log::configure() {
   * @param filename  Path to configuration file.
   */
 void Log::configure(std::string const& filename) {
+    std::lock_guard<std::mutex> lock(::configMutex);
+
+    // Make sure other threads know that default configuration is not needed
+    ::initialized = true;
+
     // This removes all defined appenders, resets level to DEBUG,
     // existing loggers are not deleted, only reset.
     log4cxx::BasicConfigurator::resetConfiguration();
 
     ::configFromFile(filename);
-
-    // reset default logger to the root logger
-    _defaultLogger(log4cxx::Logger::getRootLogger());
 }
 
 /** Configures log4cxx using a string containing the list of properties,
@@ -211,6 +218,11 @@ void Log::configure(std::string const& filename) {
   * @param properties  Configuration properties.
   */
 void Log::configure_prop(std::string const& properties) {
+    std::lock_guard<std::mutex> lock(::configMutex);
+
+    // Make sure other threads know that default configuration is not needed
+    ::initialized = true;
+
     // This removes all defined appenders, resets level to DEBUG,
     // existing loggers are not deleted, only reset.
     log4cxx::BasicConfigurator::resetConfiguration();
@@ -220,9 +232,6 @@ void Log::configure_prop(std::string const& properties) {
     log4cxx::helpers::Properties prop;
     prop.load(inStream);
     log4cxx::PropertyConfigurator::configure(prop);
-
-    // reset default logger to the root logger
-    _defaultLogger(log4cxx::Logger::getRootLogger());
 }
 
 /** Get the current default logger name.
