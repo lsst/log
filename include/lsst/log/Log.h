@@ -38,7 +38,6 @@
 #include <sstream>
 #include <stdarg.h>
 #include <string>
-#include <vector>
 
 // Third-party headers
 #include <log4cxx/logger.h>
@@ -67,13 +66,6 @@
 #define LOG_CONFIG_PROP(string) lsst::log::Log::configure_prop(string)
 
 /**
-  * @def LOG_DEFAULT_NAME()
-  * Get the current default logger name. Returns empty string for root logger.
-  * @return String containing the default logger name.
-  */
-#define LOG_DEFAULT_NAME() lsst::log::Log::getDefaultLoggerName()
-
-/**
   * @def LOG_GET(logger)
   * Returns a Log object associated with logger.
   * @return Log object corresponding to logger.
@@ -83,30 +75,14 @@
 #define LOG_GET(logger) lsst::log::Log::getLogger(logger)
 
 /**
-  * @def LOG_PUSHCTX(name)
-  * Pushes name onto the global hierarchical default logger name.
-  * Note that we only allow simple non-dotted names to be used for
-  * context names, multi-level context name (e.g. "componen1.component2")
-  * will result in exception. Empty context names are disallowed as
-  * well, exception will be raised for empty name.
+  * @def LOG_GET_CHILD(logger)
+  * Returns a Log object associated with descendant of a logger.
+  * @return Log object corresponding to logger's descendant.
   *
-  * @note Call to this macro is not thread-safe, moreover context is
-  * global and applies to all threads (which means you want to avoid
-  * using this in multi-threaded applications).
-  *
-  * @param name  String to push onto logging context.
-  * @throw std::invalid_argument raised for empty name or when name contains dot.
+  * @param logger  Either a logger name or a Log object.
+  * @param suffix  Suffix of a descendant.
   */
-#define LOG_PUSHCTX(name) lsst::log::Log::pushContext(name)
-
-/**
-  * @def LOG_POPCTX()
-  * Pops the last pushed name off the global hierarchical default logger
-  * name.
-  *
-  * @note Call to this macro is not thread-safe.
-  */
-#define LOG_POPCTX() lsst::log::Log::popContext()
+#define LOG_GET_CHILD(logger, suffix) lsst::log::Log::getLogger(logger).getChild(suffix)
 
 /**
   * @def LOG_MDC(key, value)
@@ -710,7 +686,6 @@
 #define LOG_LVL_FATAL static_cast<int>(log4cxx::Level::FATAL_INT)
 
 #define LOG_LOGGER lsst::log::Log
-#define LOG_CTX lsst::log::LogContext
 
 namespace lsst {
 namespace log {
@@ -724,10 +699,7 @@ class Log {
 public:
 
     /***
-     *  Default constructor creates an instance of "current" logger.
-     *
-     *  Initially current logger is the same as root logger, but
-     *  current can be changed via pushContext()/popContext().
+     *  Default constructor creates an instance of root logger.
      */
     Log() : _logger(_defaultLogger()) { }
 
@@ -761,9 +733,10 @@ public:
     int getLevel() const;
     bool isEnabledFor(int level) const;
 
+    Log getChild(std::string const& suffix) const;
+
     /// Return default logger instance, same as default constructor.
-    static Log getDefaultLogger() { return Log(_defaultLogger()); }
-    static std::string getDefaultLoggerName();
+    static Log getDefaultLogger() { return Log(); }
 
     static void configure();
     static void configure(std::string const& filename);
@@ -772,8 +745,6 @@ public:
     static Log getLogger(Log const& logger) { return logger; }
     static Log getLogger(std::string const& loggername);
 
-    static void pushContext(std::string const& name);
-    static void popContext();
     static void MDC(std::string const& key, std::string const& value);
     static void MDCRemove(std::string const& key);
     static int MDCRegisterInit(std::function<void()> function);
@@ -788,45 +759,23 @@ public:
 private:
 
     /**
-     *  Returns default LOG4CXX logger.
+     *  Returns default LOG4CXX logger, which is the same as root logger.
      *
-     *  @param newDefault if non-zero then default is set to this value first.
+     *  This method is needed to ensure proper LOG4CXX initialization before
+     *  any code uses any logger instance.
      */
-    static log4cxx::LoggerPtr const& _defaultLogger(log4cxx::LoggerPtr const& newDefault=log4cxx::LoggerPtr());
+    static log4cxx::LoggerPtr const& _defaultLogger();
 
     /**
      *  Construct a Log using a LOG4CXX logger.
      *
-     *  The default constructor is called to ensure the default logger is initialized and LOG4CXX is configured.
+     *  The default constructor is called to ensure the default logger is
+     *  initialized and LOG4CXX is configured.
      */
     Log(log4cxx::LoggerPtr const& logger) : Log() { _logger = logger; }
 
     log4cxx::LoggerPtr _logger;
 };
-
-/** This class handles the default logger name of a logging context.
-  */
-class LogContext {
-public:
-    /** Create a logging context associated with a default logger name
-      * constructed by pushing \p name onto the pre-existing hierarchical default
-      * logger name. See comment to \c LOG_PUSHCTX about allowed names.
-      *
-      * @param name  String to push onto logging context.
-      */
-    explicit LogContext(std::string const& name) {
-        Log::pushContext(name);
-    }
-    ~LogContext() {
-        Log::popContext();
-    }
-
-private:
-    // cannot copy instances
-    LogContext(const LogContext&);
-    LogContext& operator=(const LogContext&);
-};
-
 
 /**
  * Function which returns LWP ID on platforms which support it.

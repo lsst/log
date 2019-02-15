@@ -74,6 +74,7 @@ PYBIND11_MODULE(log, mod) {
     cls.def("setLevel", &Log::setLevel);
     cls.def("getLevel", &Log::getLevel);
     cls.def("isEnabledFor", &Log::isEnabledFor);
+    cls.def("getChild", &Log::getChild);
     cls.def("logMsg", [](Log& log, int level, std::string const& filename, std::string const& funcname,
                          unsigned int lineno, std::string const& msg) {
         log.logMsg(log4cxx::Level::toLevel(level),
@@ -82,14 +83,11 @@ PYBIND11_MODULE(log, mod) {
     cls.def("lwpID", [](Log const& log) -> unsigned { return lsst::log::lwpID(); });
 
     cls.def_static("getDefaultLogger", Log::getDefaultLogger);
-    cls.def_static("getDefaultLoggerName", Log::getDefaultLoggerName);
     cls.def_static("configure", (void (*)())Log::configure);
     cls.def_static("configure", (void (*)(std::string const&))Log::configure);
     cls.def_static("configure_prop", Log::configure_prop);
     cls.def_static("getLogger", (Log(*)(Log const&))Log::getLogger);
     cls.def_static("getLogger", (Log(*)(std::string const&))Log::getLogger);
-    cls.def_static("pushContext", Log::pushContext);
-    cls.def_static("popContext", Log::popContext);
     cls.def_static("MDC", Log::MDC);
     cls.def_static("MDCRemove", Log::MDCRemove);
     cls.def_static("MDCRegisterInit", [](py::function func) {

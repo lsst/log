@@ -13,7 +13,6 @@
 - Optionally include and format metadata including date, time, level, logger name, thread, function, source file, line number.
 - Optionally add arbitrary thread-scoped metadata (e.g. key/value pairs) to logging context programmatically.
 - Hierarchical, named loggers with independent configurations (e.g. levels, output channels, metadata, formatting).
-- Dynamic hierarchical logging contexts via `push()` and `pop()` functions.
 - Logging context objects automatically handle pushing/popping of names onto/off of global context in either C++ or Python.
 - Offers alternative interface that is compatible with standard Python logging module.
 - Configure loggers via single standard log4cxx XML or standard log4j Java properties file.
@@ -70,11 +69,11 @@ avoid filtering on Python side by setting logging level to DEBUG for root
 logger and instead configure log4cxx with proper logging level.
 
 
-Alternatively, get a logger through lsst.log.Log:
+Alternatively, get a logger through lsst.log:
 
-    lgr = lsst.log.Log.getLogger("myLogger")
+    lgr = lsst.log.getLogger("myLogger")
     lgr.setLevel(lgr.DEBUG)
-    lgr.info("This is an info statement via %s", "lsst.log.Log interface.")
+    lgr.info("This is an info statement via %s", "lsst.log interface.")
 
 \section exampleOutput Example output
 
@@ -290,57 +289,6 @@ In Python, the `lsst.log` module includes the following functions and variables:
 - `FATAL` Fatal logging level (50000).
 
 
-\section contexts Logging Contexts
-
-The logging context is maintained via a global stack onto which names can be pushed and popped using the lsst.log macros `LOG_PUSHCTX(name)` and `LOG_POPCTX()` within C++ or the `lsst.log` functions `pushContext(name)` and {{{popContext()}}} within Python. The default logger name is dynamically constructed each time a name is pushed onto or popped from the logging context. For example, within the Qserv demo, the following code can be found within `app.py`:
-
-    lsst.log.initLog("/u1/bchick/sandbox2/modules/etc/Log4cxxConfig.xml")
-    lsst.log.pushContext("czar")
-    [...]
-    lsst.log.debug("This is a debug statement!")
-
-The debugging statement is sent to the default logger, which in this case is ''czar''. Later, within the {{{submitQuery3()}}} function of {{{control/dispatcher.cc}}}, we have:
-
-    LOG_PUSHCTX("control");
-
-At this point, any logging statements that do not specify a logger name will be associated with a default logger of ''czar.control''. This mechanism allows dynamic hierarchical logging without hardcoding full logger names in order to accommodate better code re-use. Logging could then be configured, for example, so that the ''czar.control'' context is redirected or copied to a special file with a unique logging level.
-
-To pop a name from the logging context, invoke the {{{lsst.log.popContext()}}} function within Python or the {{{LOG_POPCTX()}}} macro within C++.
-
-The context determines the default logger, which is used whenever a logger is not explicitly indicated or an empty string is provided as the logger name.
-
-To summarize, within C++, we have the following macros:
-- `LOG_PUSHCTX(name)` Push '''`name`''' onto the global context stack such that the default logger name is appended with ".'''`name`'''".
-- `LOG_POPCTX()` Pop the last name `C` off of the global context stack such that a previous default logger name "`A`.`B`.`C`" is now "`A`.`B`".
-- `LOG_DEFAULT_NAME()` Returns the default logger name.
-
-And in Python, the following functions are available in the `lsst.log` module:
-- `pushContext(name)` Push '''`name`''' onto the global context stack such that the default logger name is appended with ".'''`name`'''".
-- `popContext()` Pop the last name `C` off of the global context stack such that a previous default logger name "`A`.`B`.`C`" is now "`A`.`B`".
-- `getDefaultLoggerName()` Returns the default logger name.
-
-
-\section ctxObj Context Objects
-
-Requiring that developers properly pop each context name is error prone. Therefore, we also provide logging context objects in both C++ and Python, which automatically pop names when the object is discarded.
-
-In C++, the context object will pop the provided name in its destructor. Contexts can therefore be managed as follows:
-
-    {
-        LOG_CTX context("demo");
-        LOG_INFO("Info statement within demo context.");
-    }
-    LOG_INFO("Info statement outside demo context.");
-
-In this example, if the context were initially "nameOne.nameTwo", the first logging statement would be sent to the logger named "nameOne.nameTwo.demo" and the second logging statement would be sent to the logger named "nameOne.nameTwo".
-
-The LogContext class defined in the Python layer is compatible with Python's `with` statement, and therefore, the above example can be implemented in Python as follows:
-
-    with LogContext(name="demo") as context:
-        lsst.log.info("Info statement within demo context.")
-    lsst.log.info("Info statement outside demo context.")
-
-
 \section flDebugging Fine-level Debugging Example
 
 The following is a simple recipe for emulating additional debugging levels using the above API within Python. Analogous code can be readily written in C++ using the corresponding macros.
@@ -350,7 +298,7 @@ The following is a simple recipe for emulating additional debugging levels using
         """
         Returns the logger name that corresponds to fine-level debugging number NUM.
         """
-        return '%s.debug%d' % (lsst.log.getDefaultLoggerName(), num)
+        return 'MyLogger.debug{}'.format(num)
 
     def debugAt(num, fmt, *args):
         """

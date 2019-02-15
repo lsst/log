@@ -125,6 +125,12 @@ class Log:
             else:
                 self.logMsg(level, filename, funcname, frame.f_lineno, msg)
 
+    def __reduce__(self):
+        """Implement pickle support.
+        """
+        args = (self.getName(), )
+        # method has to be module-level, not class method
+        return (getLogger, args)
 
 # Export static functions from Log class to module namespace
 
@@ -137,16 +143,12 @@ def configure_prop(properties):
     Log.configure_prop(properties)
 
 
-def getDefaultLoggerName():
-    return Log.getDefaultLoggerName()
+def getDefaultLogger():
+    return Log.getDefaultLogger()
 
 
-def pushContext(name):
-    Log.pushContext(name)
-
-
-def popContext():
-    Log.popContext()
+def getLogger(loggername):
+    return Log.getLogger(loggername)
 
 
 def MDC(key, value):
@@ -243,44 +245,6 @@ def usePythonLogging():
 
 def doNotUsePythonLogging():
     Log.doNotUsePythonLogging()
-
-
-class LogContext(object):
-    """Context manager for logging."""
-
-    def __init__(self, name=None, level=None):
-        self.name = name
-        self.level = level
-
-    def __enter__(self):
-        self.open()
-        return self
-
-    def __exit__(self, type, value, traceback):
-        self.close()
-
-    def __del__(self):
-        self.close()
-
-    def open(self):
-        if self.name is not None:
-            Log.pushContext(self.name)
-        if self.level is not None:
-            Log.getDefaultLogger().setLevel(self.level)
-
-    def close(self):
-        if self.name is not None:
-            Log.popContext()
-            self.name = None
-
-    def setLevel(self, level):
-        Log.getDefaultLogger().setLevel(level)
-
-    def getLevel(self):
-        return Log.getDefaultLogger().getLevel()
-
-    def isEnabledFor(self, level):
-        return Log.getDefaultLogger().isEnabledFor(level)
 
 
 class UsePythonLogging:

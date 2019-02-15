@@ -85,7 +85,7 @@ class TestLog(unittest.TestCase):
 
     def testDefaultLogger(self):
         """Check the default root logger name."""
-        self.assertEqual(log.getDefaultLoggerName(), "")
+        self.assertEqual(log.getDefaultLogger().getName(), "")
 
     def testBasic(self):
         """
@@ -95,7 +95,7 @@ class TestLog(unittest.TestCase):
         """
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
-            log.log(log.getDefaultLoggerName(), log.INFO, "This is INFO")
+            log.log(log.getDefaultLogger(), log.INFO, "This is INFO")
             log.info(u"This is unicode INFO")
             log.trace("This is TRACE")
             log.debug("This is DEBUG")
@@ -121,7 +121,7 @@ root WARN: Format 3 2.71828 foo
         """
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
-            log.logf(log.getDefaultLoggerName(), log.INFO,
+            log.logf(log.getDefaultLogger(), log.INFO,
                      "This is {{INFO}} Item 1: {item[1]}",
                      item=["a", "b", "c"])
             log.infof(u"This is {unicode} INFO")
@@ -139,56 +139,6 @@ root WARN: This is WARN Tucson
 root ERROR: This is ERROR 1->2
 root FATAL: This is FATAL 3 out of 4 times for LSST
 root WARN: Format 3 2.71828 foo
-""")
-
-    def testContext(self):
-        """Test the log context/component stack."""
-        with TestLog.StdoutCapture(self.outputFilename):
-            log.configure()
-            log.setLevel('', log.DEBUG)
-            log.trace("This is TRACE")
-            log.info("This is INFO")
-            log.debug("This is DEBUG")
-            with log.LogContext("component"):
-                log.trace("This is TRACE")
-                log.info("This is INFO")
-                log.debug("This is DEBUG")
-            log.trace("This is TRACE 2")
-            log.info("This is INFO 2")
-            log.debug("This is DEBUG 2")
-            with log.LogContext("comp") as ctx:
-                log.trace("This is TRACE 3")
-                log.info("This is INFO 3")
-                log.debug("This is DEBUG 3")
-                ctx.setLevel(log.INFO)
-                self.assertEqual(ctx.getLevel(), log.INFO)
-                self.assertTrue(ctx.isEnabledFor(log.INFO))
-                log.trace("This is TRACE 3a")
-                log.info("This is INFO 3a")
-                log.debug("This is DEBUG 3a")
-                with log.LogContext("subcomp", log.TRACE) as ctx2:
-                    self.assertEqual(ctx2.getLevel(), log.TRACE)
-                    log.trace("This is TRACE 4")
-                    log.info("This is INFO 4")
-                    log.debug("This is DEBUG 4")
-                log.trace("This is TRACE 5")
-                log.info("This is INFO 5")
-                log.debug("This is DEBUG 5")
-
-        self.check("""
-root INFO: This is INFO
-root DEBUG: This is DEBUG
-component INFO: This is INFO
-component DEBUG: This is DEBUG
-root INFO: This is INFO 2
-root DEBUG: This is DEBUG 2
-comp INFO: This is INFO 3
-comp DEBUG: This is DEBUG 3
-comp INFO: This is INFO 3a
-comp.subcomp TRACE: This is TRACE 4
-comp.subcomp INFO: This is INFO 4
-comp.subcomp DEBUG: This is DEBUG 4
-comp INFO: This is INFO 5
 """)
 
     def testPattern(self):
@@ -216,14 +166,13 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c %C %M (%F:%L) %l - %m - %X%n
             log.debug("This is DEBUG 2")
             log.MDCRemove("z")
 
-            with log.LogContext("component"):
-                log.trace("This is TRACE 3")
-                log.info("This is INFO 3")
-                log.debug("This is DEBUG 3")
-                log.MDCRemove("x")
-                log.trace("This is TRACE 4")
-                log.info("This is INFO 4")
-                log.debug("This is DEBUG 4")
+            log.trace("This is TRACE 3")
+            log.info("This is INFO 3")
+            log.debug("This is DEBUG 3")
+            log.MDCRemove("x")
+            log.trace("This is TRACE 4")
+            log.info("This is INFO 4")
+            log.debug("This is DEBUG 4")
 
             log.trace("This is TRACE 5")
             log.info("This is INFO 5")
@@ -237,13 +186,13 @@ INFO  root  testPattern (test_log.py:{0[0]}) test_log.py({0[0]}) - This is INFO 
 DEBUG root  testPattern (test_log.py:{0[1]}) test_log.py({0[1]}) - This is DEBUG - {{}}
 INFO  root  testPattern (test_log.py:{0[2]}) test_log.py({0[2]}) - This is INFO 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
 DEBUG root  testPattern (test_log.py:{0[3]}) test_log.py({0[3]}) - This is DEBUG 2 - {{{{x,3}}{{y,foo}}{{z,<class '{1}.TestLog'>}}}}
-INFO  component  testPattern (test_log.py:{0[4]}) test_log.py({0[4]}) - This is INFO 3 - {{{{x,3}}{{y,foo}}}}
-DEBUG component  testPattern (test_log.py:{0[5]}) test_log.py({0[5]}) - This is DEBUG 3 - {{{{x,3}}{{y,foo}}}}
-INFO  component  testPattern (test_log.py:{0[6]}) test_log.py({0[6]}) - This is INFO 4 - {{{{y,foo}}}}
-DEBUG component  testPattern (test_log.py:{0[7]}) test_log.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
+INFO  root  testPattern (test_log.py:{0[4]}) test_log.py({0[4]}) - This is INFO 3 - {{{{x,3}}{{y,foo}}}}
+DEBUG root  testPattern (test_log.py:{0[5]}) test_log.py({0[5]}) - This is DEBUG 3 - {{{{x,3}}{{y,foo}}}}
+INFO  root  testPattern (test_log.py:{0[6]}) test_log.py({0[6]}) - This is INFO 4 - {{{{y,foo}}}}
+DEBUG root  testPattern (test_log.py:{0[7]}) test_log.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (test_log.py:{0[8]}) test_log.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (test_log.py:{0[9]}) test_log.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 207 for x in (0, 1, 8, 9, 14, 15, 18, 19, 22, 23)], __name__))  # noqa E501 line too long
+""".format([x + 157 for x in (0, 1, 8, 9, 13, 14, 17, 18, 21, 22)], __name__))  # noqa E501 line too long
 
     def testMDCPutPid(self):
         """
@@ -275,7 +224,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
 
             with TestLog.StdoutCapture(self.outputFilename):
                 log.info(msg)
-                line = 277
+                line = 226  # line number for previous line
         finally:
             log.MDCRemove("PID")
 
@@ -297,10 +246,9 @@ log4j.appender.FA.file={0}
 log4j.appender.FA.layout=SimpleLayout
 """)
         log.MDC("x", 3)
-        with log.LogContext("component"):
-            log.trace("This is TRACE")
-            log.info("This is INFO")
-            log.debug("This is DEBUG")
+        log.trace("This is TRACE")
+        log.info("This is INFO")
+        log.debug("This is DEBUG")
         log.MDCRemove("x")
 
         self.check("""
@@ -637,6 +585,21 @@ INFO message: lsst.log root logger, PythonLogging""")
         for logLevel, loggingLevel in levelMap:
             self.assertEqual(log.LevelTranslator.lsstLog2logging(logLevel), loggingLevel)
             self.assertEqual(log.LevelTranslator.logging2lsstLog(loggingLevel), logLevel)
+
+    def testChildLogger(self):
+        """Check the getChild logger method."""
+        logger = log.getDefaultLogger()
+        self.assertEqual(logger.getName(), "")
+        logger1 = logger.getChild("child1")
+        self.assertEqual(logger1.getName(), "child1")
+        logger2 = logger1.getChild("child2")
+        self.assertEqual(logger2.getName(), "child1.child2")
+        logger2a = logger1.getChild(".child2")
+        self.assertEqual(logger2a.getName(), "child1.child2")
+        logger3 = logger2.getChild(" .. child3")
+        self.assertEqual(logger3.getName(), "child1.child2.child3")
+        logger3a = logger1.getChild("child2.child3")
+        self.assertEqual(logger3a.getName(), "child1.child2.child3")
 
 
 if __name__ == "__main__":

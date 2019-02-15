@@ -92,7 +92,6 @@ void configFromFile(std::string const& filename) {
  *  `log4cxx::BasicConfigurator::resetConfiguration()` first.
  */
 void defaultConfig() {
-
     // if LSST_LOG_CONFIG is set then use that file
     if (const char* env = getenv(::configEnv)) {
         if (env[0] and access(env, R_OK) == 0) {
@@ -110,13 +109,22 @@ void defaultConfig() {
     root->setLevel(log4cxx::Level::getInfo());
 }
 
+// Protects concurrent configuration
+std::mutex configMutex;
+
+// global initialization flag (protected by configMutex)
+bool initialized = false;
+
 /*
  * This method is called exactly once to initialize LOG4CXX configuration.
- * If LOG4CXX is already initialized then `skipInit` should be set to true.
+ * If `initialized` is set to true then default configuration is skipped.
  */
-log4cxx::LoggerPtr log4cxxInit(bool skipInit) {
+log4cxx::LoggerPtr log4cxxInit() {
 
-    if (! skipInit) {
+    std::lock_guard<std::mutex> lock(configMutex);
+    if (!initialized) {
+        initialized = true;
+        // do default configuration if no one done any configuration yet
         ::defaultConfig();
     }
 
@@ -137,7 +145,7 @@ struct PthreadKey {
     pthread_key_t key;
 } pthreadKey;
 
-}
+} // namespace
 
 
 namespace lsst {
@@ -149,15 +157,11 @@ namespace log {
 /**
  *  Returns default LOG4CXX logger.
  */
-log4cxx::LoggerPtr const& Log::_defaultLogger(log4cxx::LoggerPtr const& newDefault) {
-    bool isNull = newDefault == log4cxx::LoggerPtr();
+log4cxx::LoggerPtr const& Log::_defaultLogger() {
 
-    // initialize on the first call (skip initialization if someone else did that)
-    static log4cxx::LoggerPtr _default(::log4cxxInit(!isNull));
+    // initialize on the first call (skips initialization if someone else did that)
+    static log4cxx::LoggerPtr _default(::log4cxxInit());
 
-    if (!isNull) {
-        _default = newDefault;
-    }
     return _default;
 }
 
@@ -171,6 +175,10 @@ log4cxx::LoggerPtr const& Log::_defaultLogger(log4cxx::LoggerPtr const& newDefau
   * pattern "%c %p: %m%n".
   */
 void Log::configure() {
+    std::lock_guard<std::mutex> lock(::configMutex);
+
+    // Make sure other threads know that default configuration is not needed
+    ::initialized = true;
 
     // This removes all defined appenders, resets level to DEBUG,
     // existing loggers are not deleted, only reset.
@@ -178,9 +186,6 @@ void Log::configure() {
 
     // Do default configuration (only if not configured already?)
     ::defaultConfig();
-
-    // reset default logger to the root logger
-    _defaultLogger(log4cxx::Logger::getRootLogger());
 }
 
 /** Configures log4cxx from specified file.
@@ -194,14 +199,16 @@ void Log::configure() {
   * @param filename  Path to configuration file.
   */
 void Log::configure(std::string const& filename) {
+    std::lock_guard<std::mutex> lock(::configMutex);
+
+    // Make sure other threads know that default configuration is not needed
+    ::initialized = true;
+
     // This removes all defined appenders, resets level to DEBUG,
     // existing loggers are not deleted, only reset.
     log4cxx::BasicConfigurator::resetConfiguration();
 
     ::configFromFile(filename);
-
-    // reset default logger to the root logger
-    _defaultLogger(log4cxx::Logger::getRootLogger());
 }
 
 /** Configures log4cxx using a string containing the list of properties,
@@ -211,6 +218,11 @@ void Log::configure(std::string const& filename) {
   * @param properties  Configuration properties.
   */
 void Log::configure_prop(std::string const& properties) {
+    std::lock_guard<std::mutex> lock(::configMutex);
+
+    // Make sure other threads know that default configuration is not needed
+    ::initialized = true;
+
     // This removes all defined appenders, resets level to DEBUG,
     // existing loggers are not deleted, only reset.
     log4cxx::BasicConfigurator::resetConfiguration();
@@ -220,16 +232,6 @@ void Log::configure_prop(std::string const& properties) {
     log4cxx::helpers::Properties prop;
     prop.load(inStream);
     log4cxx::PropertyConfigurator::configure(prop);
-
-    // reset default logger to the root logger
-    _defaultLogger(log4cxx::Logger::getRootLogger());
-}
-
-/** Get the current default logger name.
-  * @return String containing the default logger name.
-  */
-std::string Log::getDefaultLoggerName() {
-    return getDefaultLogger().getName();
 }
 
 /** Get the logger name associated with the Log object.
@@ -256,47 +258,6 @@ Log Log::getLogger(std::string const& loggername) {
         return getDefaultLogger();
     } else {
         return Log(log4cxx::Logger::getLogger(loggername));
-    }
-}
-
-/** Pushes NAME onto the global hierarchical default logger name.
-  *
-  * @param name  String to push onto logging context.
-  */
-void Log::pushContext(std::string const& name) {
-    // can't handle empty names
-    if (name.empty()) {
-        throw std::invalid_argument("lsst::log::Log::pushContext(): "
-                "empty context name is not allowed");
-    }
-    // we do not allow multi-level context (logger1.logger2)
-    if (name.find('.') != std::string::npos) {
-        throw std::invalid_argument("lsst::log::Log::pushContext(): "
-                "multi-level contexts are not allowed: " + name);
-    }
-
-    // Construct new default logger name
-    std::string newName = _defaultLogger()->getName();
-    if (newName == "root") {
-        newName = name;
-    } else {
-        newName += ".";
-        newName += name;
-    }
-    // Update defaultLogger
-    _defaultLogger(log4cxx::Logger::getLogger(newName));
-}
-
-/** Pops the last pushed name off the global hierarchical default logger
-  * name.
-  */
-void Log::popContext() {
-    // switch to parent logger, this assumes that loggers are not
-    // re-parented between calls to push and pop
-    log4cxx::LoggerPtr parent = _defaultLogger()->getParent();
-    // root logger does not have parent, stay at root instead
-    if (parent) {
-        _defaultLogger(parent);
     }
 }
 
@@ -372,6 +333,36 @@ bool Log::isEnabledFor(int level) const {
     } else {
         return false;
     }
+}
+
+/**
+  * Return a logger which is a descendant to this logger.
+  *
+  * If for example name of this logger is "main.task" and suffix is
+  * "subtask1.algorithm" then this method will return logger with the name
+  * "main.task.subtask1.algorithm". If this logger is root logger then
+  * suffix name is used for returned logger name. If suffix is empty
+  * then this instance is returned.
+  *
+  * @param suffix Suffix for tha name of returned logger, can include dot
+  *               (but not at leading position) and can be empty.
+  * @return Log instance.
+ */
+Log Log::getChild(std::string const& suffix) const {
+    // strip leading dots and spaces from suffix
+    auto pos = suffix.find_first_not_of(" .");
+    if (pos == std::string::npos) {
+        // empty, just return myself
+        return *this;
+    }
+    std::string name = getName();
+    if (name.empty()) {
+        name = suffix.substr(pos);
+    } else {
+        name += '.';
+        name += suffix.substr(pos);
+    }
+    return getLogger(name);
 }
 
 /** Method used by LOG_INFO and similar macros to process a log message
