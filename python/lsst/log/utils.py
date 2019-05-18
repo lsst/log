@@ -21,6 +21,8 @@
 # the GNU General Public License along with this program.  If not,
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
+from contextlib import contextmanager
+
 from lsst.log import Log
 
 
@@ -37,3 +39,23 @@ def traceSetAt(name, number):
     for i in range(6):
         level = Log.INFO if i > number else Log.DEBUG
         Log.getLogger('TRACE%d.%s' % (i, name)).setLevel(level)
+
+
+@contextmanager
+def temporaryLogLevel(name, level):
+    """A context manager that temporarily sets the level of a `Log`.
+
+    Parameters
+    ----------
+    name : `str`
+        Name of the log to modify.
+    level : `int`
+        Integer enumeration constant indicating the temporary log level.
+    """
+    log = Log.getLogger(name)
+    old = log.getLevel()
+    log.setLevel(level)
+    try:
+        yield
+    finally:
+        log.setLevel(old)
