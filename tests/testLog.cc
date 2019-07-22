@@ -41,10 +41,9 @@
 #include "lsst/log/Log.h"
 
 #define BOOST_TEST_MODULE Log_1
-#define BOOST_TEST_DYN_LINK
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
-#include "boost/test/unit_test.hpp"
+#include "boost/test/included/unit_test.hpp"
 #pragma clang diagnostic pop
 
 // used to stringify line numbers to make some names below unique
