@@ -269,13 +269,16 @@ Log Log::getLogger(std::string const& loggername) {
   *
   * @param key    Unique key.
   * @param value  String value.
+  * @return Previous value for the key in the MDC.
   */
-void Log::MDC(std::string const& key, std::string const& value) {
+std::string Log::MDC(std::string const& key, std::string const& value) {
     // put() does not remove existing mapping, to make it less confusing
     // for clients which expect that MDC() always overwrites existing mapping
     // we explicitly remove it first if it exists.
+    std::string const oldValue = log4cxx::MDC::get(key);
     log4cxx::MDC::remove(key);
     log4cxx::MDC::put(key, value);
+    return oldValue;
 }
 
 /** Remove the value associated with KEY within the MDC.

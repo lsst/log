@@ -359,6 +359,7 @@ or alternatively using `%%X` format code without additional key to display full 
 In C++, the following MDC macros are available:
 - `LOG_MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender.
 - `LOG_MDC_REMOVE(key)` Delete the existing value from the global map that is associated with '''`key`'''.
+- `LOG_MDC_SCOPE(key, value)` Adds key/value to MDC and restores previous value when execution leaves the scope. Typically used at the beggining of the function if one needs to define MDC key/value for the whole duration of the function.
 
 In Python, the `lsst.log` module provides the following MDC functions:
 - `MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender. Note that `value` is converted to a string by Python before it is stored in the MDC.

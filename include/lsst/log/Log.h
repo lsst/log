@@ -105,6 +105,21 @@
 #define LOG_MDC_REMOVE(key) lsst::log::Log::MDCRemove(key)
 
 /**
+  * @def LOG_MDC_SCOPE(key, value)
+  * Places a KEY/VALUE pair in the Mapped Diagnostic Context (MDC) for the
+  * current thread, and restores previous KEY/VALUE on exit from a scope.
+  *
+  * @param key    Unique key.
+  * @param value  String value.
+  */
+// These two macros generate unique variable name using __COUNTER__ built-in
+// macro. Two levels of calls is needed to use __COUNTER__ macro value instead
+// of the macro name in concatenation.
+#define LOG_CONCAT_IMPL(a, b) a ## b
+#define LOG_CONCAT_IMPL2(a, b) LOG_CONCAT_IMPL(a, b)
+#define LOG_MDC_SCOPE(key, value) lsst::log::LogMDCScope LOG_CONCAT_IMPL2(_log_mdc_scope_, __COUNTER__)(key, value);
+
+/**
   * @def LOG_MDC_INIT(function)
   * Register function for initialization of MDC. This function will be called
   * for current thread and every new thread (but not for other existing
@@ -745,7 +760,7 @@ public:
     static Log getLogger(Log const& logger) { return logger; }
     static Log getLogger(std::string const& loggername);
 
-    static void MDC(std::string const& key, std::string const& value);
+    static std::string MDC(std::string const& key, std::string const& value);
     static void MDCRemove(std::string const& key);
     static int MDCRegisterInit(std::function<void()> function);
 
@@ -775,6 +790,61 @@ private:
     Log(log4cxx::LoggerPtr const& logger) : Log() { _logger = logger; }
 
     log4cxx::LoggerPtr _logger;
+};
+
+class LogMDCScope {
+public:
+
+    /**
+     * Constructor adds KEY/VALUE pair to current thread MDC.
+     * Key should not be empty (not checked).
+     */
+    LogMDCScope(std::string const& key, std::string const& value)
+      : _key(key)
+    {
+        _oldValue = Log::MDC(key, value);
+    }
+
+    // no copy allowed
+    LogMDCScope(LogMDCScope const&) = delete;
+    LogMDCScope& operator=(LogMDCScope const&) = delete;
+
+    LogMDCScope(LogMDCScope&& other) {
+        _key = other._key;
+        _oldValue = other._oldValue;
+        other._key.clear();
+    }
+
+    LogMDCScope& operator=(LogMDCScope&& other) {
+        if (not _key.empty()) {
+            if (_oldValue.empty()) {
+                Log::MDCRemove(_key);
+            } else {
+                Log::MDC(_key, _oldValue);
+            }
+        }
+        _key = other._key;
+        _oldValue = other._oldValue;
+        other._key.clear();
+        return *this;
+    }
+
+    /**
+     * Destructor restores old key value in MDC.
+     */
+    ~LogMDCScope() {
+        if (not _key.empty()) {
+            if (_oldValue.empty()) {
+                Log::MDCRemove(_key);
+            } else {
+                Log::MDC(_key, _oldValue);
+            }
+        }
+    }
+
+private:
+    std::string _key;
+    std::string _oldValue;
 };
 
 /**
