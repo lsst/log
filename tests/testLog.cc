@@ -212,7 +212,11 @@ BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
           "INFO  root pattern_stream test_method (tests/testLog.cc:%7%) tests/testLog.cc(%7%) - This is INFO 4 - {{y,foo}}\n"
           "DEBUG root pattern_stream test_method (tests/testLog.cc:%8%) tests/testLog.cc(%8%) - This is DEBUG 4 - {{y,foo}}\n"
           "INFO  root pattern_stream test_method (tests/testLog.cc:%9%) tests/testLog.cc(%9%) - This is INFO 5 - {{y,foo}}\n"
-          "DEBUG root pattern_stream test_method (tests/testLog.cc:%10%) tests/testLog.cc(%10%) - This is DEBUG 5 - {{y,foo}}\n";
+          "DEBUG root pattern_stream test_method (tests/testLog.cc:%10%) tests/testLog.cc(%10%) - This is DEBUG 5 - {{y,foo}}\n"
+          "INFO  root pattern_stream test_method (tests/testLog.cc:%11%) tests/testLog.cc(%11%) - This is INFO 6 - {{y,foo}{z,zzz}}\n"
+          "INFO  root pattern_stream test_method (tests/testLog.cc:%12%) tests/testLog.cc(%12%) - This is INFO 7 - {{y,foo}}\n"
+          "INFO  root pattern_stream test_method (tests/testLog.cc:%13%) tests/testLog.cc(%13%) - This is INFO 8 - {{q,qqq}{y,foo}}\n"
+          "INFO  root pattern_stream test_method (tests/testLog.cc:%14%) tests/testLog.cc(%14%) - This is INFO 9 - {{y,foo}}\n";
     std::vector<std::string> args;
 
     configure(LAYOUT_PATTERN);
@@ -241,6 +245,20 @@ BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
     LOGS_TRACE("This is TRACE 5");
     LOGS_INFO_LINENO("This is INFO 5", args);
     LOGS_DEBUG_LINENO("This is DEBUG 5", args);
+
+    {
+        LOG_MDC_SCOPE("z", "zzz");
+        LOGS_INFO_LINENO("This is INFO 6", args);
+    }
+    LOGS_INFO_LINENO("This is INFO 7", args);
+
+    {
+        // test move semantics
+        auto func = []() { return lsst::log::LogMDCScope("q", "qqq"); };
+        auto mdc_scope = func();
+        LOGS_INFO_LINENO("This is INFO 8", args);
+    }
+    LOGS_INFO_LINENO("This is INFO 9", args);
 
     LOG_MDC_REMOVE("y");
 
