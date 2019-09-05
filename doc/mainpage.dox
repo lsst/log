@@ -357,12 +357,12 @@ or alternatively using `%%X` format code without additional key to display full 
     "%d [%t] %-5p %c{2} %m%n MDC=%X"
 
 In C++, the following MDC macros are available:
-- `LOG_MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender.
+- `LOG_MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%%X{`'''`key`'''`}` in the formatting string of an associated appender.
 - `LOG_MDC_REMOVE(key)` Delete the existing value from the global map that is associated with '''`key`'''.
 - `LOG_MDC_SCOPE(key, value)` Adds key/value to MDC and restores previous value when execution leaves the scope. Typically used at the beggining of the function if one needs to define MDC key/value for the whole duration of the function.
 
 In Python, the `lsst.log` module provides the following MDC functions:
-- `MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%X{`'''`key`'''`}` in the formatting string of an associated appender. Note that `value` is converted to a string by Python before it is stored in the MDC.
+- `MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%%X{`'''`key`'''`}` in the formatting string of an associated appender. Note that `value` is converted to a string by Python before it is stored in the MDC.
 - `MDCRemove(key)` Delete the existing value from the global map that is associated with '''`key`'''.
 
 \subsection PID Display PID in the LSST logs
@@ -393,7 +393,7 @@ This has to be done after fork() and corresponding formatting code needs to be a
 
 \subsection TID Display thread ID
 
-The conversion pattern in log4cxx has special conversion code (`%t`) to render "thread ID", the rendered value is a pointer to `thread_t` object (on POSIX systems) and is rendered as a long string of hexadecimal digits which makes it difficult to read for non-hardcore programmers. `lsst.log` provides more human-friendly way to print thread-identifying information. Special function `lsst::log::lwpID()` returns light-weight process ID (LWP) on the plaftorms that support this feature and small incremental integer number on other platforms. Using this function one can add LWP to MDC and configure output format to include this special MDC key:
+The conversion pattern in log4cxx has special conversion code (`%%t`) to render "thread ID", the rendered value is a pointer to `thread_t` object (on POSIX systems) and is rendered as a long string of hexadecimal digits which makes it difficult to read for non-hardcore programmers. `lsst.log` provides more human-friendly way to print thread-identifying information. Special function `lsst::log::lwpID()` returns light-weight process ID (LWP) on the plaftorms that support this feature and small incremental integer number on other platforms. Using this function one can add LWP to MDC and configure output format to include this special MDC key:
 
 In C++:
 
