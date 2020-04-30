@@ -1,8 +1,4 @@
-setupRequired(boost)
-setupRequired(log4cxx)
 setupRequired(base)
-setupRequired(pybind11)
-setupRequired(python)
 setupRequired(sconsUtils)
 setupRequired(utils)
 
