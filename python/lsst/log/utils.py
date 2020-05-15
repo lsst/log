@@ -21,20 +21,24 @@
 # the GNU General Public License along with this program.  If not,
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
+
+__all__ = ["traceSetAt", "temporaryLogLevel"]
+
 from contextlib import contextmanager
 
 from lsst.log import Log
 
 
 def traceSetAt(name, number):
-    """!Adjust logging level to display messages with trace number <= NUMBER
+    """Adjusts logging level to display messages with the trace number being
+    less than or equal to a certain value.
 
-    Set the levels of loggers "TRACEn.name" with n > NUMBER to INFO,
-    and those with n <= NUMBER to DEBUG, so that only tracing messages
-    with n <= NUMBER are shown.
-
-    @param[in] name  The logger name
-    @param[in] number  The trace number threshold for display
+    Parameters
+    ----------
+    name : `str`
+        Name of the logger.
+    number : `int`
+        The trace number threshold for display.
     """
     for i in range(6):
         level = Log.INFO if i > number else Log.DEBUG
