@@ -31,7 +31,7 @@ from lsst.log import Log
 
 def traceSetAt(name, number):
     """Adjusts logging level to display messages with the trace number being
-    less than or equal to a certain value.
+    less than or equal to the provided value.
 
     Parameters
     ----------
