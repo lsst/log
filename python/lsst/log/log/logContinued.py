@@ -22,9 +22,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-__all__ = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL",
-           "Log", "UsePythonLogging", "LevelTranslator", "LogHandler"]
-
 import logging
 import inspect
 import os
@@ -251,8 +248,7 @@ def doNotUsePythonLogging():
 
 
 class UsePythonLogging:
-    """Context manager to enable Python log forwarding temporarily.
-    """
+    """Context manager to enable Python log forwarding temporarily."""
 
     def __init__(self):
         self.current = Log.UsePythonLogging
@@ -310,11 +306,6 @@ class LevelTranslator:
 
 class LogHandler(logging.Handler):
     """Handler for Python logging module that emits to LSST logging.
-
-    Parameters
-    ---------
-    level : `int`
-        Level at which to set the this handler.
 
     Notes
     -----
