@@ -183,6 +183,9 @@ def isEnabledFor(logger, level):
     Log.getLogger(logger).isEnabledFor(level)
 
 
+# This will cause a warning in Sphinx documentation due to confusion between
+# Log and log. https://github.com/astropy/sphinx-automodapi/issues/73 (but
+# note that this does not seem to be Mac-only).
 def log(loggername, level, fmt, *args, **kwargs):
     Log.getLogger(loggername)._log(level, False, fmt, *args)
 
@@ -247,6 +250,10 @@ def lwpID():
     return Log.lwpID
 
 
+# This will cause a warning in Sphinx documentation due to confusion between
+# UsePythonLogging and usePythonLogging.
+# https://github.com/astropy/sphinx-automodapi/issues/73 (but note that this
+# does not seem to be Mac-only).
 def usePythonLogging():
     Log.usePythonLogging()
 
@@ -317,7 +324,7 @@ class LogHandler(logging.Handler):
     """Handler for Python logging module that emits to LSST logging.
 
     Parameters
-    ---------
+    ----------
     level : `int`
         Level at which to set the this handler.
 
