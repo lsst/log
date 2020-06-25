@@ -317,7 +317,7 @@ class LogHandler(logging.Handler):
     """Handler for Python logging module that emits to LSST logging.
 
     Parameters
-    ---------
+    ----------
     level : `int`
         Level at which to set the this handler.
 
