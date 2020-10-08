@@ -46,8 +46,8 @@ ERROR = 40000
 FATAL = 50000
 
 
-@continueClass  # noqa F811 redefinition
-class Log:
+@continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
+class Log:  # noqa: F811
     UsePythonLogging = False
     """Forward Python `lsst.log` messages to Python `logging` package."""
 
