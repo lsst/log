@@ -90,9 +90,10 @@ class LogRedirect:
     errors : `str`
         Encoding error handling.
 
-    See Also
-    --------
-    https://stackoverflow.com/questions/41216215
+    Notes
+    -----
+    Inspired by `this Stack Overflow answer
+    <https://stackoverflow.com/questions/41216215>`_
     """
 
     def __init__(self, fd=1, dest=sys.stderr, encoding="utf-8", errors="strict"):
