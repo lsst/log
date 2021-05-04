@@ -51,6 +51,10 @@ class Log:  # noqa: F811
     UsePythonLogging = False
     """Forward Python `lsst.log` messages to Python `logging` package."""
 
+    @property
+    def name(self):
+        return self.getName()
+
     @classmethod
     def usePythonLogging(cls):
         """Forward log messages to Python `logging`
