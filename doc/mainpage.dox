@@ -451,6 +451,65 @@ or in Python:
 One should note that this initialization function will only be called in the current thread from which `LOG_MDC_INIT()` was called and all new threads, if there are some other threads running at a time of this call the function will not be called for them. Normally the function registered with `LOG_MDC_INIT()` will be called only once per thread but under some circumstances it may be called more than once. Registering the same function multiple times will result is multiple calls to the same function.
 
 
+\section logToPython Redirecting to Python logging
+
+For some Python applications it is preferrable to have everyhting forwarded to Python `logging` system. This package implements special `log4cxx` appender class that supports this functionality. To simply forward all log4cxx events to Python one needs to configure `log4cxx` using a special appender (and which is naturally done from Python):
+
+    import lsst.log
+
+    PROP = """
+    log4j.rootLogger = INFO, PyLog
+    log4j.appender.PyLog = org.apache.log4j.PyLogAppender
+    """
+    lsst.log.configure_prop(PROP)
+
+Logging level configuration needs some special care in this case, e.g. if DEBUG level output is needed then DEBUG level needs to be enabled in both `log4cxx` and `logging`. Alternative is to always configure `log4cxx` with TRACE level and adjust `logging` configuration to a selected level.
+
+One complication with this scheme is support for MDC. `PyLogAppender` converts MDC to attributes of the `LogRecord` instance to make them accessible on Python side (MDC keys that can clash with existing LogRecord attributes are ignored). Unfortunately accessing those attributes in a portable way is not very easy in Python, One can render these attributes using a regular `"%(attribute)s"` expressions in a `logging` format string, but that requires attribute to be present in every instance of `LogRecord` which may not be true for records originated from other sources. There are two possible workarounds to handle this complication described below.
+
+\subsection logToPythonMDC1 Rendering MDC in `log4cxx`
+
+One option is render MDC into the log message before it is passed to Python. This can be done by specifying layout configuration for the appender, e.g.:
+
+    PROP = """
+    log4j.rootLogger = INFO, PyLog
+    log4j.appender.PyLog = org.apache.log4j.PyLogAppender
+    log4j.appender.PyLog.layout = PatternLayout
+    log4j.appender.PyLog.layout.ConversionPattern = %m (%X{LABEL})
+    """
+    lsst.log.configure_prop(PROP)
+
+In this example if MDC contains "LABEL" key it will be added to a message enclosed in parentheses. Note that message formatting still happens in Python, above configuration only changes the `message` part of the output and not the whole record format.
+
+\subsection logToPythonMDC2 Rendering MDC in `logging`
+
+It is also possible to specify MDC formatting in a `logging` format string but one has to make sure that corresponding attribute exists in every generated record. The easiest way to guarantee that is to implement a `logging` record factory method following this pattern:
+
+    import lsst.log
+    import logging
+
+    old_factory = logging.getLogRecordFactory()
+
+    def record_factory(*args, **kwargs):
+        record = old_factory(*args, **kwargs)
+        record.LABEL = ""
+        return record
+
+    logging.setLogRecordFactory(record_factory)
+
+    PROP = """
+    log4j.rootLogger = DEBUG, PyLog
+    log4j.appender.PyLog = org.apache.log4j.PyLogAppender
+    """
+
+    lsst.log.configure_prop(PROP)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s %(asctime)s %(name)s (%(LABEL)s) %(filename)s:%(lineno)s - %(message)s")
+
+The record factory adds an empty `LABEL` attribute to every record. If MDC contains "LABEL" key then `PyLogAppender` will use its value to set the same `LABEL` attribute of a new record. Format string in this case contains `%(LABEL)s` which renders attribute value into a final message.
+
+
 \section benchmarks Benchmarks
 
 Measuring the performance of lsst.log when actually writing log messages to output targets such as a file or socket provides little to no information due to buffering and the fact that in the absence of buffering these operations are I/O limited. Conversely, timing calls to log functions when the level threshold is not met is quite valuable since an ideal logging system would add no appreciable overhead when deactivated. Basic measurements of the performance of Log have been made with the level threshold such that logging messages are not written. These measurements are made within a single-node instance of Qserv running on lsst-dev03 without significant competition from other system activity. The average time required to submit the following suppressed log message is 26 nanoseconds:
