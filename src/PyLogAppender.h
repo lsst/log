@@ -101,7 +101,6 @@ private:
     using LRUCache = std::map<std::string, LRUEntry>;
 
     PyObjectPtr m_getLogger;  // logging.getLogger() method
-    PyObjectPtr m_getLogRecordFactory;  // logging.getLogRecordFactory() method
     std::mutex m_cache_mutex;
     uint32_t m_lru_age = 0;
     LRUCache m_cache;  // LRU cache for loggers

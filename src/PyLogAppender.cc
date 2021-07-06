@@ -1,10 +1,11 @@
-// -*- LSST-C++ -*-
 /*
- * LSST Data Management System
- * Copyright 2014 AURA/LSST.
+ * This file is part of log.
  *
- * This product includes software developed by the
- * LSST Project (http://www.lsst.org/).
+ * Developed for the LSST Data Management System.
+ * This product includes software developed by the LSST Project
+ * (https://www.lsst.org).
+ * See the COPYRIGHT file at the top-level directory of this distribution
+ * for details of code ownership.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +17,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the LSST License Statement and
- * the GNU General Public License along with this program.  If not,
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <algorithm>
+#include <set>
 #include <stdexcept>
 
 #include "./PyLogAppender.h"
@@ -33,6 +34,14 @@ IMPLEMENT_LOG4CXX_OBJECT(PyLogAppender)
 
 namespace {
 
+// Names of LogRecord attributes that we do not want to override from MDC.
+std::set<std::string> g_LogRecordAttributes({
+    "args", "asctime", "created", "exc_info", "filename", "funcName",
+    "levelname", "levelno", "lineno", "message", "module", "msecs", "msg",
+    "name", "pathname", "process", "processName", "relativeCreated",
+    "stack_info", "thread", "threadName"});
+
+// GIL wrapper class
 class GilGuard {
 public:
 
@@ -61,6 +70,7 @@ std::string reraise(std::string const& message) {
     throw std::runtime_error(exc_msg);
 }
 
+// Maximum size of the logger name cache
 unsigned const g_max_lru_cache_size = 32;
 
 }
@@ -81,10 +91,6 @@ PyLogAppender::PyLogAppender() {
     if (m_getLogger == nullptr) {
         ::reraise("AttributeError: logging.getLogger method does not exist");
     }
-    m_getLogRecordFactory = PyObject_GetAttrString(logging, "getLogRecordFactory");
-    if (m_getLogRecordFactory == nullptr) {
-        ::reraise("AttributeError: logging.getLogRecordFactory method does not exist");
-    }
 }
 
 void PyLogAppender::append(const spi::LoggingEventPtr& event, log4cxx::helpers::Pool& p) {
@@ -102,9 +108,8 @@ void PyLogAppender::append(const spi::LoggingEventPtr& event, log4cxx::helpers::
         std::lock_guard<std::mutex> lock(m_cache_mutex);
         auto cache_iter = m_cache.find(logger_name);
         if (cache_iter != m_cache.end()) {
-            // use it an update its age
+            // use it, age is updated later
             logger = cache_iter->second.logger;
-            cache_iter->second.age = m_lru_age ++;
         }
     }
 
@@ -167,45 +172,42 @@ void PyLogAppender::append(const spi::LoggingEventPtr& event, log4cxx::helpers::
             log4cxx::helpers::Transcoder::encodeUTF8(event->getMessage(), message);
         }
 
-        // factory = logging.getLogRecordFactory()
-        PyObjectPtr factory(PyObject_CallFunction(m_getLogRecordFactory, nullptr));
-        if (factory == nullptr) {
-            ::reraise("Failed to retrieve LogRecord factory");
-        }
-
-        // record = factory(logger_name, pyLevel, file_name, lineno, message, Py_None, Py_None)
-        PyObjectPtr record(PyObject_CallFunction(factory, "sisisOO",
-                                                 logger_name.c_str(),
-                                                 pyLevel,
-                                                 file_name.c_str(),
-                                                 lineno,
-                                                 message.c_str(),
-                                                 Py_None,
-                                                 Py_None));
+        // record = logger.makeRecord(name, level, fn, lno, msg, args, exc_info,
+        //                            func=None, extra=None, sinfo=None)
+        // I would like to pass MDC as an `extra` argument but that does not
+        // work reliably in case we want to override record factory.
+        PyObjectPtr record(PyObject_CallMethod(logger, "makeRecord", "sisisOO",
+                                               logger_name.c_str(),
+                                               pyLevel,
+                                               file_name.c_str(),
+                                               lineno,
+                                               message.c_str(),
+                                               Py_None,
+                                               Py_None));
         if (record == nullptr) {
             ::reraise("Failed to create LogRecord instance");
         }
 
-        // add MDC as record attribute, setattr(record, "MDC", dict(event.MDC()))
-        auto mdc_keys = event->getMDCKeySet();
-        if (not mdc_keys.empty()) {
-            PyObjectPtr mdc_dict(PyDict_New());
-            for (auto& mdc_key: mdc_keys) {
-                std::string key, value;
-                log4cxx::LogString mdc_value;
-                event->getMDC(mdc_key, mdc_value);
-                log4cxx::helpers::Transcoder::encodeUTF8(mdc_key, key);
-                log4cxx::helpers::Transcoder::encodeUTF8(mdc_value, value);
-                PyObjectPtr py_value(PyUnicode_FromStringAndSize(value.data(), value.size()));
-                PyDict_SetItemString(mdc_dict, key.c_str(), py_value);
+        // Add MDC keys as record attributes, make sure we do not override
+        // anything important
+        for (auto& mdc_key: event->getMDCKeySet()) {
+            std::string key, value;
+            log4cxx::helpers::Transcoder::encodeUTF8(mdc_key, key);
+            if (g_LogRecordAttributes.count(key) > 0) {
+                // quietly ignore, alternatively can use `warnings`
+                continue;
             }
-            if (PyObject_SetAttrString(record, "MDC", mdc_dict) == -1) {
-                ::reraise("Failed to set LogRecord.MDC attribute");
+            log4cxx::LogString mdc_value;
+            event->getMDC(mdc_key, mdc_value);
+            log4cxx::helpers::Transcoder::encodeUTF8(mdc_value, value);
+            PyObjectPtr py_value(PyUnicode_FromStringAndSize(value.data(), value.size()));
+            if (PyObject_SetAttrString(record, key.c_str(), py_value) == -1) {
+                ::reraise("Failed to set LogRecord attribute");
             }
         }
 
         // logger.handle(record)
-        PyObjectPtr res(PyObject_CallMethod(logger.get(), "handle", "O", record.get()));
+        PyObjectPtr res(PyObject_CallMethod(logger, "handle", "O", record.get()));
         if (res == nullptr) {
             ::reraise("Logger failed to handle LogRecord");
         }
