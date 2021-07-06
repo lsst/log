@@ -571,6 +571,43 @@ INFO message: lsst.log root logger, PythonLogging""")
         # Verify that forwarding is disabled
         self.assertFalse(log.Log.UsePythonLogging)
 
+    def testForwardToPythonAppender(self):
+        """Test that `log4cxx` appender forwards it all to logging"""
+        self.configure("""
+log4j.rootLogger=DEBUG, PyLog
+log4j.appender.PyLog = org.apache.log4j.PyLogAppender
+""")
+        with self.assertLogs(level="WARNING") as cm:
+            log.warn("lsst.log: forwarded")
+            logging.warning("Python logging: also captured")
+        self.assertEqual(len(cm.output), 2)
+
+        # check that MDC is stored in LogRecord
+        log.MDC("LABEL", "some.task")
+        with self.assertLogs(level="WARNING") as cm:
+            log.warn("lsst.log: forwarded")
+        log.MDCRemove("LABEL")
+        self.assertEqual(len(cm.records), 1)
+        self.assertEqual(cm.records[0].LABEL, "some.task")
+        self.assertEqual(cm.records[0].msg, "lsst.log: forwarded")
+
+    def testForwardToPythonAppenderWithMDC(self):
+        """Test that `log4cxx` appender forwards it all to logging and modifies
+        message with MDC info"""
+        self.configure("""
+log4j.rootLogger=DEBUG, PyLog
+log4j.appender.PyLog = org.apache.log4j.PyLogAppender
+log4j.appender.PyLog.layout = PatternLayout
+log4j.appender.PyLog.layout.ConversionPattern = %m (LABEL=%X{{LABEL}})
+""")
+        log.MDC("LABEL", "some.task")
+        with self.assertLogs(level="WARNING") as cm:
+            log.warn("lsst.log: forwarded")
+        log.MDCRemove("LABEL")
+        self.assertEqual(len(cm.records), 1)
+        self.assertEqual(cm.records[0].LABEL, "some.task")
+        self.assertEqual(cm.records[0].msg, "lsst.log: forwarded (LABEL=some.task)")
+
     def testLevelTranslator(self):
         """Test LevelTranslator class
         """
