@@ -29,9 +29,7 @@
 
 #include <cstddef>
 
-namespace lsst {
-namespace log {
-namespace detail {
+namespace lsst::log::detail {
 
 /**
  *  Smart pointer class for PyObject instances.
@@ -96,8 +94,8 @@ public:
         return object;
     }
 
-    // This returns a reference so you can that a pointer of a pointer, needed
-    // for some API methods
+    // This returns a reference so you can take a pointer of a pointer, needed
+    // for some API methods.
     PyObject*& get() { return m_object; }
 
     // compare to nullptr
@@ -109,7 +107,6 @@ private:
     PyObject* m_object = nullptr;
 };
 
-
-}}} // namespace lsst::log::detail
+} // namespace lsst::log::detail
 
 #endif // LSST_LOG_PYOBJECTPTR_H

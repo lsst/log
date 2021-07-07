@@ -38,9 +38,7 @@
 #include "log4cxx/helpers/object.h"
 #include "PyObjectPtr.h"
 
-namespace lsst {
-namespace log {
-namespace detail {
+namespace lsst::log::detail {
 
 // This needs to be here for all LOG4CXX macros to work
 using namespace log4cxx;
@@ -100,12 +98,12 @@ private:
 
     using LRUCache = std::map<std::string, LRUEntry>;
 
-    PyObjectPtr m_getLogger;  // logging.getLogger() method
-    std::mutex m_cache_mutex;
-    uint32_t m_lru_age = 0;
-    LRUCache m_cache;  // LRU cache for loggers
+    PyObjectPtr _getLogger;  // logging.getLogger() method
+    std::mutex _cache_mutex;
+    uint32_t _lru_age = 0;
+    LRUCache _cache;  // LRU cache for loggers
 };
 
-}}} // namespace lsst::log::detail
+} // namespace lsst::log::detail
 
 #endif // LSST_LOG_PYLOGAPPENDER_H
