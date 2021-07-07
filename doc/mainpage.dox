@@ -453,7 +453,7 @@ One should note that this initialization function will only be called in the cur
 
 \section logToPython Redirecting to Python logging
 
-For some Python applications it is preferrable to have everyhting forwarded to Python `logging` system. This package implements special `log4cxx` appender class that supports this functionality. To simply forward all log4cxx events to Python one needs to configure `log4cxx` using a special appender (and which is naturally done from Python):
+For many Python applications it is preferable to have everything forwarded to the Python `logging` system. This package implements a special `log4cxx` appender class that supports this functionality. To simply forward all log4cxx events to Python one needs to configure `log4cxx` using this special appender (and which is naturally done from Python):
 
     import lsst.log
 
