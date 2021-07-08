@@ -22,24 +22,21 @@
  */
 
 #include <algorithm>
-#include <set>
+#include <memory>
 #include <stdexcept>
 
 #include "./PyLogAppender.h"
+#include "log4cxx/patternlayout.h"
+#include "log4cxx/helpers/stringhelper.h"
 
 // macro below dows not work without this using directive
 // (and it breaks if placed inside namespaces)
 using lsst::log::detail::PyLogAppender;
 IMPLEMENT_LOG4CXX_OBJECT(PyLogAppender)
 
-namespace {
+using namespace log4cxx::helpers;
 
-// Names of LogRecord attributes that we do not want to override from MDC.
-std::set<std::string> const LOG_RECORD_ATTRIBUTES({
-    "args", "asctime", "created", "exc_info", "filename", "funcName",
-    "levelname", "levelno", "lineno", "message", "module", "msecs", "msg",
-    "name", "pathname", "process", "processName", "relativeCreated",
-    "stack_info", "thread", "threadName"});
+namespace {
 
 // GIL wrapper class
 class GilGuard {
@@ -88,6 +85,15 @@ PyLogAppender::PyLogAppender() {
     _getLogger = PyObject_GetAttrString(logging, "getLogger");
     if (_getLogger == nullptr) {
         ::reraise("AttributeError: logging.getLogger method does not exist");
+    }
+
+    PyObjectPtr utils_module(PyImport_ImportModule("lsst.log.utils"));
+    if (utils_module == nullptr) {
+        ::reraise("ImportError: Failed to import lsst.log.utils module");
+    }
+    _mdc_class = PyObject_GetAttrString(utils_module, "_MDC");
+    if (_mdc_class == nullptr) {
+        ::reraise("AttributeError: lsst.log.utils._MDC class does not exist");
     }
 }
 
@@ -195,21 +201,39 @@ void PyLogAppender::append(const spi::LoggingEventPtr& event, log4cxx::helpers::
         ::reraise("Failed to create LogRecord instance");
     }
 
-    // Add MDC keys as record attributes, make sure we do not override
-    // anything important
+    // Record should already have an `MDC` attribute added by a record factory,
+    // and it may be pre-filled with some info by the same factory. Here we
+    // assume that if it already exists then it is dict-like, if it does not
+    // we add this attribute as lsst.log.utils._MDC instance (which is a dict
+    // with some extra niceties).
+
+    // mdc = getattr(record, "MDC")
+    PyObjectPtr mdc(PyObject_GetAttrString(record, "MDC"));
+    if (mdc == nullptr) {
+        PyErr_Clear();
+        // mdc = lsst.log.utils._MDC()
+        mdc = PyObject_CallObject(_mdc_class, nullptr);
+        if (mdc == nullptr) {
+            ::reraise("Failed to make _MDC instance");
+        }
+        // record.MDC = mdc
+        if (PyObject_SetAttrString(record, "MDC", mdc) == -1) {
+            ::reraise("Failed to set LogRecord MDC attribute");
+        }
+    }
+
+    // Copy MDC to dict, for key in getMDCKeySet(): mdc[key] = event.getMDC(key)
     for (auto& mdc_key: event->getMDCKeySet()) {
         std::string key, value;
         log4cxx::helpers::Transcoder::encodeUTF8(mdc_key, key);
-        if (LOG_RECORD_ATTRIBUTES.count(key) > 0) {
-            // quietly ignore, alternatively can use `warnings`
-            continue;
-        }
         log4cxx::LogString mdc_value;
         event->getMDC(mdc_key, mdc_value);
         log4cxx::helpers::Transcoder::encodeUTF8(mdc_value, value);
         PyObjectPtr py_value(PyUnicode_FromStringAndSize(value.data(), value.size()));
-        if (PyObject_SetAttrString(record, key.c_str(), py_value) == -1) {
-            ::reraise("Failed to set LogRecord attribute");
+        PyObjectPtr py_key(PyUnicode_FromStringAndSize(key.data(), key.size()));
+        if (PyObject_SetItem(mdc, py_key, py_value) == -1) {
+            // it is probably not a dictionary
+            ::reraise("Failed to update MDC dictionary");
         }
     }
 
@@ -224,7 +248,17 @@ void PyLogAppender::close() {
 }
 
 bool PyLogAppender::requiresLayout() const {
-    return true;
+    return false;
+}
+
+void PyLogAppender::setOption(const LogString &option, const LogString &value) {
+
+    if (StringHelper::equalsIgnoreCase(option, LOG4CXX_STR("MESSAGEPATTERN"),
+                                       LOG4CXX_STR("messagepattern"))) {
+        setLayout(LayoutPtr(new PatternLayout(value)));
+    } else {
+        AppenderSkeleton::setOption(option, value);
+    }
 }
 
 } // namespace lsst::log::detail

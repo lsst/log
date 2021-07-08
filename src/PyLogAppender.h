@@ -70,19 +70,24 @@ public:
     /**
      * Forward the event to Python logging.
      */
-    virtual void append(const spi::LoggingEventPtr& event, log4cxx::helpers::Pool& p);
+    void append(const spi::LoggingEventPtr& event, log4cxx::helpers::Pool& p) override;
 
     /**
      * Close this appender instance, this is no-op.
      */
-    virtual void close();
+    void close() override;
 
     /**
      * Returns true if appender "requires" layout to be defined for it.
      *
-     * This appender returns true, but layout is optional in configuration.
+     * This appender returns false, we use layout but construct it differently.
      */
-    virtual bool requiresLayout() const;
+    bool requiresLayout() const override;
+
+    /**
+     * Handle configuration options.
+     */
+    void setOption(const LogString &option, const LogString &value) override;
 
 private:
 
@@ -99,6 +104,7 @@ private:
     using LRUCache = std::map<std::string, LRUEntry>;
 
     PyObjectPtr _getLogger;  // logging.getLogger() method
+    PyObjectPtr _mdc_class;  // lsst.log.utils._MDC class
     std::mutex _cache_mutex;
     uint32_t _lru_age = 0;
     LRUCache _cache;  // LRU cache for loggers

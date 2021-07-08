@@ -150,3 +150,33 @@ def disable_notebook_logging():
     if _redirect is not None:
         _redirect.finish()
         _redirect = None
+
+
+class _MDC(dict):
+    """Dictionary for MDC data.
+
+    This is internal class used for better formatting of MDC in Python logging
+    output. It behaves like `defaultdict(str)` but overrides ``__str__`` and
+    ``__repr__`` method to produce output better suited for logging records.
+    It also provides namespace-like access to
+    """
+    def __getitem__(self, name: str):
+        """Returns value for a given key or empty string for missing key.
+        """
+        return self.get(name, "")
+
+    def __getattr__(self, name: str):
+        """Return value as object attribute.
+        """
+        return self.get(name, "")
+
+    def __str__(self):
+        """Return string representation, strings are interpolated without
+        quotes.
+        """
+        keys = sorted(self)
+        items = ("{}={!s}".format(k, self[k]) for k in keys)
+        return "{" + ", ".join(items) + "}"
+
+    def __repr__(self):
+        return str(self)

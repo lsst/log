@@ -359,7 +359,7 @@ or alternatively using `%%X` format code without additional key to display full 
 In C++, the following MDC macros are available:
 - `LOG_MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%%X{`'''`key`'''`}` in the formatting string of an associated appender.
 - `LOG_MDC_REMOVE(key)` Delete the existing value from the global map that is associated with '''`key`'''.
-- `LOG_MDC_SCOPE(key, value)` Adds key/value to MDC and restores previous value when execution leaves the scope. Typically used at the beggining of the function if one needs to define MDC key/value for the whole duration of the function.
+- `LOG_MDC_SCOPE(key, value)` Adds key/value to MDC and restores previous value when execution leaves the scope. Typically used at the beginning of the function if one needs to define MDC key/value for the whole duration of the function.
 
 In Python, the `lsst.log` module provides the following MDC functions:
 - `MDC(key, value)` Map the value '''`value`''' to the global key '''`key`''' such that it may be included in subsequent log messages by including the directive `%%X{`'''`key`'''`}` in the formatting string of an associated appender. Note that `value` is converted to a string by Python before it is stored in the MDC.
@@ -393,7 +393,7 @@ This has to be done after fork() and corresponding formatting code needs to be a
 
 \subsection TID Display thread ID
 
-The conversion pattern in log4cxx has special conversion code (`%%t`) to render "thread ID", the rendered value is a pointer to `thread_t` object (on POSIX systems) and is rendered as a long string of hexadecimal digits which makes it difficult to read for non-hardcore programmers. `lsst.log` provides more human-friendly way to print thread-identifying information. Special function `lsst::log::lwpID()` returns light-weight process ID (LWP) on the plaftorms that support this feature and small incremental integer number on other platforms. Using this function one can add LWP to MDC and configure output format to include this special MDC key:
+The conversion pattern in log4cxx has special conversion code (`%%t`) to render "thread ID", the rendered value is a pointer to `thread_t` object (on POSIX systems) and is rendered as a long string of hexadecimal digits which makes it difficult to read for non-hardcore programmers. `lsst.log` provides more human-friendly way to print thread-identifying information. Special function `lsst::log::lwpID()` returns light-weight process ID (LWP) on the platftorms that support this feature and small incremental integer number on other platforms. Using this function one can add LWP to MDC and configure output format to include this special MDC key:
 
 In C++:
 
@@ -412,9 +412,9 @@ In Python:
 
 \subsection MDCthreads MDC and multi-threading
 
-MDC is a great tool to associate some context information with the messages but its use in multi-threaded applications can be complicated. MDC is per-thread instance and it is initialized as empty in every new thread. If application adds somethig to MDC in main thread this information will not exist in other threads unless it is explicitly set in those other threads. This may be an issue for applications which do not have complete control over thread lifetime.
+MDC is a great tool to associate some context information with the messages but its use in multi-threaded applications can be complicated. MDC is per-thread instance and it is initialized as empty in every new thread. If application adds something to MDC in main thread this information will not exist in other threads unless it is explicitly set in those other threads. This may be an issue for applications which do not have complete control over thread lifetime.
 
-This package provides a mechanism to initialize MDC in all threads started by a process. Special macro `LOG_MDC_INIT(function)` can be used to register a function to be called in in every new thread (and in current thread) before any logging message is sent to a logging system. This function can do anything but its main pupose is to initialize MDC with useful values.
+This package provides a mechanism to initialize MDC in all threads started by a process. Special macro `LOG_MDC_INIT(function)` can be used to register a function to be called in in every new thread (and in current thread) before any logging message is sent to a logging system. This function can do anything but its main purpose is to initialize MDC with useful values.
 
 Here is an example of this:
 
@@ -467,27 +467,29 @@ To simply forward all log4cxx events to Python one needs to configure `log4cxx` 
 
 Logging level configuration needs some special care in this case, e.g. if DEBUG level output is needed then DEBUG level needs to be enabled in both `log4cxx` and `logging`.
 Alternative is to always configure `log4cxx` with TRACE level and adjust `logging` configuration to a selected level.
-Latter option has a definite performance implications as all logging messages will be generated and formatted at C++ level which can slow down things significantly.
+Latter option has performance implications as all logging messages will be generated and formatted at C++ level which can slow down things significantly.
 
 One complication with this scheme is support for MDC.
-`PyLogAppender` converts MDC to attributes of the `LogRecord` instance to make them accessible on Python side (MDC keys that can clash with existing LogRecord attributes are ignored).
-Unfortunately accessing those attributes in a portable way is not very easy in Python.
-One can render these attributes using a regular `"%(attribute)s"` expressions in a `logging` format string, but that requires attribute to be present in every instance of `LogRecord` which may not be true for records originated from other sources.
+`PyLogAppender` converts MDC to a Python dictionary-like object and adds it as an `MDC` attribute to a `LogRecord` instance to make MDC accessible on Python side.
+If `MDC` attribute already exists in `LogRecord` (e.g. it is added by record factory) `PyLogAppender` assumes that it behaves like a dictionary and updates it with MDC contents.
+Unfortunately accessing MDC attribute in a portable way is not very easy in Python.
+One can render MDC using a regular `"%(MDC)s"` expressions in a `logging` format string, but that requires `MDC` attribute to be present in every instance of `LogRecord` which may not be true for records originated from other sources.
 There are two possible workarounds to handle this complication described below.
 
 \subsection logToPythonMDC1 Rendering MDC in `log4cxx`
 
-One option is render MDC into the log message before it is passed to Python.
-This can be done by specifying layout configuration for the appender, e.g.:
+One option is to render MDC into the log message before it is passed to Python.
+This can be done by specifying `MessagePattern` configuration option for the appender, e.g.:
 
     PROP = """
     log4j.rootLogger = INFO, PyLog
     log4j.appender.PyLog = org.apache.log4j.PyLogAppender
-    log4j.appender.PyLog.layout = PatternLayout
-    log4j.appender.PyLog.layout.ConversionPattern = %m (%X{LABEL})
+    log4j.appender.PyLog.MessagePattern = %m (%X{LABEL})
     """
     lsst.log.configure_prop(PROP)
 
+`MessagePattern` value has the same format as `ConversionPattern` option of `PatternLayout` and can potentially include other items.
+If `MessagePattern` is missing it has the same effect as specifying `%m`.
 In this example if MDC contains "LABEL" key it will be added to a message enclosed in parentheses.
 Note that message formatting still happens in Python, above configuration only changes the `message` part of the output and not the whole record format.
 
@@ -497,13 +499,14 @@ It is also possible to specify MDC formatting in a `logging` format string but o
 The easiest way to guarantee that is to implement a `logging` record factory method following this pattern:
 
     import lsst.log
+    import lsst.log.utils
     import logging
 
     old_factory = logging.getLogRecordFactory()
 
     def record_factory(*args, **kwargs):
         record = old_factory(*args, **kwargs)
-        record.LABEL = ""
+        record.MDC = lsst.log.utils._MDC()
         return record
 
     logging.setLogRecordFactory(record_factory)
@@ -516,11 +519,20 @@ The easiest way to guarantee that is to implement a `logging` record factory met
     lsst.log.configure_prop(PROP)
     logging.basicConfig(
         level=logging.INFO,
-        format="%(levelname)s %(asctime)s %(name)s (%(LABEL)s) %(filename)s:%(lineno)s - %(message)s")
+        format="%(levelname)s %(asctime)s %(name)s (%(MDC)s) %(filename)s:%(lineno)s - %(message)s")
 
-The record factory adds an empty `LABEL` attribute to every record.
-If MDC contains "LABEL" key then `PyLogAppender` will use its value to set the same `LABEL` attribute of a new record.
-Format string in this case contains `%(LABEL)s` which renders attribute value into a final message.
+The record factory adds an `MDC` attribute to every record using special `_MDC` class instance, same type that is used by PyLogAppender when `MDC` attribute does not exist in `LogRecord`.
+`_MDC` class is a dictionary with a modified formatting which is more suitable for logging output. It also act similarly to `defaultdict` returning empty string for any key that does not exist in a dictionary.
+
+It is possible to render individual MDC items in formatted message using format-style option for format string which supports indexing access in format expressions:
+
+    logging.basicConfig(
+        level=logging.INFO,
+        style="{",
+        format="{levelname} {asctime} {name} ({MDC[LABEL]}) {filename}:{lineno} - {message}")
+
+If "LABEL" key is present in MDC then it will appear in the output, if "LABEL" is missing then empty string is rendered thanks to defaultdict-like behavior of `_MDC` objects.
+As before this depends on `MDC` present in every LogRecord so it has to be added by a record factory.
 
 
 \section benchmarks Benchmarks
