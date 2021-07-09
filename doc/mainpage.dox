@@ -476,7 +476,7 @@ Unfortunately accessing MDC attribute in a portable way is not very easy in Pyth
 One can render MDC using a regular `"%(MDC)s"` expressions in a `logging` format string, but that requires `MDC` attribute to be present in every instance of `LogRecord` which may not be true for records originated from other sources.
 There are two possible workarounds to handle this complication described below.
 
-\subsection logToPythonMDC1 Rendering MDC in `log4cxx`
+\subsection logToPythonMDC1 Rendering MDC in log4cxx
 
 One option is to render MDC into the log message before it is passed to Python.
 This can be done by specifying `MessagePattern` configuration option for the appender, e.g.:
@@ -493,7 +493,7 @@ If `MessagePattern` is missing it has the same effect as specifying `%m`.
 In this example if MDC contains "LABEL" key it will be added to a message enclosed in parentheses.
 Note that final message formatting still happens in Python, above configuration only changes the `message` part of the output and not the whole record format.
 
-\subsection logToPythonMDC2 Rendering MDC in `logging`
+\subsection logToPythonMDC2 Rendering MDC in logging
 
 It is also possible to specify MDC formatting in a `logging` format string but one has to make sure that corresponding attribute exists in every generated record.
 The easiest way to guarantee that is to implement a `logging` record factory method following this pattern:
