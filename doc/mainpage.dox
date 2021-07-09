@@ -393,7 +393,7 @@ This has to be done after fork() and corresponding formatting code needs to be a
 
 \subsection TID Display thread ID
 
-The conversion pattern in log4cxx has special conversion code (`%%t`) to render "thread ID", the rendered value is a pointer to `thread_t` object (on POSIX systems) and is rendered as a long string of hexadecimal digits which makes it difficult to read for non-hardcore programmers. `lsst.log` provides more human-friendly way to print thread-identifying information. Special function `lsst::log::lwpID()` returns light-weight process ID (LWP) on the platftorms that support this feature and small incremental integer number on other platforms. Using this function one can add LWP to MDC and configure output format to include this special MDC key:
+The conversion pattern in log4cxx has special conversion code (`%%t`) to render "thread ID", the rendered value is a pointer to `thread_t` object (on POSIX systems) and is rendered as a long string of hexadecimal digits which makes it difficult to read for non-hardcore programmers. `lsst.log` provides more human-friendly way to print thread-identifying information. Special function `lsst::log::lwpID()` returns light-weight process ID (LWP) on the platforms that support this feature and small incremental integer number on other platforms. Using this function one can add LWP to MDC and configure output format to include this special MDC key:
 
 In C++:
 
@@ -491,7 +491,7 @@ This can be done by specifying `MessagePattern` configuration option for the app
 `MessagePattern` value has the same format as `ConversionPattern` option of `PatternLayout` and can potentially include other items.
 If `MessagePattern` is missing it has the same effect as specifying `%m`.
 In this example if MDC contains "LABEL" key it will be added to a message enclosed in parentheses.
-Note that message formatting still happens in Python, above configuration only changes the `message` part of the output and not the whole record format.
+Note that final message formatting still happens in Python, above configuration only changes the `message` part of the output and not the whole record format.
 
 \subsection logToPythonMDC2 Rendering MDC in `logging`
 
@@ -532,7 +532,7 @@ It is possible to render individual MDC items in formatted message using format-
         format="{levelname} {asctime} {name} ({MDC[LABEL]}) {filename}:{lineno} - {message}")
 
 If "LABEL" key is present in MDC then it will appear in the output, if "LABEL" is missing then empty string is rendered thanks to defaultdict-like behavior of `_MDC` objects.
-As before this depends on `MDC` present in every LogRecord so it has to be added by a record factory.
+As before this depends on `MDC` being present in every LogRecord so it has to be added by a record factory.
 
 
 \section benchmarks Benchmarks
