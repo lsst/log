@@ -87,13 +87,13 @@ PyLogAppender::PyLogAppender() {
         ::reraise("AttributeError: logging.getLogger method does not exist");
     }
 
-    PyObjectPtr utils_module(PyImport_ImportModule("lsst.log.utils"));
-    if (utils_module == nullptr) {
-        ::reraise("ImportError: Failed to import lsst.log.utils module");
+    PyObjectPtr lsstlog_module(PyImport_ImportModule("lsst.log"));
+    if (lsstlog_module == nullptr) {
+        ::reraise("ImportError: Failed to import lsst.log module");
     }
-    _mdc_class = PyObject_GetAttrString(utils_module, "_MDC");
+    _mdc_class = PyObject_GetAttrString(lsstlog_module, "MDCDict");
     if (_mdc_class == nullptr) {
-        ::reraise("AttributeError: lsst.log.utils._MDC class does not exist");
+        ::reraise("AttributeError: lsst.log.MDCDict class does not exist");
     }
 }
 
@@ -204,17 +204,17 @@ void PyLogAppender::append(const spi::LoggingEventPtr& event, log4cxx::helpers::
     // Record should already have an `MDC` attribute added by a record factory,
     // and it may be pre-filled with some info by the same factory. Here we
     // assume that if it already exists then it is dict-like, if it does not
-    // we add this attribute as lsst.log.utils._MDC instance (which is a dict
-    // with some extra niceties).
+    // we add this attribute as lsst.log.MDCDict instance (which is a dict with
+    // some extra niceties).
 
     // mdc = getattr(record, "MDC")
     PyObjectPtr mdc(PyObject_GetAttrString(record, "MDC"));
     if (mdc == nullptr) {
         PyErr_Clear();
-        // mdc = lsst.log.utils._MDC()
+        // mdc = lsst.log.MDCDict()
         mdc = PyObject_CallObject(_mdc_class, nullptr);
         if (mdc == nullptr) {
-            ::reraise("Failed to make _MDC instance");
+            ::reraise("Failed to make MDCDict instance");
         }
         // record.MDC = mdc
         if (PyObject_SetAttrString(record, "MDC", mdc) == -1) {

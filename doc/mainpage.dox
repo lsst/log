@@ -499,20 +499,19 @@ It is also possible to specify MDC formatting in a `logging` format string but o
 The easiest way to guarantee that is to implement a `logging` record factory method following this pattern:
 
     import lsst.log
-    import lsst.log.utils
     import logging
 
     old_factory = logging.getLogRecordFactory()
 
     def record_factory(*args, **kwargs):
         record = old_factory(*args, **kwargs)
-        record.MDC = lsst.log.utils._MDC()
+        record.MDC = lsst.log.MDCDict()
         return record
 
     logging.setLogRecordFactory(record_factory)
 
     PROP = """
-    log4j.rootLogger = DEBUG, PyLog
+    log4j.rootLogger = INFO, PyLog
     log4j.appender.PyLog = org.apache.log4j.PyLogAppender
     """
 
@@ -521,8 +520,19 @@ The easiest way to guarantee that is to implement a `logging` record factory met
         level=logging.INFO,
         format="%(levelname)s %(asctime)s %(name)s (%(MDC)s) %(filename)s:%(lineno)s - %(message)s")
 
-The record factory adds an `MDC` attribute to every record using special `_MDC` class instance, same type that is used by PyLogAppender when `MDC` attribute does not exist in `LogRecord`.
-`_MDC` class is a dictionary with a modified formatting which is more suitable for logging output. It also act similarly to `defaultdict` returning empty string for any key that does not exist in a dictionary.
+The record factory adds an `MDC` attribute to every record using special `MDCDict` class instance, same type that is used by PyLogAppender when `MDC` attribute does not exist in `LogRecord`.
+Potentially any Python dictionary can be used in place of `MDCDict()` in the code above, `MDCDict` class is just a sub-class of a `dict` with a modified formatting which is more suitable for logging output.
+It also acts similarly to `defaultdict` returning empty string for any key that does not exist in a dictionary, which is useful when format string specifies individual key access as in example below, but key does not exist in MDC.
+
+Above detailed code can be replaces by a call to a convenience method:
+
+    import lsst.log
+    import logging
+
+    lsst.log.configure_pylog_MDC("INFO")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s %(asctime)s %(name)s (%(MDC)s) %(filename)s:%(lineno)s - %(message)s")
 
 It is possible to render individual MDC items in formatted message using format-style option for format string which supports indexing access in format expressions:
 
@@ -531,7 +541,7 @@ It is possible to render individual MDC items in formatted message using format-
         style="{",
         format="{levelname} {asctime} {name} ({MDC[LABEL]}) {filename}:{lineno} - {message}")
 
-If "LABEL" key is present in MDC then it will appear in the output, if "LABEL" is missing then empty string is rendered thanks to defaultdict-like behavior of `_MDC` objects.
+If "LABEL" key is present in MDC then it will appear in the output, if "LABEL" is missing then empty string is rendered thanks to defaultdict-like behavior of `MDCDict` objects.
 As before this depends on `MDC` being present in every LogRecord so it has to be added by a record factory.
 
 

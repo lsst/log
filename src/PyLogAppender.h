@@ -67,6 +67,10 @@ public:
     // Make an instance
     PyLogAppender();
 
+    // we do not support copying
+    PyLogAppender(const PyLogAppender&) = delete;
+    PyLogAppender& operator=(const PyLogAppender&) = delete;
+
     /**
      * Forward the event to Python logging.
      */
@@ -91,10 +95,6 @@ public:
 
 private:
 
-    // we do not support copying
-    PyLogAppender(const PyLogAppender&);
-    PyLogAppender& operator=(const PyLogAppender&);
-
     // cache entry type
     struct LRUEntry {
         PyObjectPtr logger;
@@ -104,7 +104,7 @@ private:
     using LRUCache = std::map<std::string, LRUEntry>;
 
     PyObjectPtr _getLogger;  // logging.getLogger() method
-    PyObjectPtr _mdc_class;  // lsst.log.utils._MDC class
+    PyObjectPtr _mdc_class;  // lsst.log.MDCDict class
     std::mutex _cache_mutex;
     uint32_t _lru_age = 0;
     LRUCache _cache;  // LRU cache for loggers

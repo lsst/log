@@ -23,6 +23,7 @@
 This tests the logging system in a variety of ways.
 """
 
+
 import os
 import shutil
 import tempfile
@@ -30,7 +31,6 @@ import threading
 import unittest
 import logging
 import lsst.log as log
-from lsst.log.utils import _MDC
 
 
 class TestLog(unittest.TestCase):
@@ -610,20 +610,12 @@ log4j.appender.PyLog.MessagePattern = %m (LABEL=%X{{LABEL}})
 
     def testForwardToPythonAppenderFormatMDC(self):
         """Test that we can format `log4cxx` MDC on Python side"""
-        self.configure("""
-log4j.rootLogger=DEBUG, PyLog
-log4j.appender.PyLog = org.apache.log4j.PyLogAppender
-""")
 
-        # replace record factory
+        # remember old record factory
         old_factory = logging.getLogRecordFactory()
 
-        def record_factory(*args, **kwargs):
-            record = old_factory(*args, **kwargs)
-            record.MDC = _MDC()
-            return record
-
-        logging.setLogRecordFactory(record_factory)
+        # configure things using convenience method
+        log.configure_pylog_MDC("INFO")
 
         with self.assertLogs(level="WARNING") as cm:
             log.warn("lsst.log: forwarded 1")
@@ -631,9 +623,10 @@ log4j.appender.PyLog = org.apache.log4j.PyLogAppender
             log.warn("lsst.log: forwarded 2")
             log.MDC("LABEL-X", "task2")
             log.warn("lsst.log: forwarded 3")
+            logging.warning("Python logging: also captured")
             log.MDCRemove("LABEL")
             log.MDCRemove("LABEL-X")
-        self.assertEqual(len(cm.records), 3)
+        self.assertEqual(len(cm.records), 4)
 
         # restore factory
         logging.setLogRecordFactory(old_factory)
@@ -647,6 +640,7 @@ log4j.appender.PyLog = org.apache.log4j.PyLogAppender
                          "WARNING:root:lsst.log: forwarded 2:{LABEL=task1}")
         self.assertEqual(formatter.format(cm.records[2]),
                          "WARNING:root:lsst.log: forwarded 3:{LABEL=task1, LABEL-X=task2}")
+        self.assertEqual(formatter.format(cm.records[3]), "WARNING:root:Python logging: also captured:{}")
 
         # format-style formatting, without MDC first
         formatter = logging.Formatter(fmt="{levelname}:{name}:{message}", style="{")
@@ -659,6 +653,7 @@ log4j.appender.PyLog = org.apache.log4j.PyLogAppender
                          "WARNING:root:lsst.log: forwarded 2:{LABEL=task1}")
         self.assertEqual(formatter.format(cm.records[2]),
                          "WARNING:root:lsst.log: forwarded 3:{LABEL=task1, LABEL-X=task2}")
+        self.assertEqual(formatter.format(cm.records[3]), "WARNING:root:Python logging: also captured:{}")
 
         # format-style, using index access to MDC items, works for almost any
         # item names
@@ -667,12 +662,7 @@ log4j.appender.PyLog = org.apache.log4j.PyLogAppender
         self.assertEqual(formatter.format(cm.records[1]), "WARNING:root:lsst.log: forwarded 2:")
         self.assertEqual(formatter.format(cm.records[2]),
                          "WARNING:root:lsst.log: forwarded 3:task2")
-
-        # using attribute access to MDC items, only works for ID-like item names
-        formatter = logging.Formatter(fmt="{levelname}:{name}:{message}:{MDC.LABEL}", style="{")
-        self.assertEqual(formatter.format(cm.records[0]), "WARNING:root:lsst.log: forwarded 1:")
-        self.assertEqual(formatter.format(cm.records[1]), "WARNING:root:lsst.log: forwarded 2:task1")
-        self.assertEqual(formatter.format(cm.records[2]), "WARNING:root:lsst.log: forwarded 3:task1")
+        self.assertEqual(formatter.format(cm.records[3]), "WARNING:root:Python logging: also captured:")
 
     def testLevelTranslator(self):
         """Test LevelTranslator class
