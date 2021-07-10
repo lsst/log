@@ -1,3 +1,4 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts
-scripts.BasicSConscript.pybind11(['log/log'], addUnderscore=False)
+scripts.BasicSConscript.pybind11(
+    ['log/log'], extraSrc={'log/log': ['log/PyLogAppender.cc']}, addUnderscore=False)
