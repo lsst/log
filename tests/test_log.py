@@ -575,7 +575,7 @@ INFO message: lsst.log root logger, PythonLogging""")
         """Test that `log4cxx` appender forwards it all to logging"""
         self.configure("""
 log4j.rootLogger=DEBUG, PyLog
-log4j.appender.PyLog = org.apache.log4j.PyLogAppender
+log4j.appender.PyLog = PyLogAppender
 """)
         with self.assertLogs(level="WARNING") as cm:
             log.warn("lsst.log: forwarded")
@@ -597,7 +597,7 @@ log4j.appender.PyLog = org.apache.log4j.PyLogAppender
         message with MDC info"""
         self.configure("""
 log4j.rootLogger=DEBUG, PyLog
-log4j.appender.PyLog = org.apache.log4j.PyLogAppender
+log4j.appender.PyLog = PyLogAppender
 log4j.appender.PyLog.MessagePattern = %m (LABEL=%X{{LABEL}})
 """)
         log.MDC("LABEL", "some.task")

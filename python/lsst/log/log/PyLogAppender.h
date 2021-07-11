@@ -50,7 +50,7 @@ using namespace log4cxx;
  *  for example:
  *  \code
  *  log4j.rootLogger = INFO, PyLog
- *  log4j.appender.PyLog = org.apache.log4j.PyLogAppender
+ *  log4j.appender.PyLog = PyLogAppender
  *  log4j.appender.PyLog.layout = org.apache.log4j.PatternLayout
  *  log4j.appender.PyLog.layout.ConversionPattern = %m (%X{LABEL})
  *  \endcode

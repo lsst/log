@@ -208,7 +208,7 @@ def configure_pylog_MDC(level: str, MDC_class: type = MDCDict):
 
     properties = """\
 log4j.rootLogger = {}, PyLog
-log4j.appender.PyLog = org.apache.log4j.PyLogAppender
+log4j.appender.PyLog = PyLogAppender
 """.format(level)
     configure_prop(properties)
 
