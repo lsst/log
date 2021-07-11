@@ -41,7 +41,7 @@ public:
      * Wraps a "borrowed" object reference, reference counter is incremented.
      */
     static PyObjectPtr from_borrowed(PyObject* object) {
-        Py_INCREF(object);
+        Py_XINCREF(object);
         return PyObjectPtr(object);
     }
 
@@ -52,7 +52,7 @@ public:
 
     // copy constructor, increments ref. counter
     PyObjectPtr(PyObjectPtr const& other) : m_object(other.m_object) {
-        Py_INCREF(m_object);
+        Py_XINCREF(m_object);
     }
 
     // move constructor, steals reference
@@ -66,7 +66,7 @@ public:
     PyObjectPtr& operator=(PyObjectPtr const& other) {
         Py_CLEAR(m_object);
         m_object = other.m_object;
-        Py_INCREF(m_object);
+        Py_XINCREF(m_object);
         return *this;
     }
 
@@ -80,7 +80,7 @@ public:
     PyObjectPtr& operator=(PyObject* object) {
         Py_CLEAR(m_object);
         m_object = object;
-        Py_INCREF(m_object);
+        Py_XINCREF(m_object);
         return *this;
     }
 
