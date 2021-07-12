@@ -571,6 +571,99 @@ INFO message: lsst.log root logger, PythonLogging""")
         # Verify that forwarding is disabled
         self.assertFalse(log.Log.UsePythonLogging)
 
+    def testForwardToPythonAppender(self):
+        """Test that `log4cxx` appender forwards it all to logging"""
+        self.configure("""
+log4j.rootLogger=DEBUG, PyLog
+log4j.appender.PyLog = PyLogAppender
+""")
+        with self.assertLogs(level="WARNING") as cm:
+            log.warn("lsst.log: forwarded")
+            logging.warning("Python logging: also captured")
+        self.assertEqual(len(cm.output), 2)
+
+        # check that MDC is stored in LogRecord
+        log.MDC("LABEL", "some.task")
+        with self.assertLogs(level="WARNING") as cm:
+            log.warn("lsst.log: forwarded")
+        log.MDCRemove("LABEL")
+        self.assertEqual(len(cm.records), 1)
+        print(f"{cm.records[0]=}")
+        self.assertEqual(cm.records[0].MDC, {"LABEL": "some.task"})
+        self.assertEqual(cm.records[0].msg, "lsst.log: forwarded")
+
+    def testForwardToPythonAppenderWithMDC(self):
+        """Test that `log4cxx` appender forwards it all to logging and modifies
+        message with MDC info"""
+        self.configure("""
+log4j.rootLogger=DEBUG, PyLog
+log4j.appender.PyLog = PyLogAppender
+log4j.appender.PyLog.MessagePattern = %m (LABEL=%X{{LABEL}})
+""")
+        log.MDC("LABEL", "some.task")
+        with self.assertLogs(level="WARNING") as cm:
+            log.warn("lsst.log: forwarded")
+        log.MDCRemove("LABEL")
+        self.assertEqual(len(cm.records), 1)
+        self.assertEqual(cm.records[0].MDC, {"LABEL": "some.task"})
+        self.assertEqual(cm.records[0].msg, "lsst.log: forwarded (LABEL=some.task)")
+
+    def testForwardToPythonAppenderFormatMDC(self):
+        """Test that we can format `log4cxx` MDC on Python side"""
+
+        # remember old record factory
+        old_factory = logging.getLogRecordFactory()
+
+        # configure things using convenience method
+        log.configure_pylog_MDC("INFO")
+
+        with self.assertLogs(level="WARNING") as cm:
+            log.warn("lsst.log: forwarded 1")
+            log.MDC("LABEL", "task1")
+            log.warn("lsst.log: forwarded 2")
+            log.MDC("LABEL-X", "task2")
+            log.warn("lsst.log: forwarded 3")
+            logging.warning("Python logging: also captured")
+            log.MDCRemove("LABEL")
+            log.MDCRemove("LABEL-X")
+        self.assertEqual(len(cm.records), 4)
+
+        # restore factory
+        logging.setLogRecordFactory(old_factory)
+
+        # %-style formatting, only works on whole MDC
+        formatter = logging.Formatter(fmt="%(levelname)s:%(name)s:%(message)s", style="%")
+        self.assertEqual(formatter.format(cm.records[0]), "WARNING:root:lsst.log: forwarded 1")
+        formatter = logging.Formatter(fmt="%(levelname)s:%(name)s:%(message)s:%(MDC)s", style="%")
+        self.assertEqual(formatter.format(cm.records[0]), "WARNING:root:lsst.log: forwarded 1:{}")
+        self.assertEqual(formatter.format(cm.records[1]),
+                         "WARNING:root:lsst.log: forwarded 2:{LABEL=task1}")
+        self.assertEqual(formatter.format(cm.records[2]),
+                         "WARNING:root:lsst.log: forwarded 3:{LABEL=task1, LABEL-X=task2}")
+        self.assertEqual(formatter.format(cm.records[3]), "WARNING:root:Python logging: also captured:{}")
+
+        # format-style formatting, without MDC first
+        formatter = logging.Formatter(fmt="{levelname}:{name}:{message}", style="{")
+        self.assertEqual(formatter.format(cm.records[0]), "WARNING:root:lsst.log: forwarded 1")
+
+        # format-style formatting, with full MDC
+        formatter = logging.Formatter(fmt="{levelname}:{name}:{message}:{MDC}", style="{")
+        self.assertEqual(formatter.format(cm.records[0]), "WARNING:root:lsst.log: forwarded 1:{}")
+        self.assertEqual(formatter.format(cm.records[1]),
+                         "WARNING:root:lsst.log: forwarded 2:{LABEL=task1}")
+        self.assertEqual(formatter.format(cm.records[2]),
+                         "WARNING:root:lsst.log: forwarded 3:{LABEL=task1, LABEL-X=task2}")
+        self.assertEqual(formatter.format(cm.records[3]), "WARNING:root:Python logging: also captured:{}")
+
+        # format-style, using index access to MDC items, works for almost any
+        # item names
+        formatter = logging.Formatter(fmt="{levelname}:{name}:{message}:{MDC[LABEL-X]}", style="{")
+        self.assertEqual(formatter.format(cm.records[0]), "WARNING:root:lsst.log: forwarded 1:")
+        self.assertEqual(formatter.format(cm.records[1]), "WARNING:root:lsst.log: forwarded 2:")
+        self.assertEqual(formatter.format(cm.records[2]),
+                         "WARNING:root:lsst.log: forwarded 3:task2")
+        self.assertEqual(formatter.format(cm.records[3]), "WARNING:root:Python logging: also captured:")
+
     def testLevelTranslator(self):
         """Test LevelTranslator class
         """

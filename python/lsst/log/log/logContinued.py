@@ -23,11 +23,11 @@
 #
 
 __all__ = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL",
-           "Log", "configure", "configure_prop", "getDefaultLogger", "getLogger",
-           "MDC", "MDCRemove", "MDCRegisterInit", "setLevel", "getLevel", "isEnabledFor",
-           "log", "trace", "debug", "info", "warn", "warning", "error", "fatal", "logf",
-           "tracef", "debugf", "infof", "warnf", "errorf", "fatalf", "lwpID",
-           "usePythonLogging", "doNotUsePythonLogging", "UsePythonLogging",
+           "Log", "configure", "configure_prop", "configure_pylog_MDC", "getDefaultLogger",
+           "getLogger", "MDC", "MDCDict", "MDCRemove", "MDCRegisterInit", "setLevel",
+           "getLevel", "isEnabledFor", "log", "trace", "debug", "info", "warn", "warning",
+           "error", "fatal", "logf", "tracef", "debugf", "infof", "warnf", "errorf", "fatalf",
+           "lwpID", "usePythonLogging", "doNotUsePythonLogging", "UsePythonLogging",
            "LevelTranslator", "LogHandler"]
 
 import logging
@@ -140,6 +140,30 @@ class Log:  # noqa: F811
         # method has to be module-level, not class method
         return (getLogger, args)
 
+
+class MDCDict(dict):
+    """Dictionary for MDC data.
+
+    This is internal class used for better formatting of MDC in Python logging
+    output. It behaves like `defaultdict(str)` but overrides ``__str__`` and
+    ``__repr__`` method to produce output better suited for logging records.
+    """
+    def __getitem__(self, name: str):
+        """Returns value for a given key or empty string for missing key.
+        """
+        return self.get(name, "")
+
+    def __str__(self):
+        """Return string representation, strings are interpolated without
+        quotes.
+        """
+        items = (f"{k}={self[k]}" for k in sorted(self))
+        return "{" + ", ".join(items) + "}"
+
+    def __repr__(self):
+        return str(self)
+
+
 # Export static functions from Log class to module namespace
 
 
@@ -149,6 +173,44 @@ def configure(*args):
 
 def configure_prop(properties):
     Log.configure_prop(properties)
+
+
+def configure_pylog_MDC(level: str, MDC_class: type = MDCDict):
+    """Configure log4cxx to send messages to Python logging, with MDC support.
+
+    Parameters
+    ----------
+    level : `str`
+        Name of the logging level for root log4cxx logger.
+    MDC_class : `type`, optional
+        Type of dictionary which is added to `logging.LogRecord` as an ``MDC``
+        attribute. Any dictionary or ``defaultdict``-like class can be used as
+        a type.
+
+    Notes
+    -----
+    This method does two things:
+
+    - Configures log4cxx with a given logging level and a ``PyLogAppender``
+      appender class which forwards all messages to Python `logging`.
+    - Installs a record factory for Python `logging` that adds ``MDC``
+      attribute to every `logging.LogRecord` object (instance of
+      ``MDC_class``).
+    """
+    old_factory = logging.getLogRecordFactory()
+
+    def record_factory(*args, **kwargs):
+        record = old_factory(*args, **kwargs)
+        record.MDC = MDC_class()
+        return record
+
+    logging.setLogRecordFactory(record_factory)
+
+    properties = """\
+log4j.rootLogger = {}, PyLog
+log4j.appender.PyLog = PyLogAppender
+""".format(level)
+    configure_prop(properties)
 
 
 def getDefaultLogger():
