@@ -28,7 +28,7 @@ __all__ = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "CRITICAL", "WARN
            "getLevel", "isEnabledFor", "log", "trace", "debug", "info", "warn", "warning",
            "error", "fatal", "critical", "logf", "tracef", "debugf", "infof", "warnf", "errorf", "fatalf",
            "lwpID", "usePythonLogging", "doNotUsePythonLogging", "UsePythonLogging",
-           "LevelTranslator", "LogHandler"]
+           "LevelTranslator", "LogHandler", "getEffectiveLevel"]
 
 import logging
 import inspect
@@ -171,6 +171,22 @@ class Log:  # noqa: F811
             else:
                 self.logMsg(level, filename, funcname, frame.f_lineno, msg)
 
+    def getEffectiveLevel(self):
+        """Get the effective level of this logger.
+
+        If there is no level set specifically for this logger, looks
+        at parent loggers in the hierarchy until a defined level is found.
+        """
+        logger = self
+        while logger:
+            if (level := logger.level) != -1:
+                return level
+            logger = logger.parent
+
+        # The root logger should always have a level so this should not
+        # happen.
+        return -1
+
     def __reduce__(self):
         """Implement pickle support.
         """
@@ -277,6 +293,10 @@ def setLevel(loggername, level):
 
 def getLevel(loggername):
     return Log.getLogger(loggername).getLevel()
+
+
+def getEffectiveLevel(loggername):
+    return Log.getLogger(loggername).getEffectiveLevel()
 
 
 def isEnabledFor(loggername, level):
