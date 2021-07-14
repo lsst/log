@@ -126,9 +126,19 @@ class Log:  # noqa: F811
             else:
                 msg = fmt % args if args else fmt
             if self.UsePythonLogging:
+                levelno = LevelTranslator.lsstLog2logging(level)
+                levelName = logging.getLevelName(levelno)
+
                 pylog = logging.getLogger(self.getName())
-                record = logging.LogRecord(self.getName(), LevelTranslator.lsstLog2logging(level),
-                                           filename, frame.f_lineno, msg, None, False, func=funcname)
+                record = logging.makeLogRecord(dict(name=self.getName(),
+                                                    levelno=levelno,
+                                                    levelname=levelName,
+                                                    msg=msg,
+                                                    funcName=funcname,
+                                                    filename=filename,
+                                                    pathname=frame.f_code.co_filename,
+                                                    lineno=frame.f_lineno,
+                                                    **kwargs))
                 pylog.handle(record)
             else:
                 self.logMsg(level, filename, funcname, frame.f_lineno, msg)
