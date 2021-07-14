@@ -76,6 +76,14 @@ class Log:  # noqa: F811
         """
         cls.UsePythonLogging = False
 
+    @property
+    def name(self):
+        return self.getName()
+
+    @property
+    def level(self):
+        return self.getLevel()
+
     def trace(self, fmt, *args):
         self._log(Log.TRACE, False, fmt, *args)
 
