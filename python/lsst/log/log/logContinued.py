@@ -194,6 +194,15 @@ class Log:  # noqa: F811
         # method has to be module-level, not class method
         return (getLogger, args)
 
+    def __repr__(self):
+        # Match python logging style.
+        cls = type(self)
+        class_name = f"{cls.__module__}.{cls.__qualname__}"
+        prefix = "lsst.log.log.log"
+        if class_name.startswith(prefix):
+            class_name = class_name.replace(prefix, "lsst.log")
+        return f"<{class_name} '{self.name}' ({getLevelName(self.getEffectiveLevel())})>"
+
 
 class MDCDict(dict):
     """Dictionary for MDC data.

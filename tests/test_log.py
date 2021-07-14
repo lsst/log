@@ -693,6 +693,11 @@ log4j.appender.PyLog.MessagePattern = %m (LABEL=%X{{LABEL}})
         self.assertEqual(log.getLevelName(log.INFO), "INFO")
         self.assertEqual(log.getLevelName(3253), "Level 3253")
 
+    def testRepr(self):
+        logger = log.getLogger("a.b")
+        logger.setLevel(log.DEBUG)
+        self.assertEqual(repr(logger), "<lsst.log.Log 'a.b' (DEBUG)>")
+
     def testChildLogger(self):
         """Check the getChild logger method."""
         logger = log.getDefaultLogger()
