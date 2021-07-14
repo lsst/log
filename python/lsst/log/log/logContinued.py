@@ -34,6 +34,8 @@ import logging
 import inspect
 import os
 
+from deprecated.sphinx import deprecated
+
 from lsst.utils import continueClass
 
 from .log import Log
@@ -125,21 +127,39 @@ class Log:  # noqa: F811
     def critical(self, fmt, *args):
         self.fatal(fmt, *args)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def tracef(self, fmt, *args, **kwargs):
         self._log(Log.TRACE, True, fmt, *args, **kwargs)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def debugf(self, fmt, *args, **kwargs):
         self._log(Log.DEBUG, True, fmt, *args, **kwargs)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def infof(self, fmt, *args, **kwargs):
         self._log(Log.INFO, True, fmt, *args, **kwargs)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def warnf(self, fmt, *args, **kwargs):
         self._log(Log.WARN, True, fmt, *args, **kwargs)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def errorf(self, fmt, *args, **kwargs):
         self._log(Log.ERROR, True, fmt, *args, **kwargs)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def fatalf(self, fmt, *args, **kwargs):
         self._log(Log.FATAL, True, fmt, *args, **kwargs)
 
