@@ -91,6 +91,16 @@ class Log:  # noqa: F811
     def level(self):
         return self.getLevel()
 
+    @property
+    def parent(self):
+        """Returns the parent logger, or None if this is the root logger."""
+        if not self.name:
+            return None
+        parent_name = self.name.rpartition(".")[0]
+        if not parent_name:
+            return self.getDefaultLogger()
+        return self.getLogger(parent_name)
+
     def trace(self, fmt, *args):
         self._log(Log.TRACE, False, fmt, *args)
 

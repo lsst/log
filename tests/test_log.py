@@ -699,6 +699,9 @@ log4j.appender.PyLog.MessagePattern = %m (LABEL=%X{{LABEL}})
         self.assertEqual(logger3.getName(), "child1.child2.child3")
         logger3a = logger1.getChild("child2.child3")
         self.assertEqual(logger3a.getName(), "child1.child2.child3")
+        self.assertEqual(logger2.parent.name, logger1.name)
+        self.assertEqual(logger1.parent.name, logger.name)
+        self.assertIsNone(logger.parent)
 
 
 if __name__ == "__main__":
