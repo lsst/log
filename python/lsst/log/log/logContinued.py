@@ -232,7 +232,7 @@ def getLogger(loggername):
 
 
 def MDC(key, value):
-    Log.MDC(key, str(value))
+    return Log.MDC(key, str(value))
 
 
 def MDCRemove(key):
@@ -248,11 +248,11 @@ def setLevel(loggername, level):
 
 
 def getLevel(loggername):
-    Log.getLogger(loggername).getLevel()
+    return Log.getLogger(loggername).getLevel()
 
 
-def isEnabledFor(logger, level):
-    Log.getLogger(logger).isEnabledFor(level)
+def isEnabledFor(loggername, level):
+    return Log.getLogger(loggername).isEnabledFor(level)
 
 
 # This will cause a warning in Sphinx documentation due to confusion between
