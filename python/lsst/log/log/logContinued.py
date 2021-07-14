@@ -28,7 +28,7 @@ __all__ = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "CRITICAL", "WARN
            "getLevel", "isEnabledFor", "log", "trace", "debug", "info", "warn", "warning",
            "error", "fatal", "critical", "logf", "tracef", "debugf", "infof", "warnf", "errorf", "fatalf",
            "lwpID", "usePythonLogging", "doNotUsePythonLogging", "UsePythonLogging",
-           "LevelTranslator", "LogHandler", "getEffectiveLevel"]
+           "LevelTranslator", "LogHandler", "getEffectiveLevel", "getLevelName"]
 
 import logging
 import inspect
@@ -372,6 +372,19 @@ def fatalf(fmt, *args, **kwargs):
 
 def lwpID():
     return Log.lwpID
+
+
+def getLevelName(level):
+    """Return the name associated with this logging level.
+
+    Returns "Level %d" if no name can be found.
+    """
+    names = ("DEBUG", "TRACE", "WARNING", "FATAL", "INFO", "ERROR")
+    for name in names:
+        test_level = getattr(Log, name)
+        if test_level == level:
+            return name
+    return f"Level {level}"
 
 
 # This will cause a warning in Sphinx documentation due to confusion between
