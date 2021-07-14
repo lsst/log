@@ -677,6 +677,7 @@ log4j.appender.PyLog.MessagePattern = %m (LABEL=%X{{LABEL}})
                     (log.DEBUG, logging.DEBUG),
                     (log.INFO, logging.INFO),
                     (log.WARN, logging.WARNING),
+                    (log.WARNING, logging.WARNING),
                     (log.ERROR, logging.ERROR),
                     (log.CRITICAL, logging.CRITICAL),
                     (log.FATAL, logging.FATAL))

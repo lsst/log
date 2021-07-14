@@ -22,7 +22,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-__all__ = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "CRITICAL",
+__all__ = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "CRITICAL", "WARNING",
            "Log", "configure", "configure_prop", "configure_pylog_MDC", "getDefaultLogger",
            "getLogger", "MDC", "MDCDict", "MDCRemove", "MDCRegisterInit", "setLevel",
            "getLevel", "isEnabledFor", "log", "trace", "debug", "info", "warn", "warning",
@@ -47,6 +47,7 @@ FATAL = 50000
 
 # For compatibility with python logging
 CRITICAL = FATAL
+WARNING = WARN
 
 
 @continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
@@ -55,6 +56,7 @@ class Log:  # noqa: F811
     """Forward Python `lsst.log` messages to Python `logging` package."""
 
     CRITICAL = CRITICAL
+    WARNING = WARNING
 
     @classmethod
     def usePythonLogging(cls):
