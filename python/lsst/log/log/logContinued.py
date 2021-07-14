@@ -22,11 +22,11 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-__all__ = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL",
+__all__ = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "CRITICAL",
            "Log", "configure", "configure_prop", "configure_pylog_MDC", "getDefaultLogger",
            "getLogger", "MDC", "MDCDict", "MDCRemove", "MDCRegisterInit", "setLevel",
            "getLevel", "isEnabledFor", "log", "trace", "debug", "info", "warn", "warning",
-           "error", "fatal", "logf", "tracef", "debugf", "infof", "warnf", "errorf", "fatalf",
+           "error", "fatal", "critical", "logf", "tracef", "debugf", "infof", "warnf", "errorf", "fatalf",
            "lwpID", "usePythonLogging", "doNotUsePythonLogging", "UsePythonLogging",
            "LevelTranslator", "LogHandler"]
 
@@ -45,11 +45,16 @@ WARN = 30000
 ERROR = 40000
 FATAL = 50000
 
+# For compatibility with python logging
+CRITICAL = FATAL
+
 
 @continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
 class Log:  # noqa: F811
     UsePythonLogging = False
     """Forward Python `lsst.log` messages to Python `logging` package."""
+
+    CRITICAL = CRITICAL
 
     @classmethod
     def usePythonLogging(cls):
@@ -104,6 +109,9 @@ class Log:  # noqa: F811
 
     def fatal(self, fmt, *args):
         self._log(Log.FATAL, False, fmt, *args)
+
+    def critical(self, fmt, *args):
+        self.fatal(fmt, *args)
 
     def tracef(self, fmt, *args, **kwargs):
         self._log(Log.TRACE, True, fmt, *args, **kwargs)
@@ -296,6 +304,10 @@ def error(fmt, *args):
 
 def fatal(fmt, *args):
     Log.getDefaultLogger()._log(FATAL, False, fmt, *args)
+
+
+def critical(fmt, *args):
+    fatal(fmt, *args)
 
 
 def logf(loggername, level, fmt, *args, **kwargs):

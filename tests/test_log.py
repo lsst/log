@@ -102,6 +102,7 @@ class TestLog(unittest.TestCase):
             log.warn("This is WARN")
             log.error("This is ERROR")
             log.fatal("This is FATAL")
+            log.critical("This is CRITICAL")
             log.warning("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
 root INFO: This is INFO
@@ -109,6 +110,7 @@ root INFO: This is unicode INFO
 root WARN: This is WARN
 root ERROR: This is ERROR
 root FATAL: This is FATAL
+root FATAL: This is CRITICAL
 root WARN: Format 3 2.71828 foo
 """)
 
@@ -192,7 +194,7 @@ INFO  root  testPattern (test_log.py:{0[6]}) test_log.py({0[6]}) - This is INFO 
 DEBUG root  testPattern (test_log.py:{0[7]}) test_log.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (test_log.py:{0[8]}) test_log.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (test_log.py:{0[9]}) test_log.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 157 for x in (0, 1, 8, 9, 13, 14, 17, 18, 21, 22)], __name__))  # noqa E501 line too long
+""".format([x + 159 for x in (0, 1, 8, 9, 13, 14, 17, 18, 21, 22)], __name__))  # noqa E501 line too long
 
     def testMDCPutPid(self):
         """
@@ -224,7 +226,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
 
             with TestLog.StdoutCapture(self.outputFilename):
                 log.info(msg)
-                line = 226  # line number for previous line
+                line = 228  # line number for previous line
         finally:
             log.MDCRemove("PID")
 
@@ -676,6 +678,7 @@ log4j.appender.PyLog.MessagePattern = %m (LABEL=%X{{LABEL}})
                     (log.INFO, logging.INFO),
                     (log.WARN, logging.WARNING),
                     (log.ERROR, logging.ERROR),
+                    (log.CRITICAL, logging.CRITICAL),
                     (log.FATAL, logging.FATAL))
         for logLevel, loggingLevel in levelMap:
             self.assertEqual(log.LevelTranslator.lsstLog2logging(logLevel), loggingLevel)
