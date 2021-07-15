@@ -73,6 +73,7 @@ PYBIND11_MODULE(log, mod) {
     cls.def("getName", &Log::getName);
     cls.def("setLevel", &Log::setLevel);
     cls.def("getLevel", &Log::getLevel);
+    cls.def("getEffectiveLevel", &Log::getEffectiveLevel);
     cls.def("isEnabledFor", &Log::isEnabledFor);
     cls.def("getChild", &Log::getChild);
     cls.def("logMsg", [](Log& log, int level, std::string const& filename, std::string const& funcname,
