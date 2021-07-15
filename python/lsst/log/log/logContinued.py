@@ -185,8 +185,7 @@ class Log:  # noqa: F811
                                                     funcName=funcname,
                                                     filename=filename,
                                                     pathname=frame.f_code.co_filename,
-                                                    lineno=frame.f_lineno,
-                                                    **kwargs))
+                                                    lineno=frame.f_lineno))
                 pylog.handle(record)
             else:
                 self.logMsg(level, filename, funcname, frame.f_lineno, msg)
