@@ -596,7 +596,6 @@ log4j.appender.PyLog = PyLogAppender
             log.warn("lsst.log: forwarded")
         log.MDCRemove("LABEL")
         self.assertEqual(len(cm.records), 1)
-        print(f"{cm.records[0]=}")
         self.assertEqual(cm.records[0].MDC, {"LABEL": "some.task"})
         self.assertEqual(cm.records[0].msg, "lsst.log: forwarded")
 
