@@ -324,6 +324,18 @@ int Log::getLevel() const {
     return levelno;
 }
 
+/** Retrieve the effective logging threshold.
+  * @return int Indicating the effective logging threshold.
+  */
+int Log::getEffectiveLevel() const {
+    log4cxx::LevelPtr level = _logger->getEffectiveLevel();
+    int levelno = -1;
+    if (level != NULL) {
+        levelno = level->toInt();
+    }
+    return levelno;
+}
+
 /** Return whether the logging threshold of the logger is less than or equal
   * to LEVEL.
   * @return Bool indicating whether or not logger is enabled.

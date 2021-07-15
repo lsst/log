@@ -163,6 +163,17 @@
     lsst::log::Log::getLogger(logger).getLevel()
 
 /**
+  * @def LOG_GETEFF_LVL(logger)
+  * Retrieve the effective logging threshold for LOGGER.
+  * @return int Indicating the effective logging threshold.
+  *
+  * @param logger  Either a logger name or a Log object with threshold
+  *                to return.
+  */
+#define LOG_GETEFF_LVL(logger) \
+    lsst::log::Log::getLogger(logger).getEffectiveLevel()
+
+/**
   * @def LOG_CHECK_LVL(logger, level)
   * Return whether the logging threshold of LOGGER is less than or equal
   * to LEVEL.
@@ -746,6 +757,7 @@ public:
     std::string getName() const;
     void setLevel(int level);
     int getLevel() const;
+    int getEffectiveLevel() const;
     bool isEnabledFor(int level) const;
 
     Log getChild(std::string const& suffix) const;

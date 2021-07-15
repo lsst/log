@@ -102,6 +102,7 @@ class TestLog(unittest.TestCase):
             log.warn("This is WARN")
             log.error("This is ERROR")
             log.fatal("This is FATAL")
+            log.critical("This is CRITICAL")
             log.warning("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
 root INFO: This is INFO
@@ -109,6 +110,7 @@ root INFO: This is unicode INFO
 root WARN: This is WARN
 root ERROR: This is ERROR
 root FATAL: This is FATAL
+root FATAL: This is CRITICAL
 root WARN: Format 3 2.71828 foo
 """)
 
@@ -192,7 +194,7 @@ INFO  root  testPattern (test_log.py:{0[6]}) test_log.py({0[6]}) - This is INFO 
 DEBUG root  testPattern (test_log.py:{0[7]}) test_log.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (test_log.py:{0[8]}) test_log.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (test_log.py:{0[9]}) test_log.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 157 for x in (0, 1, 8, 9, 13, 14, 17, 18, 21, 22)], __name__))  # noqa E501 line too long
+""".format([x + 159 for x in (0, 1, 8, 9, 13, 14, 17, 18, 21, 22)], __name__))  # noqa E501 line too long
 
     def testMDCPutPid(self):
         """
@@ -224,7 +226,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
 
             with TestLog.StdoutCapture(self.outputFilename):
                 log.info(msg)
-                line = 226  # line number for previous line
+                line = 228  # line number for previous line
         finally:
             log.MDCRemove("PID")
 
@@ -365,6 +367,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p - %m %X%n
             log.configure()
             logger = log.Log.getLogger("b")
             self.assertEqual(logger.getName(), "b")
+            self.assertEqual(logger.name, logger.getName())
             logger.trace("This is TRACE")
             logger.info("This is INFO")
             logger.debug("This is DEBUG")
@@ -393,11 +396,16 @@ log4j.appender.CA.layout.ConversionPattern=%-5p %c (%F)- %m%n
 """)
             self.assertEqual(log.Log.getLevel(log.Log.getDefaultLogger()),
                              log.TRACE)
+            self.assertEqual(log.Log.getDefaultLogger().getEffectiveLevel(), log.TRACE)
             logger = log.Log.getLogger("a.b")
             self.assertEqual(logger.getName(), "a.b")
+            self.assertEqual(logger.getEffectiveLevel(), log.TRACE)
+            self.assertEqual(log.getEffectiveLevel(logger.name), log.TRACE)
             logger.trace("This is TRACE")
             logger.setLevel(log.INFO)
             self.assertEqual(logger.getLevel(), log.INFO)
+            self.assertEqual(logger.getEffectiveLevel(), log.INFO)
+            self.assertEqual(logger.level, logger.getLevel())
             self.assertEqual(log.Log.getLevel(logger), log.INFO)
             logger.debug("This is DEBUG")
             logger.info("This is INFO")
@@ -588,7 +596,6 @@ log4j.appender.PyLog = PyLogAppender
             log.warn("lsst.log: forwarded")
         log.MDCRemove("LABEL")
         self.assertEqual(len(cm.records), 1)
-        print(f"{cm.records[0]=}")
         self.assertEqual(cm.records[0].MDC, {"LABEL": "some.task"})
         self.assertEqual(cm.records[0].msg, "lsst.log: forwarded")
 
@@ -673,11 +680,22 @@ log4j.appender.PyLog.MessagePattern = %m (LABEL=%X{{LABEL}})
                     (log.DEBUG, logging.DEBUG),
                     (log.INFO, logging.INFO),
                     (log.WARN, logging.WARNING),
+                    (log.WARNING, logging.WARNING),
                     (log.ERROR, logging.ERROR),
+                    (log.CRITICAL, logging.CRITICAL),
                     (log.FATAL, logging.FATAL))
         for logLevel, loggingLevel in levelMap:
             self.assertEqual(log.LevelTranslator.lsstLog2logging(logLevel), loggingLevel)
             self.assertEqual(log.LevelTranslator.logging2lsstLog(loggingLevel), logLevel)
+
+    def testLevelName(self):
+        self.assertEqual(log.getLevelName(log.INFO), "INFO")
+        self.assertEqual(log.getLevelName(3253), "Level 3253")
+
+    def testRepr(self):
+        logger = log.getLogger("a.b")
+        logger.setLevel(log.DEBUG)
+        self.assertEqual(repr(logger), "<lsst.log.Log 'a.b' (DEBUG)>")
 
     def testChildLogger(self):
         """Check the getChild logger method."""
@@ -693,6 +711,9 @@ log4j.appender.PyLog.MessagePattern = %m (LABEL=%X{{LABEL}})
         self.assertEqual(logger3.getName(), "child1.child2.child3")
         logger3a = logger1.getChild("child2.child3")
         self.assertEqual(logger3a.getName(), "child1.child2.child3")
+        self.assertEqual(logger2.parent.name, logger1.name)
+        self.assertEqual(logger1.parent.name, logger.name)
+        self.assertIsNone(logger.parent)
 
 
 if __name__ == "__main__":

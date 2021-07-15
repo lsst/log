@@ -22,17 +22,19 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-__all__ = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL",
+__all__ = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "CRITICAL", "WARNING",
            "Log", "configure", "configure_prop", "configure_pylog_MDC", "getDefaultLogger",
            "getLogger", "MDC", "MDCDict", "MDCRemove", "MDCRegisterInit", "setLevel",
            "getLevel", "isEnabledFor", "log", "trace", "debug", "info", "warn", "warning",
-           "error", "fatal", "logf", "tracef", "debugf", "infof", "warnf", "errorf", "fatalf",
+           "error", "fatal", "critical", "logf", "tracef", "debugf", "infof", "warnf", "errorf", "fatalf",
            "lwpID", "usePythonLogging", "doNotUsePythonLogging", "UsePythonLogging",
-           "LevelTranslator", "LogHandler"]
+           "LevelTranslator", "LogHandler", "getEffectiveLevel", "getLevelName"]
 
 import logging
 import inspect
 import os
+
+from deprecated.sphinx import deprecated
 
 from lsst.utils import continueClass
 
@@ -45,11 +47,18 @@ WARN = 30000
 ERROR = 40000
 FATAL = 50000
 
+# For compatibility with python logging
+CRITICAL = FATAL
+WARNING = WARN
+
 
 @continueClass  # noqa: F811 (FIXME: remove for py 3.8+)
 class Log:  # noqa: F811
     UsePythonLogging = False
     """Forward Python `lsst.log` messages to Python `logging` package."""
+
+    CRITICAL = CRITICAL
+    WARNING = WARNING
 
     @classmethod
     def usePythonLogging(cls):
@@ -76,6 +85,24 @@ class Log:  # noqa: F811
         """
         cls.UsePythonLogging = False
 
+    @property
+    def name(self):
+        return self.getName()
+
+    @property
+    def level(self):
+        return self.getLevel()
+
+    @property
+    def parent(self):
+        """Returns the parent logger, or None if this is the root logger."""
+        if not self.name:
+            return None
+        parent_name = self.name.rpartition(".")[0]
+        if not parent_name:
+            return self.getDefaultLogger()
+        return self.getLogger(parent_name)
+
     def trace(self, fmt, *args):
         self._log(Log.TRACE, False, fmt, *args)
 
@@ -97,21 +124,42 @@ class Log:  # noqa: F811
     def fatal(self, fmt, *args):
         self._log(Log.FATAL, False, fmt, *args)
 
+    def critical(self, fmt, *args):
+        self.fatal(fmt, *args)
+
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def tracef(self, fmt, *args, **kwargs):
         self._log(Log.TRACE, True, fmt, *args, **kwargs)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def debugf(self, fmt, *args, **kwargs):
         self._log(Log.DEBUG, True, fmt, *args, **kwargs)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def infof(self, fmt, *args, **kwargs):
         self._log(Log.INFO, True, fmt, *args, **kwargs)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def warnf(self, fmt, *args, **kwargs):
         self._log(Log.WARN, True, fmt, *args, **kwargs)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def errorf(self, fmt, *args, **kwargs):
         self._log(Log.ERROR, True, fmt, *args, **kwargs)
 
+    @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
+                " Will be removed after v25",
+                version="v23.0", category=FutureWarning)
     def fatalf(self, fmt, *args, **kwargs):
         self._log(Log.FATAL, True, fmt, *args, **kwargs)
 
@@ -126,9 +174,18 @@ class Log:  # noqa: F811
             else:
                 msg = fmt % args if args else fmt
             if self.UsePythonLogging:
+                levelno = LevelTranslator.lsstLog2logging(level)
+                levelName = logging.getLevelName(levelno)
+
                 pylog = logging.getLogger(self.getName())
-                record = logging.LogRecord(self.getName(), LevelTranslator.lsstLog2logging(level),
-                                           filename, frame.f_lineno, msg, None, False, func=funcname)
+                record = logging.makeLogRecord(dict(name=self.getName(),
+                                                    levelno=levelno,
+                                                    levelname=levelName,
+                                                    msg=msg,
+                                                    funcName=funcname,
+                                                    filename=filename,
+                                                    pathname=frame.f_code.co_filename,
+                                                    lineno=frame.f_lineno))
                 pylog.handle(record)
             else:
                 self.logMsg(level, filename, funcname, frame.f_lineno, msg)
@@ -139,6 +196,15 @@ class Log:  # noqa: F811
         args = (self.getName(), )
         # method has to be module-level, not class method
         return (getLogger, args)
+
+    def __repr__(self):
+        # Match python logging style.
+        cls = type(self)
+        class_name = f"{cls.__module__}.{cls.__qualname__}"
+        prefix = "lsst.log.log.log"
+        if class_name.startswith(prefix):
+            class_name = class_name.replace(prefix, "lsst.log")
+        return f"<{class_name} '{self.name}' ({getLevelName(self.getEffectiveLevel())})>"
 
 
 class MDCDict(dict):
@@ -222,7 +288,7 @@ def getLogger(loggername):
 
 
 def MDC(key, value):
-    Log.MDC(key, str(value))
+    return Log.MDC(key, str(value))
 
 
 def MDCRemove(key):
@@ -238,11 +304,15 @@ def setLevel(loggername, level):
 
 
 def getLevel(loggername):
-    Log.getLogger(loggername).getLevel()
+    return Log.getLogger(loggername).getLevel()
 
 
-def isEnabledFor(logger, level):
-    Log.getLogger(logger).isEnabledFor(level)
+def getEffectiveLevel(loggername):
+    return Log.getLogger(loggername).getEffectiveLevel()
+
+
+def isEnabledFor(loggername, level):
+    return Log.getLogger(loggername).isEnabledFor(level)
 
 
 # This will cause a warning in Sphinx documentation due to confusion between
@@ -280,6 +350,10 @@ def fatal(fmt, *args):
     Log.getDefaultLogger()._log(FATAL, False, fmt, *args)
 
 
+def critical(fmt, *args):
+    fatal(fmt, *args)
+
+
 def logf(loggername, level, fmt, *args, **kwargs):
     Log.getLogger(loggername)._log(level, True, fmt, *args, **kwargs)
 
@@ -310,6 +384,19 @@ def fatalf(fmt, *args, **kwargs):
 
 def lwpID():
     return Log.lwpID
+
+
+def getLevelName(level):
+    """Return the name associated with this logging level.
+
+    Returns "Level %d" if no name can be found.
+    """
+    names = ("DEBUG", "TRACE", "WARNING", "FATAL", "INFO", "ERROR")
+    for name in names:
+        test_level = getattr(Log, name)
+        if test_level == level:
+            return name
+    return f"Level {level}"
 
 
 # This will cause a warning in Sphinx documentation due to confusion between
