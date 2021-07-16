@@ -34,6 +34,7 @@ import logging
 import inspect
 import os
 
+from typing import Optional
 from deprecated.sphinx import deprecated
 
 from lsst.utils import continueClass
@@ -241,7 +242,7 @@ def configure_prop(properties):
     Log.configure_prop(properties)
 
 
-def configure_pylog_MDC(level: str, MDC_class: type = MDCDict):
+def configure_pylog_MDC(level: str, MDC_class: Optional[type] = MDCDict):
     """Configure log4cxx to send messages to Python logging, with MDC support.
 
     Parameters
@@ -251,7 +252,7 @@ def configure_pylog_MDC(level: str, MDC_class: type = MDCDict):
     MDC_class : `type`, optional
         Type of dictionary which is added to `logging.LogRecord` as an ``MDC``
         attribute. Any dictionary or ``defaultdict``-like class can be used as
-        a type.
+        a type. If `None` the `logging.LogRecord` will not be augmented.
 
     Notes
     -----
@@ -261,16 +262,18 @@ def configure_pylog_MDC(level: str, MDC_class: type = MDCDict):
       appender class which forwards all messages to Python `logging`.
     - Installs a record factory for Python `logging` that adds ``MDC``
       attribute to every `logging.LogRecord` object (instance of
-      ``MDC_class``).
+      ``MDC_class``). This will happen by default but can be disabled
+      by setting the ``MDC_class`` parameter to `None`.
     """
-    old_factory = logging.getLogRecordFactory()
+    if MDC_class is not None:
+        old_factory = logging.getLogRecordFactory()
 
-    def record_factory(*args, **kwargs):
-        record = old_factory(*args, **kwargs)
-        record.MDC = MDC_class()
-        return record
+        def record_factory(*args, **kwargs):
+            record = old_factory(*args, **kwargs)
+            record.MDC = MDC_class()
+            return record
 
-    logging.setLogRecordFactory(record_factory)
+        logging.setLogRecordFactory(record_factory)
 
     properties = """\
 log4j.rootLogger = {}, PyLog
