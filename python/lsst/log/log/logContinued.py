@@ -117,7 +117,9 @@ class Log:  # noqa: F811
         self._log(Log.WARN, False, fmt, *args)
 
     def warning(self, fmt, *args):
-        self.warn(fmt, *args)
+        # Do not call warn() because that will result in an incorrect
+        # line number in the log.
+        self._log(Log.WARN, False, fmt, *args)
 
     def error(self, fmt, *args):
         self._log(Log.ERROR, False, fmt, *args)
@@ -126,7 +128,9 @@ class Log:  # noqa: F811
         self._log(Log.FATAL, False, fmt, *args)
 
     def critical(self, fmt, *args):
-        self.fatal(fmt, *args)
+        # Do not call fatal() because that will result in an incorrect
+        # line number in the log.
+        self._log(Log.FATAL, False, fmt, *args)
 
     @deprecated(reason="f-string log messages are now deprecated to match python logging convention."
                 " Will be removed after v25",
