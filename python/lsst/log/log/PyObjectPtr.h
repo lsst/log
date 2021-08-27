@@ -99,8 +99,8 @@ public:
     PyObject*& get() { return m_object; }
 
     // compare to nullptr
-    bool operator==(nullptr_t) const { return m_object == nullptr; }
-    bool operator!=(nullptr_t) const { return m_object != nullptr; }
+    bool operator==(std::nullptr_t) const { return m_object == nullptr; }
+    bool operator!=(std::nullptr_t) const { return m_object != nullptr; }
 
 private:
 
