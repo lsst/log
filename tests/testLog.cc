@@ -203,21 +203,21 @@ BOOST_AUTO_TEST_CASE(child_logger) {
 BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
 
     std::string expected_msg =
-          "INFO  root pattern_stream test_method (tests/testLog.cc:%1%) tests/testLog.cc(%1%) - This is INFO - {}\n"
-          "DEBUG root pattern_stream test_method (tests/testLog.cc:%2%) tests/testLog.cc(%2%) - This is DEBUG - {}\n"
-          "INFO  root pattern_stream test_method (tests/testLog.cc:%3%) tests/testLog.cc(%3%) - This is INFO 2 - {{x,3}{y,foo}}\n"
-          "DEBUG root pattern_stream test_method (tests/testLog.cc:%4%) tests/testLog.cc(%4%) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
-          "INFO  root pattern_stream test_method (tests/testLog.cc:%5%) tests/testLog.cc(%5%) - This is INFO 3 - {{x,3}{y,foo}}\n"
-          "DEBUG root pattern_stream test_method (tests/testLog.cc:%6%) tests/testLog.cc(%6%) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
-          "INFO  root pattern_stream test_method (tests/testLog.cc:%7%) tests/testLog.cc(%7%) - This is INFO 4 - {{y,foo}}\n"
-          "DEBUG root pattern_stream test_method (tests/testLog.cc:%8%) tests/testLog.cc(%8%) - This is DEBUG 4 - {{y,foo}}\n"
-          "INFO  root pattern_stream test_method (tests/testLog.cc:%9%) tests/testLog.cc(%9%) - This is INFO 5 - {{y,foo}}\n"
-          "DEBUG root pattern_stream test_method (tests/testLog.cc:%10%) tests/testLog.cc(%10%) - This is DEBUG 5 - {{y,foo}}\n"
-          "INFO  root pattern_stream test_method (tests/testLog.cc:%11%) tests/testLog.cc(%11%) - This is INFO 6 - {{y,foo}{z,zzz}}\n"
-          "INFO  root pattern_stream test_method (tests/testLog.cc:%12%) tests/testLog.cc(%12%) - This is INFO 7 - {{y,foo}}\n"
-          "INFO  root pattern_stream test_method (tests/testLog.cc:%13%) tests/testLog.cc(%13%) - This is INFO 8 - {{q,qqq}{y,foo}}\n"
-          "INFO  root pattern_stream test_method (tests/testLog.cc:%14%) tests/testLog.cc(%14%) - This is INFO 9 - {{y,foo}}\n";
-    std::vector<std::string> args;
+          "INFO  root pattern_stream test_method (%1%:%2%) %1%(%2%) - This is INFO - {}\n"
+          "DEBUG root pattern_stream test_method (%1%:%3%) %1%(%3%) - This is DEBUG - {}\n"
+          "INFO  root pattern_stream test_method (%1%:%4%) %1%(%4%) - This is INFO 2 - {{x,3}{y,foo}}\n"
+          "DEBUG root pattern_stream test_method (%1%:%5%) %1%(%5%) - This is DEBUG 2 - {{x,3}{y,foo}}\n"
+          "INFO  root pattern_stream test_method (%1%:%6%) %1%(%6%) - This is INFO 3 - {{x,3}{y,foo}}\n"
+          "DEBUG root pattern_stream test_method (%1%:%7%) %1%(%7%) - This is DEBUG 3 - {{x,3}{y,foo}}\n"
+          "INFO  root pattern_stream test_method (%1%:%8%) %1%(%8%) - This is INFO 4 - {{y,foo}}\n"
+          "DEBUG root pattern_stream test_method (%1%:%9%) %1%(%9%) - This is DEBUG 4 - {{y,foo}}\n"
+          "INFO  root pattern_stream test_method (%1%:%10%) %1%(%10%) - This is INFO 5 - {{y,foo}}\n"
+          "DEBUG root pattern_stream test_method (%1%:%11%) %1%(%11%) - This is DEBUG 5 - {{y,foo}}\n"
+          "INFO  root pattern_stream test_method (%1%:%12%) %1%(%12%) - This is INFO 6 - {{y,foo}{z,zzz}}\n"
+          "INFO  root pattern_stream test_method (%1%:%13%) %1%(%13%) - This is INFO 7 - {{y,foo}}\n"
+          "INFO  root pattern_stream test_method (%1%:%14%) %1%(%14%) - This is INFO 8 - {{q,qqq}{y,foo}}\n"
+          "INFO  root pattern_stream test_method (%1%:%15%) %1%(%15%) - This is INFO 9 - {{y,foo}}\n";
+    std::vector<std::string> args = { __FILE__ };
 
     configure(LAYOUT_PATTERN);
 
@@ -271,10 +271,10 @@ BOOST_FIXTURE_TEST_CASE(pattern_stream, LogFixture) {
 BOOST_FIXTURE_TEST_CASE(MDCPutPid, LogFixture) {
 
     std::string msg;
-    std::string expected_msg = "INFO  root LogFixture pid_log_helper (tests/testLog.cc:%1%) "
-                               "tests/testLog.cc(%1%) - %2% - "
-                               "{{" MDC_PID_KEY ",%3%}}\n";
-    std::vector<std::string> args;
+    std::string expected_msg = "INFO  root LogFixture pid_log_helper (%1%:%2%) "
+                               "%1%(%2%) - %3% - "
+                               "{{" MDC_PID_KEY ",%4%}}\n";
+    std::vector<std::string> args = { __FILE__ };
     pid_t pid = fork();
 
     BOOST_CHECK_MESSAGE(pid >= 0, "fork() failed!");
