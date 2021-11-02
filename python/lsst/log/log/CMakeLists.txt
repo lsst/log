@@ -2,6 +2,7 @@ find_package(pybind11 REQUIRED)
 
 pybind11_add_module(log_pybind
     log.cc
+    PyLogAppender.cc
 )
 
 set_target_properties(log_pybind PROPERTIES 
