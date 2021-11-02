@@ -1,7 +1,7 @@
 add_library(log SHARED)
 
 target_compile_features(log PRIVATE
-    cxx_std_14
+    cxx_std_17
 )
 
 set_target_properties(log PROPERTIES 
