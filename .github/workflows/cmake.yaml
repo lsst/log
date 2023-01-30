@@ -31,7 +31,7 @@ jobs:
             pytest \
             pytest-flake8 \
             "flake8<5" \
-            git+https://github.com/lsst/utils@main#egg=lsst_utils
+            lsst-utils
 
       - name: CMake configure
         run: |
