@@ -136,15 +136,6 @@ In Python, the following logging functions are available in the `lsst.log` modul
 - `error(fmt, *args)` Log a message of level `ERROR` with format string '''`fmt`''' and corresponding arguments '''`*args`''' to the default logger.
 - `fatal(fmt, *args)` Log a message of level `FATAL` with format string '''`fmt`''' and corresponding arguments '''`*args`''' to the default logger.
 
-Additionally, Python has variants of the above functions, with a trailing `f` in the name, supporting the Python string `format()` syntax. The use of `*args` and `**kwargs` is recommended over the use of calling the `format()` method on the string directly, to avoid unnecessarily formatting log messages that do not meet the level threshold.
-- `logf(loggername, level, fmt, *args, **kwargs)` Log a message of level '''`level`''' with format string '''`fmt`''' and variable arguments '''`*args`''' and '''`**kwargs`''' to the logger named '''`loggername`''' using format method syntax.
-- `tracef(fmt, *args, **kwargs)` Log a message of level `TRACE` with format string '''`fmt`''' and corresponding arguments '''`*args`''' and '''`**kwargs`''' to the default logger using format method syntax.
-- `debugf(fmt, *args, **kwargs)` Log a message of level `DEBUG` with format string '''`fmt`''' and corresponding arguments '''`*args`''' and '''`**kwargs`''' to the default logger using format method syntax.
-- `infof(fmt, *args, **kwargs)` Log a message of level `INFO` with format string '''`fmt`''' and corresponding arguments '''`*args`''' and '''`**kwargs`''' to the default logger using format method syntax.
-- `warnf(fmt, *args, **kwargs)` Log a message of level `WARN` with format string '''`fmt`''' and corresponding arguments '''`*args`''' and '''`**kwargs`''' to the default logger using format method syntax.
-- `errorf(fmt, *args, **kwargs)` Log a message of level `ERROR` with format string '''`fmt`''' and corresponding arguments '''`*args`''' and '''`**kwargs`''' to the default logger using format method syntax.
-- `fatalf(fmt, *args, **kwargs)` Log a message of level `FATAL` with format string '''`fmt`''' and corresponding arguments '''`*args`''' and '''`**kwargs`''' to the default logger using format method syntax.
-
 \section initialization Initialization
 
 The underlying log4cxx system can be initialized explicitly from either the C++ or Python layers or default-initialized.

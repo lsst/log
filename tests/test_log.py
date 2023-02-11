@@ -114,35 +114,6 @@ root FATAL: This is CRITICAL
 root WARN: Format 3 2.71828 foo
 """)
 
-    def testBasicFormat(self):
-        """
-        Test basic log output with default configuration but using
-        the f variants.
-        Since the default threshold is INFO, the DEBUG or TRACE
-        message is not emitted.
-        """
-        with TestLog.StdoutCapture(self.outputFilename):
-            log.configure()
-            log.logf(log.getDefaultLogger(), log.INFO,
-                     "This is {{INFO}} Item 1: {item[1]}",
-                     item=["a", "b", "c"])
-            log.infof(u"This is {unicode} INFO")
-            log.tracef("This is TRACE")
-            log.debugf("This is DEBUG")
-            log.warnf("This is WARN {city}", city="Tucson")
-            log.errorf("This is ERROR {1}->{0}", 2, 1)
-            log.fatalf("This is FATAL {1} out of {0} times for {place}",
-                       4, 3, place="LSST")
-            log.warnf("Format {} {} {}", 3, 2.71828, "foo")
-        self.check("""
-root INFO: This is {INFO} Item 1: b
-root INFO: This is {unicode} INFO
-root WARN: This is WARN Tucson
-root ERROR: This is ERROR 1->2
-root FATAL: This is FATAL 3 out of 4 times for LSST
-root WARN: Format 3 2.71828 foo
-""")
-
     def testPattern(self):
         """
         Test a complex pattern for log messages, including Mapped
@@ -194,7 +165,7 @@ INFO  root  testPattern (test_log.py:{0[6]}) test_log.py({0[6]}) - This is INFO 
 DEBUG root  testPattern (test_log.py:{0[7]}) test_log.py({0[7]}) - This is DEBUG 4 - {{{{y,foo}}}}
 INFO  root  testPattern (test_log.py:{0[8]}) test_log.py({0[8]}) - This is INFO 5 - {{{{y,foo}}}}
 DEBUG root  testPattern (test_log.py:{0[9]}) test_log.py({0[9]}) - This is DEBUG 5 - {{{{y,foo}}}}
-""".format([x + 159 for x in (0, 1, 8, 9, 13, 14, 17, 18, 21, 22)], __name__))  # noqa E501 line too long
+""".format([x + 130 for x in (0, 1, 8, 9, 13, 14, 17, 18, 21, 22)], __name__))  # noqa E501 line too long
 
     def testMDCPutPid(self):
         """
@@ -226,7 +197,7 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
 
             with TestLog.StdoutCapture(self.outputFilename):
                 log.info(msg)
-                line = 228  # line number for previous line
+                line = 199  # line number for previous line
         finally:
             log.MDCRemove("PID")
 
