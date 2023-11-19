@@ -51,7 +51,7 @@ struct is_new_log4cxx<T, std::void_t<decltype(T::calcShortFileName)>> : std::tru
 
 // helper function to construct LocationInfo
 template<typename T>
-auto construct_location_info(std::string const &filename, std::string const &funcname, unsigned int lineno) {
+T inline construct_location_info(std::string const &filename, std::string const &funcname, unsigned int lineno) {
     if constexpr (is_new_log4cxx<T>::value)
         return T(filename.c_str(), T::calcShortFileName(filename.c_str()), funcname.c_str(), lineno);
     else
@@ -62,7 +62,7 @@ auto construct_location_info(std::string const &filename, std::string const &fun
 
 class callable_wrapper {
 public:
-    callable_wrapper(PyObject* callable) : _callable(callable) { Py_XINCREF(_callable); }
+    explicit callable_wrapper(PyObject* callable) : _callable(callable) { Py_XINCREF(_callable); }
     void operator()() {
         // make sure we own GIL before doing Python call
         auto state = PyGILState_Ensure();
@@ -104,7 +104,7 @@ PYBIND11_MODULE(log, mod) {
                          unsigned int lineno, std::string const &msg) {
         log.logMsg(log4cxx::Level::toLevel(level),
                    construct_location_info<log4cxx::spi::LocationInfo>(filename, funcname, lineno),
-                   msg.c_str());
+                   msg);
     });
     cls.def("lwpID", [](Log const& log) -> unsigned { return lsst::log::lwpID(); });
 
