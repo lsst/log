@@ -173,9 +173,9 @@ void PyLogAppender::append(const spi::LoggingEventPtr& event, log4cxx::helpers::
 
     // if layout is defined then use formatted message
     std::string message;
-    if (this->layout) {
+    if (this->getLayout()) {
         LogString msg;
-        this->layout->format(msg, event, p);
+        this->getLayout()->format(msg, event, p);
         // get rid of trailing new-line, just in case someone uses %n in format
         if (not msg.empty() and msg.back() == '\n') {
             msg.pop_back();
