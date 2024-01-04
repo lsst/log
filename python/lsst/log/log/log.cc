@@ -37,29 +37,6 @@ namespace log {
 //
 // See DM-9708
 
-namespace {
-// wrapper to detect log4cxx version >= 1
-template<class T, class = void>
-struct is_new_log4cxx : std::false_type {
-};
-
-// check if member calcShortFileName is implemented
-// this indicates a newer library version
-template<class T>
-struct is_new_log4cxx<T, std::void_t<decltype(T::calcShortFileName)>> : std::true_type {
-};
-
-// helper function to construct LocationInfo
-template<typename T>
-T inline construct_location_info(std::string const &filename, std::string const &funcname, unsigned int lineno) {
-    if constexpr (is_new_log4cxx<T>::value)
-        return T(filename.c_str(), T::calcShortFileName(filename.c_str()), funcname.c_str(), lineno);
-    else
-        return T(filename.c_str(), funcname.c_str(), lineno);
-}
-}
-
-
 class callable_wrapper {
 public:
     explicit callable_wrapper(PyObject* callable) : _callable(callable) { Py_XINCREF(_callable); }
@@ -103,7 +80,7 @@ PYBIND11_MODULE(log, mod) {
     cls.def("logMsg", [](Log &log, int level, std::string const &filename, std::string const &funcname,
                          unsigned int lineno, std::string const &msg) {
         log.logMsg(log4cxx::Level::toLevel(level),
-                   construct_location_info<log4cxx::spi::LocationInfo>(filename, funcname, lineno),
+                   log4cxx::spi::LocationInfo(filename.c_str(), log4cxx::spi::LocationInfo::calcShortFileName(filename.c_str()), funcname.c_str(), lineno),
                    msg);
     });
     cls.def("lwpID", [](Log const& log) -> unsigned { return lsst::log::lwpID(); });
