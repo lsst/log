@@ -9,23 +9,29 @@ on:
 jobs:
   cmake:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
     strategy:
       matrix:
-        python-version: ["3.10", "3.9", "3.8"]
+        python-version: ["3.12", "3.11", "3.10"]
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Install platform prereqs
-        run: |
-          sudo apt-get -y install \
-            libboost-dev \
-            libboost-test-dev \
-            liblog4cxx-dev
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
         with:
+          auto-update-conda: true
           python-version: ${{ matrix.python-version }}
+          mamba-version: "*"
+          channels: conda-forge,defaults
+
+      - name: Install conda prereqs
+        run: |
+          mamba install \
+            log4cxx \
+            cmake \
+            make \
+            libboost-devel \
+            cxx-compiler
 
       - name: Install Python prereqs
         run: |
