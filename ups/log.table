@@ -1,4 +1,5 @@
 setupRequired(sconsUtils)
+setupRequired(libnanobind)
 setupRequired(utils)
 
 envPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
