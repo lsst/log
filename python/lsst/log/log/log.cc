@@ -20,11 +20,13 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include "pybind11/pybind11.h"
+#include "nanobind/nanobind.h"
+#include "nanobind/stl/function.h"
+#include "nanobind/stl/string.h"
 
 #include "lsst/log/Log.h"
 
-namespace py = pybind11;
+namespace nb = nanobind;
 
 namespace lsst {
 namespace log {
@@ -51,19 +53,19 @@ private:
     PyObject* _callable;
 };
 
-PYBIND11_MODULE(log, mod) {
-    py::class_<Log> cls(mod, "Log");
+NB_MODULE(log, mod) {
+    nb::class_<Log> cls(mod, "Log");
 
     /* Constructors */
-    cls.def(py::init<>());
+    cls.def(nb::init<>());
 
     /* Members */
-    cls.attr("TRACE") = py::int_(5000);
-    cls.attr("DEBUG") = py::int_(10000);
-    cls.attr("INFO") = py::int_(20000);
-    cls.attr("WARN") = py::int_(30000);
-    cls.attr("ERROR") = py::int_(40000);
-    cls.attr("FATAL") = py::int_(50000);
+    cls.attr("TRACE") = nb::int_(5000);
+    cls.attr("DEBUG") = nb::int_(10000);
+    cls.attr("INFO") = nb::int_(20000);
+    cls.attr("WARN") = nb::int_(30000);
+    cls.attr("ERROR") = nb::int_(40000);
+    cls.attr("FATAL") = nb::int_(50000);
 
     cls.def("isDebugEnabled", &Log::isDebugEnabled);
     cls.def("isErrorEnabled", &Log::isErrorEnabled);
@@ -93,7 +95,7 @@ PYBIND11_MODULE(log, mod) {
     cls.def_static("getLogger", (Log(*)(std::string const&))Log::getLogger);
     cls.def_static("MDC", Log::MDC);
     cls.def_static("MDCRemove", Log::MDCRemove);
-    cls.def_static("MDCRegisterInit", [](py::function func) {
+    cls.def_static("MDCRegisterInit", [](nb::callable func) {
         auto handle = func.release();  // will leak as described in callable_wrapper
         Log::MDCRegisterInit(std::function<void()>(callable_wrapper(handle.ptr())));
     });
