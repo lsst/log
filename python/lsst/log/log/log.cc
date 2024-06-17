@@ -31,28 +31,6 @@ namespace nb = nanobind;
 namespace lsst {
 namespace log {
 
-// Wrapper for Python callable object to make sure that we have GIL
-// when we call Python. Note that we are leaking Python callable,
-// as C++ callables may be (and actually are in our particular case)
-// outliving Python interpreter and attempt to delete Python object
-// will result in crash.
-//
-// See DM-9708
-
-class callable_wrapper {
-public:
-    explicit callable_wrapper(PyObject* callable) : _callable(callable) { Py_XINCREF(_callable); }
-    void operator()() {
-        // make sure we own GIL before doing Python call
-        auto state = PyGILState_Ensure();
-        PyObject_CallObject(_callable, nullptr);
-        PyGILState_Release(state);
-    }
-
-private:
-    PyObject* _callable;
-};
-
 NB_MODULE(log, mod) {
     nb::class_<Log> cls(mod, "Log");
 
@@ -95,10 +73,8 @@ NB_MODULE(log, mod) {
     cls.def_static("getLogger", (Log(*)(std::string const&))Log::getLogger);
     cls.def_static("MDC", Log::MDC);
     cls.def_static("MDCRemove", Log::MDCRemove);
-    cls.def_static("MDCRegisterInit", [](nb::callable func) {
-        auto handle = func.release();  // will leak as described in callable_wrapper
-        Log::MDCRegisterInit(std::function<void()>(callable_wrapper(handle.ptr())));
-    });
+    // DM-9708: work around for pybind11 is not needed for nanobind
+    cls.def_static("MDCRegisterInit", &Log::MDCRegisterInit);
 }
 
 }  // log
