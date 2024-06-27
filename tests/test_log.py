@@ -65,7 +65,7 @@ class TestLog(unittest.TestCase):
     def tearDown(self):
         """Remove the temporary directory and clean up Python forwarding."""
         log.doNotUsePythonLogging()
-        shutil.rmtree(self.tempDir)
+        shutil.rmtree(self.tempDir, ignore_errors=True)
 
     def configure(self, configuration):
         """

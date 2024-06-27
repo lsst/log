@@ -63,7 +63,7 @@ class TestRedir(unittest.TestCase):
 
     def tearDown(self):
         """Remove the temporary directory."""
-        shutil.rmtree(self.tempDir)
+        shutil.rmtree(self.tempDir, ignore_errors=True)
 
     def check(self, reference):
         """Compare the log file with the provided reference text."""
