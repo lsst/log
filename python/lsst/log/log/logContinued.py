@@ -242,10 +242,10 @@ def configure_pylog_MDC(level: str, MDC_class: Optional[type] = MDCDict):
 
         logging.setLogRecordFactory(record_factory)
 
-    properties = """\
-log4j.rootLogger = {}, PyLog
+    properties = f"""\
+log4j.rootLogger = {level}, PyLog
 log4j.appender.PyLog = PyLogAppender
-""".format(level)
+"""
     configure_prop(properties)
 
 

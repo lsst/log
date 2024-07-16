@@ -34,7 +34,7 @@ import lsst.log.utils as log_utils
 
 
 class TestRedir(unittest.TestCase):
-    class StdoutCapture(object):
+    class StdoutCapture:
         """
         Context manager to redirect stdout to a file.
         """
@@ -67,7 +67,7 @@ class TestRedir(unittest.TestCase):
 
     def check(self, reference):
         """Compare the log file with the provided reference text."""
-        with open(self.outputFilename, "r") as f:
+        with open(self.outputFilename) as f:
             # strip everything up to first ] to remove timestamp and thread ID
             lines = [ln.split("]")[-1].rstrip("\n") for ln in f.readlines()]
             reflines = [rl for rl in reference.split("\n") if rl != ""]
@@ -85,7 +85,7 @@ class TestRedir(unittest.TestCase):
             dest = io.StringIO()
             log_utils.enable_notebook_logging(dest)
             log.log(log.getDefaultLogger().getName(), log.INFO, "This is INFO")
-            log.info(u"This is unicode INFO")
+            log.info("This is unicode INFO")
             log.trace("This is TRACE")
             log.debug("This is DEBUG")
             log.warn("This is WARN")
