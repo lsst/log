@@ -96,7 +96,7 @@ class TestLog(unittest.TestCase):
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
             log.log(log.getDefaultLogger(), log.INFO, "This is INFO")
-            log.info("This is unicode INFO")
+            log.info("This is unicode 统一码 INFO")
             log.trace("This is TRACE")
             log.debug("This is DEBUG")
             log.warn("This is WARN")
@@ -106,7 +106,7 @@ class TestLog(unittest.TestCase):
             log.warning("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
 root INFO: This is INFO
-root INFO: This is unicode INFO
+root INFO: This is unicode 统一码 INFO
 root WARN: This is WARN
 root ERROR: This is ERROR
 root FATAL: This is FATAL
