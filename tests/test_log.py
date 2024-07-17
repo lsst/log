@@ -35,7 +35,7 @@ import lsst.log as log
 
 class TestLog(unittest.TestCase):
 
-    class StdoutCapture(object):
+    class StdoutCapture:
         """
         Context manager to redirect stdout to a file.
         """
@@ -76,7 +76,7 @@ class TestLog(unittest.TestCase):
 
     def check(self, reference):
         """Compare the log file with the provided reference text."""
-        with open(self.outputFilename, 'r') as f:
+        with open(self.outputFilename) as f:
             # strip everything up to first ] to remove timestamp and thread ID
             lines = [line.split(']')[-1].rstrip("\n") for line in f.readlines()]
             reflines = [line for line in reference.split("\n") if line != ""]
@@ -96,7 +96,7 @@ class TestLog(unittest.TestCase):
         with TestLog.StdoutCapture(self.outputFilename):
             log.configure()
             log.log(log.getDefaultLogger(), log.INFO, "This is INFO")
-            log.info(u"This is unicode INFO")
+            log.info("This is unicode 统一码 INFO")
             log.trace("This is TRACE")
             log.debug("This is DEBUG")
             log.warn("This is WARN")
@@ -106,7 +106,7 @@ class TestLog(unittest.TestCase):
             log.warning("Format %d %g %s", 3, 2.71828, "foo")
         self.check("""
 root INFO: This is INFO
-root INFO: This is unicode INFO
+root INFO: This is unicode 统一码 INFO
 root WARN: This is WARN
 root ERROR: This is ERROR
 root FATAL: This is FATAL
@@ -202,9 +202,9 @@ log4j.appender.CA.layout.ConversionPattern=%-5p PID:%X{{PID}} %c %C %M (%F:%L) %
             log.MDCRemove("PID")
 
         # Use format to make line numbers easier to change.
-        self.check("""
-INFO  PID:{1} root  testMDCPutPid (test_log.py:{0}) test_log.py({0}) - {2}
-""".format(line, os.getpid(), msg))
+        self.check(f"""
+INFO  PID:{os.getpid()} root  testMDCPutPid (test_log.py:{line}) test_log.py({line}) - {msg}
+""")
 
         # don't pass other tests in child process
         if pid == 0:
