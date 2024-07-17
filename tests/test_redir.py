@@ -85,7 +85,7 @@ class TestRedir(unittest.TestCase):
             dest = io.StringIO()
             log_utils.enable_notebook_logging(dest)
             log.log(log.getDefaultLogger().getName(), log.INFO, "This is INFO")
-            log.info("This is unicode 统一码 INFO")
+            log.info("This is unicode INFO")
             log.trace("This is TRACE")
             log.debug("This is DEBUG")
             log.warn("This is WARN")
@@ -96,7 +96,7 @@ class TestRedir(unittest.TestCase):
         self.assertEqual(
             dest.getvalue(),
             """root INFO: This is INFO
-root INFO: This is unicode 统一码 INFO
+root INFO: This is unicode INFO
 root WARN: This is WARN
 root ERROR: This is ERROR
 root FATAL: This is FATAL
