@@ -1,4 +1,4 @@
-find_package(Boost REQUIRED COMPONENTS
+find_package(Boost REQUIRED NO_MODULE COMPONENTS
     unit_test_framework REQUIRED
 )
 

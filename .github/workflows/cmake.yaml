@@ -46,6 +46,7 @@ jobs:
         run: |
           cmake \
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build/install \
+            -DPython_FIND_STRATEGY=LOCATION \
             -B ${{github.workspace}}/build
 
       - name: CMake build
