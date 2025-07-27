@@ -1,3 +1,4 @@
+find_package(Python COMPONENTS Development Interpreter)
 add_subdirectory(log)
 
 install(
