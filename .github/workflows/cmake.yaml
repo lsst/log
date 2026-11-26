@@ -38,8 +38,6 @@ jobs:
           pip install \
             pybind11[global] \
             pytest \
-            pytest-flake8 \
-            "flake8<5" \
             lsst-utils
 
       - name: CMake configure
